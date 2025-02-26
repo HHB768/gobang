@@ -6,17 +6,29 @@
 namespace mfwu {
 
 class HumanPlayer : Player {
-    void play() override {
-        Position pos = get_pos();
+public:
+    virtual void play() override {
+        Position pos = this->get_pos();
         this->place(pos);
     }
 
-    void place(Position pos) override {
+    void place(const Position& pos) override {
         return Player::place(pos);
     }
-private:
-    Position get_pos();
+protected:
+    virtual Position get_pos() = 0;
 };  // endof class HumanPlayer
+
+class GUIPlayer : HumanPlayer {
+    
+};  // endof class GUIPlayer
+
+class CMDPlayer : HumanPlayer {
+
+};  // endof class CMDPlayer
+
+// TODO: do we really need this?
+//       or we can wait_movement() and call chessboard(GUI/CMD) to monitor the human input
 
 }  // endof namespace mfwu
 

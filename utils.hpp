@@ -12,16 +12,42 @@ namespace mfwu {
     
     struct Position {
         int row, col;
+
+        Position() : row(-1), col(-1) {}
+        Position(int r, int c) : row(r), col(c) {}
+        Position(const Position& pos) = default;
+
+        void update(int r, int c) {
+            row = r;
+            col = c;
+        }
+        virtual size_t get_status() const { return 0; }
     
         virtual ~Position() {}
     };  // endof struct Position
     
     struct Piece : Position {
-        static constexpr bool Black = 1;
-        static constexpr bool White = 0;
-    
-        bool color;
+        enum class Color {
+            Invalid = 0,
+            White   = 1,
+            WhiteSp = 2,
+            Black   = 3,
+            BlackSp = 4
+        };  // endof struct Color
         
+        Color color;
+
+        void update(int r, int c, Color clr) {
+            this->row = r;
+            this->col = c;
+            this->color = clr;
+        }
+        size_t get_status() const { return static_cast<size_t>(color); }
+        
+        Piece(int r, int c, Color clr) 
+            : Position(r, c), color(clr) {}
+        Piece(const Position& pos, Color clr)
+            : Position(pos), color(clr) {}
         virtual ~Piece() {}
     };  // endof struct Piece
 

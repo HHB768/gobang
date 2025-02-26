@@ -10,14 +10,25 @@ class ChessBoard_base;
 
 class Player {
 public:
+    Player() : board_(nullptr) {}
+    template <BoardSize Size>
+    Player(std::shared_ptr<ChessBoard_base> board, Piece::Color color) : board_(board), player_color_(color) {}
+    Player(std::shared_ptr<ChessBoard_base> board, Piece::Color color) : board_(board), player_color_(color) {}
+
     virtual void play() = 0;
 
-    virtual void place(Position pos) {
-        board_->update(pos);
+    virtual void place(const Position& pos) {
+        place(Piece(pos, this->player_color_));
     }
 
 protected:
     std::shared_ptr<ChessBoard_base> board_;
+    Piece::Color player_color_;
+
+private:
+    void place(const Piece& piece) {
+        board_->update(piece);
+    }
 };  // endof class Player
 
 
