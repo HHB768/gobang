@@ -25,10 +25,15 @@ public:
     }
     ~GameController() {}
     
-    void start();  // fork a process to do this
-    void game_play_task();  // for thread
-    void advance();
-    bool check();
+    void start() {}  // fork a process to do this
+    void game_play_task() {}  // for thread
+    void advance() {
+
+    }
+    bool check() {
+        const Piece& p = board_.get_last_piece();
+        
+    }
 private:
     std::shared_ptr<ChessBoard_base> board_;
     Player1_type player1_;

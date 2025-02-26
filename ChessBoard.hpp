@@ -107,18 +107,76 @@ public:
     size_t len() const { return size(); }
     size_t size() const { return static_cast<size_t>(Size); }
 
-    int count_left(const Piece& pos) {
-        int row = pos.row + 1;
-        int col = pos.col;
-        Piece::Color color = pos.color;
-        while (is_valid_row(row)) {
-            if (Piece::is_same_color(board_[row][col]->get_status(), )
+    int count_left(const Piece& piece) const {
+        int row = piece.row;
+        int col = piece.col - 1;
+        size_t status = piece->get_status();
+        int cnt = 0;
+        while (is_valid_col(col)) {
+            if (Piece::is_same_color(
+                    board_[row][col]->get_status(), status)) {
+                cnt++;
+            }
+            col--;
         }
+        return cnt;
     }
-    int count_right(const Piece&) = 0;
-    int count_up(const Piece&) = 0;
-    int count_down(const Piece&) = 0;
-    int count_up_left(const Piece&) = 0;
+    int count_right(const Piece& piece) const {
+        int row = piece.row;
+        int col = piece.col + 1;
+        size_t status = piece->get_status();
+        int cnt = 0;
+        while (is_valid_col(col)) {
+            if (Piece::is_same_color(
+                    board_[row][col]->get_status(), status)) {
+                cnt++;
+            }
+            col++;
+        }
+        return cnt;
+    }
+    int count_up(const Piece& piece) const {
+        int row = piece.row - 1;
+        int col = piece.col;
+        size_t status = piece->get_status();
+        int cnt = 0;
+        while (is_valid_row(row)) {
+            if (Piece::is_same_color(
+                    board_[row][col]->get_status(), status)) {
+                cnt++;
+            }
+            row--;
+        }
+        return cnt;
+    }
+    int count_down(const Piece& piece) const {
+        int row = piece.row + 1;
+        int col = piece.col;
+        size_t status = piece->get_status();
+        int cnt = 0;
+        while (is_valid_row(row)) {
+            if (Piece::is_same_color(
+                    board_[row][col]->get_status(), status)) {
+                cnt++;
+            }
+            row++;
+        }
+        return cnt;
+    } 
+    int count_up_left(const Piece& piece) const {
+        int row = piece.row - 1;
+        int col = piece.col - 1;
+        size_t status = piece->get_status();
+        int cnt = 0;
+        while (is_valid_col(col)) {
+            if (Piece::is_same_color(
+                    board_[row][col]->get_status(), status)) {
+                cnt++;
+            }
+            col++;
+        }
+        return cnt;
+    }
     int count_up_right(const Piece&) = 0;
     int count_down_left(const Piece&) = 0;
     int count_down_right(const Piece&) = 0;
