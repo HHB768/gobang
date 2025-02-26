@@ -65,7 +65,18 @@ namespace mfwu {
         virtual ~Piece() {}
     };  // endof struct Piece
 
-
+    constexpr std::vector<std::pair<int, int>> dirs = {
+        {1, 0}, {0, 1}, {-1, 0}, {0, -1},
+        {1, 1}, {1, -1}, {-1, 1}, {-1, -1}
+    };
+    constexpr std::pair<int, int> dir_right = dirs[0];
+    constexpr std::pair<int, int> dir_down  = dirs[1];
+    constexpr std::pair<int, int> dir_left  = dirs[2];
+    constexpr std::pair<int, int> dir_up    = dirs[3];
+    constexpr std::pair<int, int> dir_down_right = dirs[4];
+    constexpr std::pair<int, int> dir_down_left  = dirs[5];
+    constexpr std::pair<int, int> dir_up_rihgt   = dirs[6];
+    constexpr std::pair<int, int> dir_up_left    = dirs[7];
 }  // endof namespace mfwu
 
 
