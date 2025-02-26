@@ -5,7 +5,7 @@
 
 namespace mfwu {
 
-class RobotPlayer : Player {
+class RobotPlayer : public Player {
 public:
     virtual void play() override {
         Position pos = get_best_position();
@@ -16,23 +16,26 @@ public:
         Player::place(pos);
     }
 
-private:
-    Position get_best_position();
+protected:
+    virtual Position get_best_position() = 0;
 };  // endof class RobotPlayer
 
-class DebugRobot : RobotPlayer {
-
+class DebugRobot : public RobotPlayer {
+private:
+    Position get_best_position() const override {
+        size_t sz = this->board_->size();
+    }
 };  // endof class DebugRobot;
 
-class DummyRobot : RobotPlayer {
+class DummyRobot : public RobotPlayer {
 
 };  // endof class DummyRobot
 
-class HumanLikeRobot : RobotPlayer {
+class HumanLikeRobot : public RobotPlayer {
 
 };  // endof class HumanLikeRobot
 
-class SmartRobot : RobotPlayer {
+class SmartRobot : public RobotPlayer {
 
 };  // enof class SmartRobot
 

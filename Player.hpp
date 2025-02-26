@@ -11,9 +11,8 @@ class ChessBoard_base;
 class Player {
 public:
     Player() : board_(nullptr) {}
-    template <BoardSize Size>
-    Player(std::shared_ptr<ChessBoard_base> board, Piece::Color color) : board_(board), player_color_(color) {}
-    Player(std::shared_ptr<ChessBoard_base> board, Piece::Color color) : board_(board), player_color_(color) {}
+    Player(std::shared_ptr<ChessBoard_base> board, Piece::Color color) 
+        : board_(board), player_color_(color) {}
 
     virtual void play() = 0;
 
@@ -22,7 +21,8 @@ public:
     }
 
 protected:
-    std::shared_ptr<ChessBoard_base> board_;
+    std::shared_ptr<ChessBoard_base> board_;  // i dont want unexpected modifications
+                                              // but cannnot set const chessboard
     Piece::Color player_color_;
 
 private:

@@ -19,18 +19,32 @@ public:
 
     ChessBoard_base() {}
     virtual ~ChessBoard_base() {}
-
-    virtual void update(Position pos) = 0;
+    const Piece& get_last_piece() const { return last_piece_; }
 protected:
-    Position last_piece_;
+    virtual void update(Position pos) = 0;
+    virtual void size() = 0;
+    virtual Position wait_input() const = 0;
+
+    virtual int count_left(const Piece&) const = 0;
+    virtual int count_right(const Piece&) const = 0;
+    virtual int count_up(const Piece&) const = 0;
+    virtual int count_down(const Piece&) const = 0;
+    virtual int count_up_left(const Piece&) const = 0;
+    virtual int count_up_right(const Piece&) const = 0;
+    virtual int count_down_left(const Piece&) const = 0;
+    virtual int count_down_right(const Piece&) const = 0;
+
+    Piece last_piece_;
     bool status_;
 };  // endof class ChessBoard_base
 
 template <BoardSize Size=BoardSize::Small>
-class ChessBoard : ChessBoard_base {
+class ChessBoard : public ChessBoard_base {
 public:
     ChessBoard() 
-        : board_(Size, std::vector<std::unique_ptr<Postion>>(Size, nullptr)) {
+        : board_(static_cast<size_t>(Size), 
+            std::vector<std::unique_ptr<Postion>>(
+                static_cast<size_t>(Size), nullptr)) {
         _init_board();
     }
     ChessBoard(const std::vector<std::vector<size_t>>> input_board) 
@@ -77,37 +91,97 @@ public:
         board_[piece.row][piece.row] 
             = std::make_unique<Position>(piece);
     }
+    size_t get_status(int row, int col) const {
+        return board_[i][j]->get_status();
+    }
 
     void print_board() const {
-        for (size_t i = 0; i < static_cast<size_t>(Size); i++) {
-            for (size_t j = 0; j < static_cast<size_t>(Size); j++) {
+        for (size_t i = 0; i < len(); i++) {
+            for (size_t j = 0; j < len(); j++) {
                 std::cout << board_[i][j]->get_status() << " ";
             }
             std::cout << "\n";
         }
     }
+
+    size_t len() const { return size(); }
+    size_t size() const { return static_cast<size_t>(Size); }
+
+    int count_left(const Piece& pos) {
+        int row = pos.row + 1;
+        int col = pos.col;
+        Piece::Color color = pos.color;
+        while (is_valid_row(row)) {
+            if (Piece::is_same_color(board_[row][col]->get_status(), )
+        }
+    }
+    int count_right(const Piece&) = 0;
+    int count_up(const Piece&) = 0;
+    int count_down(const Piece&) = 0;
+    int count_up_left(const Piece&) = 0;
+    int count_up_right(const Piece&) = 0;
+    int count_down_left(const Piece&) = 0;
+    int count_down_right(const Piece&) = 0;
     
 private:
     void _init_board() {
-        for (size_t i = 0; i < static_cast<size_t>(Size); i++) {
-            for (size_t j = 0; j < static_cast<size_t>(Size); j++) {
+        for (size_t i = 0; i < len(); i++) {
+            for (size_t j = 0; j < len(); j++) {
                 board_[i][j] = std::make_unique<Position>(i, j);
             }
         }
-    }    
+    } 
+    
+    bool is_valid_row(int row) const {
+        return row >= 0 and row < size();
+    }
+    bool is_valid_col(int col) const {
+        return col >= 0 and col < size();
+    }
+    bool is_valid_row_col(int row, int col) const {
+        return is_valid_row(row) && is_valid_col(col);
+    }
 
     std::vector<std::vector<std::unique_ptr<Position>>> board_;
     
 };  // endof class ChessBoard
 
 template <BoardSize Size=BoardSize::Small>
-class GUIBoard : ChessBoard<Size> {
+class GUIBoard : public ChessBoard<Size> {
+public:
+    Position wait_input() {
 
+    }
 };  // endof class GUIBoard
 
 template <BoardSize Size=BoardSize::Small>
 class CMDBoard : ChessBoard<Size> {
-
+    Position wait_input() const override {
+        std::string input_str;
+        std::cin >> input_str;
+        Position ret = CMDBoard::validate_input(input_str);
+        if (ret.row < 0 or ret.col < 0) {
+            std::cout << "invalid input, plz try again\n";
+            ret = this->wait_input();
+        }
+        return ret;
+    }
+    static Position validate_input(const std::string& str) {
+        if (str.size() != 2) return {-1, -1};
+        return {get_int(str[0]), get_int(str[1])};
+    }
+    static int get_int(char c) {
+        int res = -1
+        if ('a' <= c && c <= 'z') {
+            res = c - 'a';
+        } else if ('A' <= c && c <= 'Z') {
+            res = c - 'A';
+        } else {
+            return -1;
+        }
+        if (res >= this->size()) { return -1; }
+        return res;
+    }
 };  // endof class CMDBoard
 
 }  // endof namespace mfwu

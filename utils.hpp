@@ -10,6 +10,7 @@ namespace mfwu {
         Large  = 25
     };  // endof enum class BoardSize
     
+    /* dual ints, -1 for invalid res */
     struct Position {
         int row, col;
 
@@ -37,6 +38,18 @@ namespace mfwu {
         
         Color color;
 
+        static bool is_same_color(Color a, Color b) {
+            return is_same_color(static_cast<size_t>(a),
+                                 static_cast<size_t>(b));
+        }
+        static bool is_same_color(size_t ca, size_t cb) {
+            if (ca == 1 && cb == 2) return true;
+            if (ca == 2 && cb == 1) return true;
+            if (ca == 3 && cb == 4) return true;
+            if (ca == 4 && cb == 3) return true;
+            return ca == cb;
+        }
+
         void update(int r, int c, Color clr) {
             this->row = r;
             this->col = c;
@@ -44,12 +57,14 @@ namespace mfwu {
         }
         size_t get_status() const { return static_cast<size_t>(color); }
         
+        Piece() : Position(), color(Color::Invalid) {}
         Piece(int r, int c, Color clr) 
             : Position(r, c), color(clr) {}
         Piece(const Position& pos, Color clr)
             : Position(pos), color(clr) {}
         virtual ~Piece() {}
     };  // endof struct Piece
+
 
 }  // endof namespace mfwu
 
