@@ -20,9 +20,10 @@ public:
     ChessBoard_base() {}
     virtual ~ChessBoard_base() {}
     const Piece& get_last_piece() const { return last_piece_; }
+    virtual void update(const Piece& piece) = 0;
+    virtual size_t size() const = 0;
+    virtual size_t get_status(int row, int col) const = 0;
 protected:
-    virtual void update(Position pos) = 0;
-    virtual void size() = 0;
     virtual Position wait_input() const = 0;
 
     virtual int count_left(const Piece&) const = 0;
@@ -87,7 +88,7 @@ public:
         _init_board();
     }
 
-    void update(const Piece& piece) {
+    void update(const Piece& piece) override {
         board_[piece.row][piece.row] 
             = std::make_unique<Position>(piece);
     }
@@ -104,8 +105,8 @@ public:
         }
     }
 
-    static constexpr size_t len() const { return size(); }
-    static constexpr size_t size() const { return static_cast<size_t>(Size); }
+    size_t len() const override { return size(); }
+    size_t size() const override { return static_cast<size_t>(Size); }
 
     int count_left(const Piece& piece) const {
         int row = piece.row;

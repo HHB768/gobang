@@ -9,13 +9,14 @@
 
 namespace mfwu {
 
-class GameController_base_base {};
+class GameController_base_base {
+public:
+    virtual void start() = 0;
+    virtual void reset_game() = 0;
+};  // endof class GameController_base_base
 
-template <typename Player1_type, typename Player2_type, typename ChessBoard_type,
-          typename std::enable_if<std::is_base_of<mfwu::Player, Player1_type>::value 
-                                  && std::is_base_of<mfwu::Player, Player2_type>::value, int
-                                 >::type = 0>
-class GameController_base : GameController_base_base {
+template <typename Player1_type, typename Player2_type, typename ChessBoard_type>  // TODO: type check
+class GameController_base : public GameController_base_base {
 public:
     GameController_base() 
         : board_(new ChessBoard_type()), 
@@ -62,6 +63,21 @@ public:
         if (is_end(res)) { return true; }
         else return false;
     }
+
+    virtual void reset_game() {
+        board_->clear();
+        std::swap(player1_.get_color(), player2_.get_color());
+        player1_first_ = !player1_first_;
+        if (player1_first_) {
+            current_player_ = player1_;
+            idle_player_ = player2_;
+        } else {
+            current_player_ = player2_;
+            idle_player_ = player1_;
+        }
+        logger_.new_game();
+        archive_.flush();
+    }
 private:
     static bool is_end(const count_res_4& res) {
         if (res.left_right >= 5
@@ -77,23 +93,25 @@ private:
     Player2_type player2_;
     Player& current_player_;
     Player& idle_player_;
+    bool player1_first_;
 
     Logger logger_;
-    std::vector<typename ChessBoard_type::Archive_type> archive_; 
+    Archive archive_;
+    // std::vector<typename ChessBoard_type::Archive_type> archive_; 
 
 };  // endof class GameController_base
 
 template <typename Player1_type, typename Player2_type, typename ChessBoard_type>
-class GameController : public GameController_base {};
+class GameController : public GameController_base<Player1_type, Player2_type, ChessBoard_type>;
 
 template <typename Player1_type, typename Player2_type, BoardSize Size>
-class GameController<Player1_type, Player2_type, GUIBoard<Size>> {
+class GameController<Player1_type, Player2_type, GUIBoard<Size>> : public GameController_base<Player1_type, Player2_type, ChessBoard_type> {
 
 };
 
 
 template <typename Player1_type, typename Player2_type, BoardSize Size>
-class GameController<Player1_type, Player2_type, CMDBoard<Size>> {
+class GameController<Player1_type, Player2_type, CMDBoard<Size>> : public GameController_base<Player1_type, Player2_type, ChessBoard_type> {
 public:
     GameController() : board_(new CMDBoard()), player1_(&board_), player2_(&board_) {
         
@@ -101,10 +119,11 @@ public:
     ~GameController() {}
     
     void start();  // fork a process to do this
+    
+private:
     void game_play_task();  // for thread
     void advance();
     bool check();
-private:
     std::shared_ptr<ChessBoard_base> board_;
     Player1_type player1_;
     Player2_type player2_;

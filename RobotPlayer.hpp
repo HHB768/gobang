@@ -17,13 +17,25 @@ public:
     }
 
 protected:
-    virtual Position get_best_position() = 0;
+    virtual Position get_best_position() const = 0;
 };  // endof class RobotPlayer
 
 class DebugRobot : public RobotPlayer {
 private:
     Position get_best_position() const override {
-        size_t sz = this->board_->size();
+        size_t len = this->board_->size();
+        int row = -1, col = -1;
+        while (is_valid(row, col) == false) {
+            row = rand() % len;
+            col = rand() % len;
+        }
+    }
+
+    bool is_valid(int row, int col) const {
+        if (row < 0 || row >= this->board_->size()) return false;
+        if (col < 0 || col >= this->board_->size()) return false;
+        if (this->board_->get_status(row, col) != 0) return false;
+        return true;
     }
 };  // endof class DebugRobot;
 
