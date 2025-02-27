@@ -72,7 +72,7 @@ namespace mfwu {
         virtual ~Piece() {}
     };  // endof struct Piece
 
-    constexpr std::vector<std::pair<int, int>> dirs = {
+    const std::vector<std::pair<int, int>> dirs = {
         {1, 0}, {0, 1}, {-1, 0}, {0, -1},
         {1, 1}, {1, -1}, {-1, 1}, {-1, -1}
     };
@@ -84,6 +84,36 @@ namespace mfwu {
     constexpr std::pair<int, int> dir_down_left  = dirs[5];
     constexpr std::pair<int, int> dir_up_rihgt   = dirs[6];
     constexpr std::pair<int, int> dir_up_left    = dirs[7];
+
+    enum class GameMode {
+        PVE = 0,
+        PVP = 1,
+        EVE = 2
+    };  // endof enum class GameMode
+
+    GameMode print_mode_choice_help_cmd() {
+    
+
+        return GameMode::PVE;
+    }
+    
+    BoardSize print_size_choice_help_cmd() {
+    
+    
+        return BoardSize::Small;
+    }
+    
+    GameMode print_mode_choice_help_gui() {
+        
+    
+        return GameMode::PVE;
+    }
+    
+    BoardSize print_size_choice_help_gui() {
+    
+    
+        return BoardSize::Small;
+    }
 }  // endof namespace mfwu
 
 

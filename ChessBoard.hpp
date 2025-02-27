@@ -239,12 +239,29 @@ public:
         return cnt;
     }
     
-    struct count_res_6 {
+    struct count_res_8 {
         int right, down, left, up;
         int down_right, down_left, up_right, up_left;
-    };  // endof struct count_res_6
-    void count_dir(const Piece& piece, count_res_6* res) {
-        
+    };  // endof struct count_res_8
+    void count_dir(const Piece& piece, count_res_8* res) const {
+        res->right = count_right(piece);
+        res->down = count_down(piece);
+        res->left = count_left(piece);
+        res->up = count_up(piece);
+        res->down_right = count_down_right(piece);
+        res->down_left = count_down_left(piece);
+        res->up_right = count_up_right(piece);
+        res->up_left = count_up_left(piece);
+    }
+    struct count_res_4 {
+        int left_right, up_down;
+        int up_left_down_right, up_right_down_left;
+    };  // endof struct count_res_4
+    void count_dir(const Piece& piece, count_res_4* res) const {
+        res->left_right = count_left(piece) + count_right(piece);
+        res->up_down    = count_up(piece) + count_down(piece);
+        res->up_left_down_right = count_up_left(piece) + count_down_right(piece);
+        res->up_right_down_left = count_up_right(piece) + count_down_left(piece);
     }
 
 
@@ -277,6 +294,8 @@ public:
     Position wait_input() {
 
     }
+
+    using Archive_type = std::string;
 };  // endof class GUIBoard
 
 template <BoardSize Size=BoardSize::Small>
