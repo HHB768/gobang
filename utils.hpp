@@ -49,6 +49,13 @@ namespace mfwu {
             if (ca == 4 && cb == 3) return true;
             return ca == cb;
         }
+        static size_t get_real_color(Color a) {
+            return get_real_color(static_cast<size_t>(a));
+        }
+        static size_t get_real_color(size_t ca) {
+            if (ca == 2 || ca == 4) return ca - 1;
+            return ca;
+        }
 
         void update(int r, int c, Color clr) {
             this->row = r;

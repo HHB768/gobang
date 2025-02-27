@@ -104,8 +104,8 @@ public:
         }
     }
 
-    size_t len() const { return size(); }
-    size_t size() const { return static_cast<size_t>(Size); }
+    static constexpr size_t len() const { return size(); }
+    static constexpr size_t size() const { return static_cast<size_t>(Size); }
 
     int count_left(const Piece& piece) const {
         int row = piece.row;
@@ -238,6 +238,16 @@ public:
         }
         return cnt;
     }
+    
+    struct count_res_6 {
+        int right, down, left, up;
+        int down_right, down_left, up_right, up_left;
+    };  // endof struct count_res_6
+    void count_dir(const Piece& piece, count_res_6* res) {
+        
+    }
+
+
 private:
     void _init_board() {
         for (size_t i = 0; i < len(); i++) {
@@ -247,13 +257,13 @@ private:
         }
     } 
     
-    bool is_valid_row(int row) const {  // i want them static
-        return row >= 0 and row < size();
+    static bool is_valid_row(int row) {  // i want them static
+        return row >= 0 and row < Size;
     }
-    bool is_valid_col(int col) const {
-        return col >= 0 and col < size();
+    static bool is_valid_col(int col) {
+        return col >= 0 and col < Size;
     }
-    bool is_valid_row_col(int row, int col) const {
+    static bool is_valid_row_col(int row, int col) {
         return is_valid_row(row) && is_valid_col(col);
     }
 
