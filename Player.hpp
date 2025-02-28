@@ -14,13 +14,13 @@ public:
     Player(std::shared_ptr<ChessBoard_base> board, Piece::Color color) 
         : board_(board), player_color_(color) {}
 
-    virtual void play() = 0;
+    virtual CommandType play() = 0;
 
     virtual void place(const Position& pos) {
         place(Piece(pos, this->player_color_));
     }
 
-    Piece::Color& get_color() const {
+    Piece::Color& get_color() {
         return player_color_;
     }
 

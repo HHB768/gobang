@@ -7,9 +7,10 @@ namespace mfwu {
 
 class RobotPlayer : public Player {
 public:
-    virtual void play() override {
+    virtual CommandType play() override {
         Position pos = get_best_position();
         this->place(pos);
+        return CommandType::PIECE;
     }
 
     void place(const Position& pos) override {
@@ -29,6 +30,7 @@ private:
             row = rand() % len;
             col = rand() % len;
         }
+        return {row, col};
     }
 
     bool is_valid(int row, int col) const {

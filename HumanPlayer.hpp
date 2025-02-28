@@ -7,16 +7,29 @@ namespace mfwu {
 
 class HumanPlayer : public Player {
 public:
-    virtual void play() override {
-        Position pos = this->get_pos();
-        this->place(pos);
+    virtual CommandType play() override {
+        Command cmd = this->get_command();
+        switch (cmd.type) {
+        case CommandType::PIECE : {
+            this->place(cmd.pos);
+        } break;
+        case CommandType::RESTART : {
+        } break;
+        case CommandType::MENU : {
+        } break;
+        case CommandType::QUIT : {
+        } break;
+        default :
+            std::cerr << UNKNOWN_COMMAND_TYPE << "\n";
+        }
+        return cmd.type;
     }
 
     void place(const Position& pos) override {
         return Player::place(pos);
     }
 protected:
-    virtual Position get_pos() = 0;
+    virtual Command get_command() = 0;
 };  // endof class HumanPlayer
 
 class GUIPlayer : public HumanPlayer {

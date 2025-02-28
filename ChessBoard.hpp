@@ -25,6 +25,8 @@ public:
     virtual size_t get_status(int row, int col) const = 0;
 protected:
     virtual Position wait_input() const = 0;
+    virtual void show() = 0;
+    virtual void refresh() = 0;
 
     virtual int count_left(const Piece&) const = 0;
     virtual int count_right(const Piece&) const = 0;
@@ -93,16 +95,19 @@ public:
             = std::make_unique<Position>(piece);
     }
     size_t get_status(int row, int col) const {
+        assert(is_valid_row_col(row, col));
         return board_[i][j]->get_status();
     }
 
-    void print_board() const {
+    std::string serialize() const {
+        std::stringstream ss;
         for (size_t i = 0; i < len(); i++) {
             for (size_t j = 0; j < len(); j++) {
-                std::cout << board_[i][j]->get_status() << " ";
+                ss<< board_[i][j]->get_status() << " ";
             }
-            std::cout << "\n";
+            ss << "\n";
         }
+        return ss.str();
     }
 
     size_t len() const override { return size(); }

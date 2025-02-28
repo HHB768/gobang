@@ -9,7 +9,7 @@ namespace mfwu {
         Middle = 20,
         Large  = 25
     };  // endof enum class BoardSize
-    
+
     /* dual ints, -1 for invalid res */
     struct Position {
         int row, col;
@@ -114,6 +114,26 @@ namespace mfwu {
     
         return BoardSize::Small;
     }
+
+    enum class CommandType : size_t {
+        PIECE = 0,
+        RESTART = 1,
+        MENU = 2,
+        QUIT = 3
+    };  // endof enum class CommandType
+    struct Command {
+        CommandType type;
+        Position pos;
+    };  // endof struct Command
+
+    constexpr char* UNKNOWN_COMMAND_TYPE = "Unknown CommandType by HumanPlayer";
+    // constexpr char*
+    enum class GameStatus : size_t {
+        NORMAL = 0,
+        RESTART = 1,
+        MENU = 2,
+        QUIT = 3
+    };  // endof enum class GameStatus
 }  // endof namespace mfwu
 
 

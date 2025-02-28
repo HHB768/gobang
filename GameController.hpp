@@ -6,12 +6,13 @@
 #include "ChessBoard.hpp"
 #include "HumanPlayer.hpp"
 #include "RobotPlayer.hpp"
+#include <sys/wait.h>
 
 namespace mfwu {
 
 class GameController_base_base {
 public:
-    virtual void start() = 0;
+    virtual GameStatus start() = 0;
     virtual void reset_game() = 0;
 };  // endof class GameController_base_base
 
@@ -24,46 +25,67 @@ public:
           player2_(&board_, Piece::Color::Black),
           current_player_(player1_),
           current_player_(player2_),
+          player1_first_(true),
           logger_(), archive_() {
-        // ?
+        init_game();
     }
     ~GameController_base() {}
     
-    virtual void start() {
-        auto pid = fork();
-        if (pid == 0) {
-            game_play_task();
-            exit(0);
-        } else {
-            int status;
-            wait(&status);
-            if (status) {
-                std::cerr << "game end with status: " << status << "\n"; 
+    virtual GameStatus start() {
+        CommandType cmd_type;
+        std::thread t(GameController_base::game_play_task, this, cmd_type);  // we really need this?
+        t.join();
+        switch (cmd_type) {
+        case CommandType::PIECE : {
+            return GameStatus::NORMAL;
+        } break;
+        case CommandType::RESTART : {
+            return GameStatus::RESTART;
+        } break;
+        case CommandType::MENU : {
+            return GameStatus::MENU;
+        } break;
+        case CommandType::QUIT: {
+            return GameStatus::QUIT;
+        } break;
+        default:
+            std::cerr << "game end with status: " << status << "\n"; 
+        }
+    }
+    
+    virtual void game_play_task(CommandType& cmd_type) {
+        while (!check_end()) {
+            cmd_type = advance();
+            if (cmd_type != CommandType::PIECE) {
+                return ;
             }
         }
-        reinit(); start();
     }
     
-    virtual void game_play_task() {
-        while (!stop_flag_ && !check_end()) {
-            advance();
+    virtual CommandType advance() {
+        CommandType cmd_type = current_player_->play();
+        if (cmd_type == CommandType::PIECE) {
+            board_->refresh();
+            std::swap(current_player_, idle_player_);
         }
-    }
-    
-    virtual void advance() {
-        current_player_->play();
-        board_->fresh();
-        std::swap(current_player_, idle_player_);
+        return cmd_type;
     }
 
     virtual bool check_end() const {
-        const Piece& p = board_.get_last_piece();
+        const Piece& p = board_->get_last_piece();
         ChessBoard_type::count_res_4 res;
         board_->count_dir(p, &res);
         if (is_end(res)) { return true; }
         else return false;
     }
-
+    virtual void init_game() {
+        board_->show();
+        player1_first_ = true;
+        current_player_ = player1_;
+        idle_player_ = player2_;
+        logger_.new_game();
+        archive_.flush();
+    }
     virtual void reset_game() {
         board_->clear();
         std::swap(player1_.get_color(), player2_.get_color());
@@ -113,23 +135,10 @@ class GameController<Player1_type, Player2_type, GUIBoard<Size>> : public GameCo
 template <typename Player1_type, typename Player2_type, BoardSize Size>
 class GameController<Player1_type, Player2_type, CMDBoard<Size>> : public GameController_base<Player1_type, Player2_type, ChessBoard_type> {
 public:
-    GameController() : board_(new CMDBoard()), player1_(&board_), player2_(&board_) {
-        
-    }
-    ~GameController() {}
-    
-    void start();  // fork a process to do this
+
     
 private:
-    void game_play_task();  // for thread
-    void advance();
-    bool check();
-    std::shared_ptr<ChessBoard_base> board_;
-    Player1_type player1_;
-    Player2_type player2_;
-
-    Logger logger_;
-    std::stack<ChessBoard_type> archive_; 
+    
 };
 }  // endof namespace mfwu
 
