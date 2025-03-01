@@ -119,7 +119,8 @@ namespace mfwu {
         PIECE = 0,
         RESTART = 1,
         MENU = 2,
-        QUIT = 3
+        QUIT = 3,
+        INVALID = 4
     };  // endof enum class CommandType
     struct Command {
         CommandType type;
@@ -134,6 +135,17 @@ namespace mfwu {
         MENU = 2,
         QUIT = 3
     };  // endof enum class GameStatus
+
+    constexpr char* QUIT_CMD1 = "\\QUIT";
+    constexpr char* QUIT_CMD2 = "\\Q";
+    constexpr char* QUIT_CMD3 = "\\quit";
+    constexpr char* RESTART_CMD1 = "\\RESTART";
+    constexpr char* RESTART_CMD2 = "\\R";
+    constexpr char* RESTART_CMD3 = "\\restart";
+    constexpr char* MENU_CMD1 = "\\MENU";
+    constexpr char* MENU_CMD2 = "\\M";
+    constexpr char* MENU_CMD3 = "\\menu";
+
 }  // endof namespace mfwu
 
 

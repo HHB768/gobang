@@ -8,7 +8,7 @@ namespace mfwu {
 class HumanPlayer : public Player {
 public:
     virtual CommandType play() override {
-        Command cmd = this->get_command();
+        Command cmd = this->board_->get_command();
         switch (cmd.type) {
         case CommandType::PIECE : {
             this->place(cmd.pos);
@@ -29,7 +29,9 @@ public:
         return Player::place(pos);
     }
 protected:
-    virtual Command get_command() = 0;
+    // virtual Command get_command() = 0;
+    // 不应该由你来实现吧，不然真要写GUIplayer和CMDplayer你又不乐意
+    // XQ4 25.03.01
 };  // endof class HumanPlayer
 
 class GUIPlayer : public HumanPlayer {

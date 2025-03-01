@@ -23,9 +23,10 @@ public:
     virtual void update(const Piece& piece) = 0;
     virtual size_t size() const = 0;
     virtual size_t get_status(int row, int col) const = 0;
+    virtual Command get_command() = 0;
 protected:
-    virtual Position wait_input() const = 0;
-    virtual void show() = 0;
+    
+    virtual void show() const = 0;
     virtual void refresh() = 0;
 
     virtual int count_left(const Piece&) const = 0;
@@ -270,7 +271,9 @@ public:
         res->up_right_down_left = count_up_right(piece) + count_down_left(piece);
     }
 
-
+protected:
+    virtual void show() const = 0;
+    virtual void refresh() = 0;
 private:
     void _init_board() {
         for (size_t i = 0; i < len(); i++) {
@@ -297,8 +300,15 @@ private:
 template <BoardSize Size=BoardSize::Small>
 class GUIBoard : public ChessBoard<Size> {
 public:
-    Position wait_input() {
+    Command get_command() override {
 
+    }
+
+    void show() const override {
+        
+    }
+    void refresh() override {
+        show();
     }
 
     using Archive_type = std::string;
@@ -306,19 +316,32 @@ public:
 
 template <BoardSize Size=BoardSize::Small>
 class CMDBoard : ChessBoard<Size> {
-    Position wait_input() const override {
+    Command get_command() override {
         std::string input_str;
         std::cin >> input_str;
-        Position ret = CMDBoard::validate_input(input_str);
+        Command ret = CMDBoard::validate_input(input_str);
         if (ret.row < 0 or ret.col < 0) {
             std::cout << "invalid input, plz try again\n";
             ret = this->wait_input();
         }
         return ret;
     }
-    static Position validate_input(const std::string& str) {
-        if (str.size() != 2) return {-1, -1};
-        return {get_int(str[0]), get_int(str[1])};
+    static Command validate_input(const std::string& str) {
+        if (str == std::string(QUIT_CMD1)
+            || str == std::string(QUIT_CMD2)
+            || str == std::string(QUIT_CMD3)) {
+            return Command{CommandType::QUIT, {}};
+        } else if (str == std::string(MENU_CMD1)
+            || str == std::string(MEMU_CMD2)
+            || str == std::string(MENU_CMD3)) {
+            return Command{CommandType::MENU, {}};
+        } else if (str == std::string(RESTART_CMD1)
+            || str == std::string(RESTART_CMD2)
+            || str == std::string(RESTART_CMD3)) {
+            return Command{CommandType::RESTART, {}};
+        }
+        if (str.size() != 2) return Command{CommandType::INVALID, {}};
+        return Command{CommandType::PIECE, {get_int(str[0]), get_int(str[1])}};
     }
     static int get_int(char c) {
         int res = -1
