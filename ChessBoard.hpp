@@ -92,7 +92,7 @@ public:
     }
 
     void update(const Piece& piece) override {
-        board_[piece.row][piece.row] 
+        board_[piece.row][piece.col] 
             = std::make_unique<Position>(piece);
     }
     size_t get_status(int row, int col) const {
@@ -274,6 +274,7 @@ public:
 protected:
     virtual void show() const = 0;
     virtual void refresh() = 0;
+    virtual void show_board() const = 0;
 private:
     void _init_board() {
         for (size_t i = 0; i < len(); i++) {
@@ -284,10 +285,10 @@ private:
     } 
     
     static bool is_valid_row(int row) {  // i want them static
-        return row >= 0 and row < Size;
+        return row >= 0 and row < static_cast<size_t>(Size);
     }
     static bool is_valid_col(int col) {
-        return col >= 0 and col < Size;
+        return col >= 0 and col < static_cast<size_t>(Size);
     }
     static bool is_valid_row_col(int row, int col) {
         return is_valid_row(row) && is_valid_col(col);
@@ -305,13 +306,14 @@ public:
     }
 
     void show() const override {
-        
+        show_board();
     }
     void refresh() override {
         show();
     }
 
     using Archive_type = std::string;
+
 };  // endof class GUIBoard
 
 template <BoardSize Size=BoardSize::Small>
@@ -326,6 +328,17 @@ class CMDBoard : ChessBoard<Size> {
         }
         return ret;
     }
+    void show() const override {
+        cmd_clear();
+        std::cout << CMD_HELPER << "\n";
+        std::cout << INPUT_HELPER << "\n";
+        show_board();
+    }
+    void refresh() override {
+        show();
+    }
+
+private:
     static Command validate_input(const std::string& str) {
         if (str == std::string(QUIT_CMD1)
             || str == std::string(QUIT_CMD2)
@@ -355,6 +368,69 @@ class CMDBoard : ChessBoard<Size> {
         if (res >= this->size()) { return -1; }
         return res;
     }
+    void show_board() const {
+        // TODO: better design:
+        // init a vec<vec<char> frwk first and list a set of 
+        // methods to locate the position of [i, j] on the board_
+        for (int i = 0; i <= static_cast<size_t>(Size); i++) {
+            for (int j = 0; j <= static_cast<size_t>(Size); j++) {
+                std::cout << ' .';
+            }
+            for (int j = 0; j <= static_cast<size_t>(Size); j++) {
+                std::cout << '.';
+                switch (board_[i][j]->get_status()) {
+                // Invalid = 0,
+                // White   = 1,
+                // WhiteSp = 2,
+                // Black   = 3,
+                // BlackSp = 4
+                case static_cast<size_t>(Piece::Color::Invalid) : {  // empty
+                    print_empty_position();
+                } break;
+                case static_cast<size_t>(Piece::Color::White): {
+                    print_white_piece();
+                } break;
+                case static_cast<size_t>(Piece::Color::WhiteSp) : {
+                    print_white_sp_piece();
+                } break;
+                case static_cast<size_t>(Piece::Color::Black) : {
+                    print_black_piece();
+                } break;
+                case static_cast<size_t>(Piece::Color::BlackSp) : {
+                    print_black_sp_piece();
+                } break;
+                default:
+                    std::cerr << UNKNOWN_PIECE_STATUS << "\n";
+                    print_unknown_status_piece();
+                }
+            }
+            std::cout << ".  " << char('A' + i) << "\n";
+        }
+    }
+    static void print_empty_position() {
+        std::cout << empty_position_char;
+    }
+    static void print_white_piece() {
+        std::cout << white_piece_char;
+    }
+    static void print_white_sp_piece() {
+        std::cout << white_sp_piece_char;
+    }
+    static void print_black_piece() {
+        std::cout << black_piece_char;
+    }
+    static void print_black_sp_piece() {
+        std::cout << black_sp_piece_char;
+    }
+    static void print_unknown_status_piece() {
+        std::cout << unknown_status_piece_char;
+    }
+    constexpr char empty_position_char = '+';
+    constexpr char white_piece_char = 'O';
+    constexpr char wihte_sp_piece_char = '@';
+    constexpr char black_piece_char = 'X';
+    constexpr char black_sp_piece_char = '*';
+    constexpr char unknown_status_piece_char = '!'
 };  // endof class CMDBoard
 
 }  // endof namespace mfwu

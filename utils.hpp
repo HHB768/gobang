@@ -145,6 +145,12 @@ namespace mfwu {
     constexpr char* MENU_CMD1 = "\\MENU";
     constexpr char* MENU_CMD2 = "\\M";
     constexpr char* MENU_CMD3 = "\\menu";
+    constexpr char* CMD_HELPER = "Key in \\RESTART or \\MENU or \\QUIT if you want";
+    constexpr char* INPUT_HELPER = "Key in a pair of character to play, e.g., AB for the first row & the second col";
+    constexpr char* NEW_GC_ERROR = "An error occurs when we new GameController()";
+    constexpr char* CMD_CLEAR = "\033[2J";
+    constexpr void cmd_clear() { std::cout << CMD_CLEAR << "\n"; }
+    constexpr char* UNKNOWN_PIECE_STATUS = "Unknown piece status";
 
 }  // endof namespace mfwu
 

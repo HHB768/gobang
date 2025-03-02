@@ -42,7 +42,7 @@ int main() {
                 game = new GameController<Human_type, Robot_type, __CHESSBOARD_TYPE__<BoardSize::Large>>();
             }; break;
             default:
-                std::cerr << "new GC error\n";
+                std::cerr << NEW_GC_ERROR << "\n";
             }; break;
         }; break;
         case GameMode::PVP : {
@@ -57,7 +57,7 @@ int main() {
                 game = new GameController<Human_type, Human_type, __CHESSBOARD_TYPE__<BoardSize::Large>>();
             }; break;
             default:
-                std::cerr << "new GC error\n";
+            std::cerr << NEW_GC_ERROR << "\n";
             }; break;
         }; break;
         case GameMode::EVE : {
@@ -72,11 +72,11 @@ int main() {
                 game = new GameController<Robot_type, Robot_type, __CHESSBOARD_TYPE__<BoardSize::Large>>();
             }; break;
             default:
-                std::cerr << "new GC error\n";
+            std::cerr << NEW_GC_ERROR << "\n";
             }; break;
         }; break;
         default:
-            std::cerr << "new GC error\n";
+        std::cerr << NEW_GC_ERROR << "\n";
         }
         
         auto pid = fork();
