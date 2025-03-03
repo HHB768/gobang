@@ -6,6 +6,8 @@
 #include "ChessBoard.hpp"
 #include "HumanPlayer.hpp"
 #include "RobotPlayer.hpp"
+#include "Logger.hpp"
+#include "Archive.hpp"
 #include <sys/wait.h>
 
 namespace mfwu {
@@ -21,10 +23,10 @@ class GameController_base : public GameController_base_base {
 public:
     GameController_base() 
         : board_(new ChessBoard_type()), 
-          player1_(&board_, Piece::Color::White), 
-          player2_(&board_, Piece::Color::Black),
+          player1_(board_, Piece::Color::White), 
+          player2_(board_, Piece::Color::Black),
           current_player_(player1_),
-          current_player_(player2_),
+          idle_player_(player2_),
           player1_first_(true),
           logger_(), archive_() {
         init_game();
@@ -33,7 +35,7 @@ public:
     
     virtual GameStatus start() {
         CommandType cmd_type;
-        std::thread t(GameController_base::game_play_task, this, cmd_type);  // we really need this?
+        std::thread t(&GameController_base::game_play_task, this, cmd_type);  // we really need this?
         t.join();
         switch (cmd_type) {
         case CommandType::PIECE : {
@@ -49,8 +51,9 @@ public:
             return GameStatus::QUIT;
         } break;
         default:
-            std::cerr << "game end with status: " << status << "\n"; 
+            std::cerr << "game end with cmd type: " << static_cast<size_t>(cmd_type) << "\n"; 
         }
+        return GameStatus::INVALID;
     }
     
     virtual void game_play_task(CommandType& cmd_type) {
@@ -63,17 +66,19 @@ public:
     }
     
     virtual CommandType advance() {
-        CommandType cmd_type = current_player_->play();
+        CommandType cmd_type = current_player_.play();
         if (cmd_type == CommandType::PIECE) {
             board_->refresh();
-            std::swap(current_player_, idle_player_);
+            Player& temp = current_player_;
+            current_player_ = idle_player_;
+            idle_player_ = temp;  // CHECK
         }
         return cmd_type;
     }
 
     virtual bool check_end() const {
         const Piece& p = board_->get_last_piece();
-        ChessBoard_type::count_res_4 res;
+        typename ChessBoard_type::count_res_4 res;
         board_->count_dir(p, &res);
         if (is_end(res)) { return true; }
         else return false;
@@ -101,7 +106,7 @@ public:
         archive_.flush();
     }
 private:
-    static bool is_end(const count_res_4& res) {
+    static bool is_end(const Chessboard_type::count_res_4& res) {
         if (res.left_right >= 5
             || res.up_down >= 5
             || res.up_left_down_right >= 5
@@ -118,7 +123,7 @@ private:
     bool player1_first_;
 
     Logger logger_;
-    Archive archive_;
+    Archive<std::string> archive_;
     // std::vector<typename ChessBoard_type::Archive_type> archive_; 
 
 };  // endof class GameController_base
@@ -127,13 +132,13 @@ template <typename Player1_type, typename Player2_type, typename ChessBoard_type
 class GameController : public GameController_base<Player1_type, Player2_type, ChessBoard_type>;
 
 template <typename Player1_type, typename Player2_type, BoardSize Size>
-class GameController<Player1_type, Player2_type, GUIBoard<Size>> : public GameController_base<Player1_type, Player2_type, ChessBoard_type> {
+class GameController<Player1_type, Player2_type, GUIBoard<Size>> : public GameController_base<Player1_type, Player2_type, GUIBoard<Size>> {
 
 };
 
 
 template <typename Player1_type, typename Player2_type, BoardSize Size>
-class GameController<Player1_type, Player2_type, CMDBoard<Size>> : public GameController_base<Player1_type, Player2_type, ChessBoard_type> {
+class GameController<Player1_type, Player2_type, CMDBoard<Size>> : public GameController_base<Player1_type, Player2_type, CMDBoard<Size>> {
 public:
 
     

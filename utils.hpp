@@ -27,7 +27,7 @@ namespace mfwu {
         virtual ~Position() {}
     };  // endof struct Position
     
-    struct Piece : Position {
+    struct Piece : public Position {
         enum class Color {
             Invalid = 0,
             White   = 1,
@@ -127,30 +127,31 @@ namespace mfwu {
         Position pos;
     };  // endof struct Command
 
-    constexpr char* UNKNOWN_COMMAND_TYPE = "Unknown CommandType by HumanPlayer";
     // constexpr char*
     enum class GameStatus : size_t {
         NORMAL = 0,
         RESTART = 1,
         MENU = 2,
-        QUIT = 3
+        QUIT = 3,
+        INVALID = 4
     };  // endof enum class GameStatus
 
-    constexpr char* QUIT_CMD1 = "\\QUIT";
-    constexpr char* QUIT_CMD2 = "\\Q";
-    constexpr char* QUIT_CMD3 = "\\quit";
-    constexpr char* RESTART_CMD1 = "\\RESTART";
-    constexpr char* RESTART_CMD2 = "\\R";
-    constexpr char* RESTART_CMD3 = "\\restart";
-    constexpr char* MENU_CMD1 = "\\MENU";
-    constexpr char* MENU_CMD2 = "\\M";
-    constexpr char* MENU_CMD3 = "\\menu";
-    constexpr char* CMD_HELPER = "Key in \\RESTART or \\MENU or \\QUIT if you want";
-    constexpr char* INPUT_HELPER = "Key in a pair of character to play, e.g., AB for the first row & the second col";
-    constexpr char* NEW_GC_ERROR = "An error occurs when we new GameController()";
-    constexpr char* CMD_CLEAR = "\033[2J";
-    constexpr void cmd_clear() { std::cout << CMD_CLEAR << "\n"; }
-    constexpr char* UNKNOWN_PIECE_STATUS = "Unknown piece status";
+    constexpr const char* QUIT_CMD1 = "\\QUIT";
+    constexpr const char* QUIT_CMD2 = "\\Q";
+    constexpr const char* QUIT_CMD3 = "\\quit";
+    constexpr const char* RESTART_CMD1 = "\\RESTART";
+    constexpr const char* RESTART_CMD2 = "\\R";
+    constexpr const char* RESTART_CMD3 = "\\restart";
+    constexpr const char* MENU_CMD1 = "\\MENU";
+    constexpr const char* MENU_CMD2 = "\\M";
+    constexpr const char* MENU_CMD3 = "\\menu";
+    constexpr const char* CMD_HELPER = "Key in \\RESTART or \\MENU or \\QUIT if you want";
+    constexpr const char* INPUT_HELPER = "Key in a pair of character to play, e.g., AB for the first row & the second col";
+    constexpr const char* NEW_GC_ERROR = "An error occurs when we new GameController()";
+    constexpr const char* CMD_CLEAR = "\033[2J";
+    void cmd_clear() { std::cout << CMD_CLEAR << "\n"; }
+    constexpr const char* UNKNOWN_PIECE_STATUS = "Unknown piece status";
+    constexpr const char* UNKNOWN_COMMAND_TYPE = "Unknown CommandType by HumanPlayer";
 
 }  // endof namespace mfwu
 

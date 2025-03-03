@@ -4,7 +4,7 @@
 namespace mfwu {
 
 class Logger {
-
+public:
     void new_game() {}
 
 };  // endof class Logger

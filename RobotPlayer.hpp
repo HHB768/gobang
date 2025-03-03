@@ -7,6 +7,9 @@ namespace mfwu {
 
 class RobotPlayer : public Player {
 public:
+    RobotPlayer() : Player() {}
+    RobotPlayer(std::shared_ptr<ChessBoard_base> board, Piece::Color color) : Player(board, color) {}
+
     virtual CommandType play() override {
         Position pos = get_best_position();
         this->place(pos);
@@ -22,6 +25,9 @@ protected:
 };  // endof class RobotPlayer
 
 class DebugRobot : public RobotPlayer {
+public:
+    DebugRobot() : RobotPlayer() {}
+    DebugRobot(std::shared_ptr<ChessBoard_base> board, Piece::Color color) : RobotPlayer(board, color) {}
 private:
     Position get_best_position() const override {
         size_t len = this->board_->size();

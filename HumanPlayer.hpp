@@ -7,6 +7,9 @@ namespace mfwu {
 
 class HumanPlayer : public Player {
 public:
+    HumanPlayer() : Player() {}
+    HumanPlayer(std::shared_ptr<ChessBoard_base> board, Piece::Color color) : Player(board, color) {}
+
     virtual CommandType play() override {
         Command cmd = this->board_->get_command();
         switch (cmd.type) {

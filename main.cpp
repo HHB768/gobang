@@ -20,10 +20,10 @@ int main() {
 
 #ifdef __CMD_MODE__
 #define __CHESSBOARD_TYPE__ CMDBoard
-        using Human_type = CMDPlayer;
+        using Human_type = HumanPlayer;
 #else 
 #define __CHESSBOARD_TYPE__ GUIBoard
-        using Human_type = GUIPlayer;
+        using Human_type = HumanPlayer;
 #endif
 
         using Robot_type = DebugRobot;
