@@ -2,7 +2,7 @@
 #define __CHESSBOARD_HPP__
 
 #include "utils.hpp"
-
+#include "CmdFramework.hpp"
 
 namespace mfwu {
 
@@ -319,15 +319,10 @@ private:
 template <BoardSize Size=BoardSize::Small>
 class CMDBoard : public ChessBoard<Size> {
 public:
-    static constexpr size_t frwk_size = 2 * (3 + static_cast<size_t>(Size));
     CMDBoard() 
-        : ChessBoard<Size>(), framework_(frwk_size, std::string(frwk_size, inner_border_char)) {
-        _init_framework();
-    }
+        : ChessBoard<Size>(), framework_() {}
     CMDBoard(const std::vector<std::vector<size_t>>& input_board) 
-        : ChessBoard<Size>(input_board), framework_(frwk_size, std::string(frwk_size, inner_border_char)) {
-        _init_framework();
-        reconstruct_framework();
+        : ChessBoard<Size>(input_board), framework_(this->board_) {
     }
     CMDBoard(const CMDBoard& board) = default;  // really work?
     CMDBoard(CMDBoard&& board) = default;
@@ -337,12 +332,14 @@ public:
 
     void update(const Piece& piece) override {
         ChessBoard<Size>::update(piece);
-        update_framework();
+        framework_.update_step(this->last_piece_);
     }
 
     Command get_command() override {
         std::string input_str;
+        std::cout << "wait input\n";
         std::cin >> input_str;
+        std::cout << "input\n";
         Command ret = CMDBoard::validate_input(input_str);
         if (ret.pos.row < 0 or ret.pos.col < 0) {
             std::cout << "invalid input, plz try again\n";
@@ -352,9 +349,9 @@ public:
     }
     void show() const override {
         cmd_clear();
+        show_board();
         std::cout << CMD_HELPER << "\n";
         std::cout << INPUT_HELPER << "\n";
-        show_board();
     }
     void refresh() override {
         show();
@@ -396,166 +393,10 @@ private:
         // methods to locate the position of [i, j] on the board_  25.03.03
         // TODO: better design:
         // make framework a class
-        for (const std::string& line : framework_) {
-            std::cout << line << "\n";
-        }
-    }
-    void print_empty_position(size_t r, size_t c) {
-        framework_[get_row_in_framework(r)][get_col_in_framework(c)] = empty_position_char;
-    }
-    void print_white_piece(size_t r, size_t c) {
-        framework_[get_row_in_framework(r)][get_col_in_framework(c)] = white_piece_char;
-    }
-    void print_white_sp_piece(size_t r, size_t c) {
-        framework_[get_row_in_framework(r)][get_col_in_framework(c)] = white_sp_piece_char;
-    }
-    void print_black_piece(size_t r, size_t c) {
-        framework_[get_row_in_framework(r)][get_col_in_framework(c)] = black_piece_char;
-    }
-    void print_black_sp_piece(size_t r, size_t c) {
-        framework_[get_row_in_framework(r)][get_col_in_framework(c)] = black_sp_piece_char;
-    }
-    void print_unknown_status_piece(size_t r, size_t c) {
-        framework_[get_row_in_framework(r)][get_col_in_framework(c)] = unknown_status_piece_char;
-    }
-    static constexpr const char empty_position_char = '+';
-    static constexpr const char white_piece_char = 'O';
-    static constexpr const char white_sp_piece_char = '@';
-    static constexpr const char black_piece_char = 'X';
-    static constexpr const char black_sp_piece_char = '*';
-    static constexpr const char unknown_status_piece_char = '!';
-    static constexpr const char inner_border_char = ' ';
-    static constexpr const char outer_border_char = '.';
-    static constexpr const char highlight_up_down_char = '-';
-    static constexpr const char highlight_left_right_char = '|';
-
-    std::vector<std::string> framework_;
-    //  board: 2 * 3
-    /*
-            A B C 
-          . . . . .
-        A . O + X .
-        B . + O + .
-          . . . . .
-
-        framework:   row : 2 + 2 + 2 * 2 + 2 = 2 * (3 + 2)
-                     col : 2 + 2 + 3 * 2 + 2 = 2 * (3 + 3)
-
-        [i, j] -> [4 + 2 * i, 4 + 2 * j]
-    */
-    static std::pair<size_t, size_t> get_pos_in_framework(size_t r, size_t c) {
-        return {get_row_in_framework(r), get_col_in_framework(c)};
-    }
-    static size_t get_row_in_framework(size_t r) {
-        return 4 + 2 * r;
-    }
-    static size_t get_col_in_framework(size_t c) {
-        return 4 + 2 * c;
-    }
-    void remove_highlight() {
-        for (std::string& line : framework_) {
-            for (char& c : line) {
-                if (c == highlight_up_down_char 
-                    or c == highlight_left_right_char) {
-                    c = inner_border_char;
-                }
-            }
-        }
-    }
-    void add_highlight() {
-        auto [row, col] = get_pos_in_framework(this->last_piece_.row, 
-                                               this->last_piece_.col);
-        framework_[row - 1][col] = highlight_up_down_char;
-        framework_[row + 1][col] = highlight_up_down_char;
-        framework_[row][col - 1] = highlight_left_right_char;
-        framework_[row][col + 1] = highlight_left_right_char;
-    }
-    void add_highlight(size_t r, size_t c) {
-        // assert(...)
-        auto [row, col] = get_pos_in_framework(r, c);
-        framework_[row - 1][col] = highlight_up_down_char;
-        framework_[row + 1][col] = highlight_up_down_char;
-        framework_[row][col - 1] = highlight_left_right_char;
-        framework_[row][col + 1] = highlight_left_right_char;
-    }
-    void remove_sp() {
-        for (auto line : framework_) {
-            for (auto c : line) {
-                if (c == white_sp_piece_char) {
-                    c = white_piece_char;
-                } else if (c == black_sp_piece_char) {
-                    c = black_piece_char;
-                }
-            }
-        }
-    }
-    void add_sp() {
-        auto [row, col] = get_pos_in_framework(this->last_piece_.row, 
-                                               this->last_piece_.col);
-        if (this->last_piece_.color == Piece::Color::BlackSp) {
-            framework_[row][col] = black_sp_piece_char;
-        } else if (this->last_piece_.color == Piece::Color::WhiteSp) {
-            framework_[row][col] = white_sp_piece_char;
-        } else {
-            std::cout << "Last piece is not highlighted\n";
-        }
-    }
-    void update_framework() {
-        remove_highlight(); add_highlight();
-        remove_sp(); add_sp();
-    }
-    void _init_framework() {
-        for (int i = 0; i <= static_cast<size_t>(Size); i++) {
-            framework_[0][get_col_in_framework(i)] = 'A' + i;
-        }
-        for (int j = 0; j <= static_cast<size_t>(Size); j++) {
-            framework_[get_row_in_framework(j)][0] = 'A' + j;
-        }
-        for (int i = 0; i <= static_cast<size_t>(Size); i++) {
-            framework_[get_row_in_framework(-1)][get_col_in_framework(i)] = 'A' + i;
-        }
-        for (int i = 0; i <= static_cast<size_t>(Size); i++) {
-            framework_[get_row_in_framework(static_cast<size_t>(Size))][get_col_in_framework(i)] = 'A' + i;
-        }
-        for (int j = 0; j <= static_cast<size_t>(Size); j++) {
-            framework_[get_row_in_framework(j)][get_row_in_framework(-1)] = 'A' + j;
-        }
-        for (int j = 0; j <= static_cast<size_t>(Size); j++) {
-            framework_[get_row_in_framework(j)][get_row_in_framework(static_cast<size_t>(Size))] = 'A' + j;
-        }
-    }
-    void reconstruct_framework() {
-        for (int i = 0; i <= static_cast<size_t>(Size); i++) {
-            for (int j = 0; j <= static_cast<size_t>(Size); j++) {
-                switch (this->board_[i][j]->get_status()) {
-                // Invalid = 0,
-                // White   = 1,
-                // WhiteSp = 2,
-                // Black   = 3,
-                // BlackSp = 4
-                case static_cast<size_t>(Piece::Color::Invalid) : {  // empty
-                    print_empty_position(i, j);
-                } break;
-                case static_cast<size_t>(Piece::Color::White): {
-                    print_white_piece(i, j);
-                } break;
-                case static_cast<size_t>(Piece::Color::WhiteSp) : {
-                    print_white_sp_piece(i, j);
-                } break;
-                case static_cast<size_t>(Piece::Color::Black) : {
-                    print_black_piece(i, j);
-                } break;
-                case static_cast<size_t>(Piece::Color::BlackSp) : {
-                    print_black_sp_piece(i, j);
-                } break;
-                default:
-                    std::cerr << UNKNOWN_PIECE_STATUS << "\n";
-                    print_unknown_status_piece(i, j);
-                }
-            }
-        }
+        framework_.show();
     }
     
+    DisplayFramework<Size> framework_;
 };  // endof class CMDBoard
 
 }  // endof namespace mfwu

@@ -15,8 +15,7 @@ int main() {
         BoardSize size = print_size_choice_help_gui();
 #endif  // __CMD_MODE__
 
-        GameController_base_base* game = nullptr;
-    // use std::unique_ptr, but nonsense
+        std::unique_ptr<GameController_base_base> game = nullptr;
 
 #ifdef __CMD_MODE__
 #define __CHESSBOARD_TYPE__ CMDBoard
@@ -33,13 +32,13 @@ int main() {
         case GameMode::PVE : {
             switch (size) {
             case BoardSize::Small : {
-                game = new GameController<Human_type, Robot_type, __CHESSBOARD_TYPE__<BoardSize::Small>>();
+                game = std::make_unique<GameController<Human_type, Robot_type, __CHESSBOARD_TYPE__<BoardSize::Small>>>();
             }; break;
             case BoardSize::Middle : {
-                game = new GameController<Human_type, Robot_type, __CHESSBOARD_TYPE__<BoardSize::Middle>>();
+                game = std::make_unique<GameController<Human_type, Robot_type, __CHESSBOARD_TYPE__<BoardSize::Middle>>>();
             }; break;
             case BoardSize::Large : {
-                game = new GameController<Human_type, Robot_type, __CHESSBOARD_TYPE__<BoardSize::Large>>();
+                game = std::make_unique<GameController<Human_type, Robot_type, __CHESSBOARD_TYPE__<BoardSize::Large>>>();
             }; break;
             default:
                 std::cerr << NEW_GC_ERROR << "\n";
@@ -48,13 +47,13 @@ int main() {
         case GameMode::PVP : {
             switch (size) {
             case BoardSize::Small : {
-                game = new GameController<Human_type, Human_type, __CHESSBOARD_TYPE__<BoardSize::Small>>();
+                game = std::make_unique<GameController<Human_type, Human_type, __CHESSBOARD_TYPE__<BoardSize::Small>>>();
             }; break;
             case BoardSize::Middle : {
-                game = new GameController<Human_type, Human_type, __CHESSBOARD_TYPE__<BoardSize::Middle>>();
+                game = std::make_unique<GameController<Human_type, Human_type, __CHESSBOARD_TYPE__<BoardSize::Middle>>>();
             }; break;
             case BoardSize::Large : {
-                game = new GameController<Human_type, Human_type, __CHESSBOARD_TYPE__<BoardSize::Large>>();
+                game = std::make_unique<GameController<Human_type, Human_type, __CHESSBOARD_TYPE__<BoardSize::Large>>>();
             }; break;
             default:
             std::cerr << NEW_GC_ERROR << "\n";
@@ -63,13 +62,13 @@ int main() {
         case GameMode::EVE : {
             switch (size) {
             case BoardSize::Small : {
-                game = new GameController<Robot_type, Robot_type, __CHESSBOARD_TYPE__<BoardSize::Small>>();
+                game = std::make_unique< GameController<Robot_type, Robot_type, __CHESSBOARD_TYPE__<BoardSize::Small>>>();
             }; break;
             case BoardSize::Middle : {
-                game = new GameController<Robot_type, Robot_type, __CHESSBOARD_TYPE__<BoardSize::Middle>>();
+                game = std::make_unique<GameController<Robot_type, Robot_type, __CHESSBOARD_TYPE__<BoardSize::Middle>>>();
             }; break;
             case BoardSize::Large : {
-                game = new GameController<Robot_type, Robot_type, __CHESSBOARD_TYPE__<BoardSize::Large>>();
+                game = std::make_unique< GameController<Robot_type, Robot_type, __CHESSBOARD_TYPE__<BoardSize::Large>>>();
             }; break;
             default:
             std::cerr << NEW_GC_ERROR << "\n";
@@ -108,19 +107,13 @@ int main() {
             exit(0);
         }
         int status = 42;
-        int ret = wait(&status);
-        if(-1 == ret){
-            perror("wait");
-            return 1;
-        }
+        wait(&status);
 
-        printf("fork exit success;recovery fork resource success\n");
-        
-        if(WIFEXITED(status)){
+        if (WIFEXITED(status)){
             printf("fork exit success status code is %d\n",WEXITSTATUS(status));
-        }else if(WIFSIGNALED(status)){
+        } else if (WIFSIGNALED(status)){
             printf("fork was killed by %d\n",WTERMSIG(status));
-        }else if(WIFSTOPPED(status)){
+        } else if (WIFSTOPPED(status)){
             printf("fork was stop by %d\n",WSTOPSIG(status));
         }
         // return to help menu
