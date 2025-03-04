@@ -107,11 +107,28 @@ int main() {
             }
             exit(0);
         }
-        int status;
-        wait(&status);
+        int status = 42;
+        int ret = wait(&status);
+        if(-1 == ret){
+            perror("wait");
+            return 1;
+        }
+
+        printf("fork exit success;recovery fork resource success\n");
+        
+        if(WIFEXITED(status)){
+            printf("fork exit success status code is %d\n",WEXITSTATUS(status));
+        }else if(WIFSIGNALED(status)){
+            printf("fork was killed by %d\n",WTERMSIG(status));
+        }else if(WIFSTOPPED(status)){
+            printf("fork was stop by %d\n",WSTOPSIG(status));
+        }
         // return to help menu
         if (status) { std::cerr << "last game ends with " << status << "\n"; }
+        // TODO: quit func
     }
 
     return 0;
 }
+
+// TODO: check this->

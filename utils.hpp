@@ -28,7 +28,7 @@ namespace mfwu {
     };  // endof struct Position
     
     struct Piece : public Position {
-        enum class Color {
+        enum class Color : size_t {
             Invalid = 0,
             White   = 1,
             WhiteSp = 2,
@@ -85,35 +85,20 @@ namespace mfwu {
     const std::pair<int, int> dir_up_rihgt   = dirs[6];
     const std::pair<int, int> dir_up_left    = dirs[7];
 
+    struct count_res_4 {
+        int left_right, up_down;
+        int up_left_down_right, up_right_down_left;
+    };  // endof struct count_res_4
+    struct count_res_8 {
+        int right, down, left, up;
+        int down_right, down_left, up_right, up_left;
+    };  // endof struct count_res_8
+
     enum class GameMode : size_t {
         PVE = 0,
         PVP = 1,
         EVE = 2
     };  // endof enum class GameMode
-
-    GameMode print_mode_choice_help_cmd() {
-    
-
-        return GameMode::PVE;
-    }
-    
-    BoardSize print_size_choice_help_cmd() {
-    
-    
-        return BoardSize::Small;
-    }
-    
-    GameMode print_mode_choice_help_gui() {
-        
-    
-        return GameMode::PVE;
-    }
-    
-    BoardSize print_size_choice_help_gui() {
-    
-    
-        return BoardSize::Small;
-    }
 
     enum class CommandType : size_t {
         PIECE = 0,
@@ -148,10 +133,107 @@ namespace mfwu {
     constexpr const char* CMD_HELPER = "Key in \\RESTART or \\MENU or \\QUIT if you want";
     constexpr const char* INPUT_HELPER = "Key in a pair of character to play, e.g., AB for the first row & the second col";
     constexpr const char* NEW_GC_ERROR = "An error occurs when we new GameController()";
-    constexpr const char* CMD_CLEAR = "\033[2J";
-    void cmd_clear() { std::cout << CMD_CLEAR << "\n"; }
+    constexpr const char* CMD_CLEAR = "clear screen\n";
+    void cmd_clear() { std::cout << CMD_CLEAR; }
     constexpr const char* UNKNOWN_PIECE_STATUS = "Unknown piece status";
     constexpr const char* UNKNOWN_COMMAND_TYPE = "Unknown CommandType by HumanPlayer";
+    constexpr const char* MODE_SELECTION_HELPER = "Plz key in your game mode: A.1. PVE, B.2. PVP, C.3, EVE "
+                                                  "default: A";
+    constexpr const char* SIZE_SELECTION_HELPER = "Plz key in your scale of board: A.1 Small, B.2 Middle, C.3. Large"
+                                                  "default: A";
+
+
+    bool is_digit(char c) {
+        return c <= '9' and c >= '0';
+    }
+    bool is_uppercase(char c) {
+        return c <= 'Z' and c >= 'A';
+    }
+    bool is_lowercase(char c) {
+        return c <= 'z' and c >= 'a';
+    }
+
+    GameMode print_mode_choice_help_cmd() {
+        cmd_clear();
+        std::cout << MODE_SELECTION_HELPER << "\n";
+        std::string gamemode;
+        signed char mode = -1;
+        while (mode < 0) {
+            std::cin >> gamemode;
+            if (gamemode.size() == 0) {
+                return GameMode::PVE;
+            }
+            mode = gamemode[0];
+            if (is_digit(mode)) {
+                mode -= '0';
+            } else if (is_uppercase(mode)) {
+                mode -= 'A' - 1;
+            } else if (is_lowercase(mode)) {
+                mode -= 'a' - 1;
+            } else {
+                std::cout << "INVALID MODE SELECTION\n";
+                mode = -1; continue;
+            }
+            switch (mode) {
+                case 1 : return GameMode::PVE;
+                case 2 : return GameMode::PVP;
+                case 3 : return GameMode::EVE;
+                default : {
+                    mode = -2;
+                    std::cout << "Key in 1/2/3 or A/B/C plz\n";
+                }
+            }
+        }
+        
+        return GameMode::EVE;
+    }
+    
+    BoardSize print_size_choice_help_cmd() {
+        cmd_clear();
+        std::cout << SIZE_SELECTION_HELPER << "\n";
+        std::string boardsize;
+        signed char size = -1;
+        while (size < 0) {
+            std::cin >> boardsize;
+            if (boardsize.size() == 0) {
+                return BoardSize::Small;
+            }
+            size = boardsize[0];
+            if (is_digit(size)) {
+                size -= '0';
+            } else if (is_uppercase(size)) {
+                size -= 'A' - 1;
+            } else if (is_lowercase(size)) {
+                size -= 'a' - 1;
+            } else {
+                std::cout << "INVALID SIZE SELECTION\n";
+                size = -1; continue;
+            }
+            switch (size) {
+                case 1 : return BoardSize::Small;
+                case 2 : return BoardSize::Middle;
+                case 3 : return BoardSize::Large;
+                default : {
+                    size = -2;
+                    std::cout << "Key in 1/2/3 or A/B/C plz\n";
+                }
+            }
+        }
+    
+        return BoardSize::Large;
+    }
+    
+    GameMode print_mode_choice_help_gui() {
+        cmd_clear();
+    
+        return GameMode::PVE;
+    }
+    
+    BoardSize print_size_choice_help_gui() {
+        cmd_clear();
+    
+        return BoardSize::Small;
+    }
 
 }  // endof namespace mfwu
 

@@ -6,7 +6,7 @@
 
 namespace mfwu {
 
-class Player;
+// class Player;
 
 class ChessBoard_base {
 public:
@@ -19,15 +19,17 @@ public:
 
     ChessBoard_base() {}
     virtual ~ChessBoard_base() {}
+
+    virtual void reset() = 0;
     const Piece& get_last_piece() const { return last_piece_; }
     virtual void update(const Piece& piece) = 0;
     virtual size_t size() const = 0;
     virtual size_t get_status(int row, int col) const = 0;
     virtual Command get_command() = 0;
-protected:
-    
+
     virtual void show() const = 0;
     virtual void refresh() = 0;
+
 
     virtual int count_left(const Piece&) const = 0;
     virtual int count_right(const Piece&) const = 0;
@@ -38,6 +40,11 @@ protected:
     virtual int count_down_left(const Piece&) const = 0;
     virtual int count_down_right(const Piece&) const = 0;
 
+    virtual int count_dir(const Piece& piece, const std::pair<int, int>& dir) const = 0;
+    virtual void count_dir(const Piece& piece, count_res_8* res) const = 0;
+    virtual void count_dir(const Piece& piece, count_res_4* res) const = 0;
+
+protected:
     Piece last_piece_;
     bool status_;
 };  // endof class ChessBoard_base
@@ -48,56 +55,56 @@ public:
     static constexpr size_t size_ = static_cast<size_t>(Size);
     ChessBoard() 
         : board_(static_cast<size_t>(Size), 
-            std::vector<std::unique_ptr<Position>>(
-                static_cast<size_t>(Size), nullptr)) {
+            std::vector<std::shared_ptr<Position>>(
+                static_cast<size_t>(Size))) {
         _init_board();
     }
     ChessBoard(const std::vector<std::vector<size_t>>& input_board) 
-        : board_(Size, std::vector<std::unique_ptr<Position>>(Size, nullptr)) {
+        : board_(Size, std::vector<std::shared_ptr<Position>>(Size)) {
         for (size_t i = 0; i < static_cast<size_t>(Size); i++) {
             for (size_t j = 0; j < static_cast<size_t>(Size); j++) {
                 switch (input_board[i][j]) {
                 case static_cast<size_t>(Color::Invalid) : {
-                    board_[i][j] = std::make_unique<Position>(i, j);
+                    board_[i][j] = std::make_shared<Position>(i, j);
                 } break;
                 case static_cast<size_t>(Color::White) : {
-                    board_[i][j] = std::make_unique<Position>(Piece(i, j, Color::White));
+                    board_[i][j] = std::make_shared<Position>(Piece(i, j, Color::White));
                 } break;
                 case static_cast<size_t>(Color::Black) : {
-                    board_[i][j] = std::make_unique<Position>(Piece(i, j, Color::Black));
+                    board_[i][j] = std::make_shared<Position>(Piece(i, j, Color::Black));
                 } break;
                 case static_cast<size_t>(Color::BlackSp) : {
-                    board_[i][j] = std::make_unique<Position>(Piece(i, j, Color::BlackSp));
+                    board_[i][j] = std::make_shared<Position>(Piece(i, j, Color::BlackSp));
                 } break;
                 case static_cast<size_t>(Color::WhiteSp) : {
-                    board_[i][j] = std::make_unique<Position>(Piece(i, j, Color::WhiteSp));
+                    board_[i][j] = std::make_shared<Position>(Piece(i, j, Color::WhiteSp));
                 } break;
                 default:
-                    std::cout << "Position [" << i << ", " << j << "] init failed: UNKOWN PIECE COLOR\n"
+                    std::cout << "Position [" << i << ", " << j << "] init failed: UNKOWN PIECE COLOR\n";
                     // TODO: LOG IT
-                    board_[i][j] = std::make_unique<Position>(i, j);
+                    board_[i][j] = std::make_shared<Position>(i, j);
                 }
             }
         }
     }
-    ChessBoard(const ChessBoard& board) = delete;
+    ChessBoard(const ChessBoard& board) = default;
     ChessBoard(ChessBoard&& board) = default;
 
-    ChessBoard operator=(const ChessBoard& board) = delete;
-    ChessBoard operator=(ChessBoard&& board) = default;
+    ChessBoard& operator=(const ChessBoard& board) = default;
+    ChessBoard& operator=(ChessBoard&& board) = default;
 
-    ~ChessBoard() {}
+    virtual ~ChessBoard() {}
     
-    void reset() {
+    void reset() override {
         _init_board();
     }
 
     virtual void update(const Piece& piece) override {
         board_[last_piece_.row][last_piece_.col] 
-            = std::make_unique<Position>(Piece{last_piece_.row, last_piece_.col, 
+            = std::make_shared<Position>(Piece{last_piece_.row, last_piece_.col, 
                                                Piece::Color{last_piece_.get_status() - 1}});
         board_[piece.row][piece.col] 
-            = std::make_unique<Position>(piece);
+            = std::make_shared<Position>(piece);
     }
     size_t get_status(int row, int col) const {
         assert(is_valid_row_col(row, col));
@@ -115,10 +122,10 @@ public:
         return ss.str();
     }
 
-    size_t len() const override { return size(); }
+    size_t len() const { return size(); }
     size_t size() const override { return static_cast<size_t>(Size); }
 
-    int count_left(const Piece& piece) const {
+    int count_left(const Piece& piece) const override {
         int row = piece.row;
         int col = piece.col - 1;
         size_t status = piece.get_status();
@@ -132,7 +139,7 @@ public:
         }
         return cnt;
     }
-    int count_right(const Piece& piece) const {
+    int count_right(const Piece& piece) const override {
         int row = piece.row;
         int col = piece.col + 1;
         size_t status = piece.get_status();
@@ -146,7 +153,7 @@ public:
         }
         return cnt;
     }
-    int count_up(const Piece& piece) const {
+    int count_up(const Piece& piece) const override {
         int row = piece.row - 1;
         int col = piece.col;
         size_t status = piece.get_status();
@@ -160,7 +167,7 @@ public:
         }
         return cnt;
     }
-    int count_down(const Piece& piece) const {
+    int count_down(const Piece& piece) const override {
         int row = piece.row + 1;
         int col = piece.col;
         size_t status = piece.get_status();
@@ -174,7 +181,7 @@ public:
         }
         return cnt;
     } 
-    int count_up_left(const Piece& piece) const {
+    int count_up_left(const Piece& piece) const override {
         int row = piece.row - 1;
         int col = piece.col - 1;
         size_t status = piece.get_status();
@@ -189,7 +196,7 @@ public:
         }
         return cnt;
     }
-    int count_up_right(const Piece& piece) const {
+    int count_up_right(const Piece& piece) const override {
         int row = piece.row - 1;
         int col = piece.col + 1;
         size_t status = piece.get_status();
@@ -204,7 +211,7 @@ public:
         }
         return cnt;
     }
-    int count_down_left(const Piece& piece) const {
+    int count_down_left(const Piece& piece) const override {
         int row = piece.row + 1;
         int col = piece.col - 1;
         size_t status = piece.get_status();
@@ -219,7 +226,7 @@ public:
         }
         return cnt;
     } 
-    int count_down_right(const Piece& piece) const {
+    int count_down_right(const Piece& piece) const override {
         int row = piece.row + 1;
         int col = piece.col + 1;
         size_t status = piece.get_status();
@@ -234,7 +241,7 @@ public:
         }
         return cnt;
     }
-    int count_dir(const Piece& piece, const std::pair<int, int>& dir) const {
+    int count_dir(const Piece& piece, const std::pair<int, int>& dir) const override {
         int row = piece.row + dir.first;
         int col = piece.col + dir.second;
         size_t status = piece.get_status();
@@ -249,12 +256,7 @@ public:
         }
         return cnt;
     }
-    
-    struct count_res_8 {
-        int right, down, left, up;
-        int down_right, down_left, up_right, up_left;
-    };  // endof struct count_res_8
-    void count_dir(const Piece& piece, count_res_8* res) const {
+    void count_dir(const Piece& piece, count_res_8* res) const override {
         res->right = count_right(piece);
         res->down = count_down(piece);
         res->left = count_left(piece);
@@ -264,11 +266,7 @@ public:
         res->up_right = count_up_right(piece);
         res->up_left = count_up_left(piece);
     }
-    struct count_res_4 {
-        int left_right, up_down;
-        int up_left_down_right, up_right_down_left;
-    };  // endof struct count_res_4
-    void count_dir(const Piece& piece, count_res_4* res) const {
+    void count_dir(const Piece& piece, count_res_4* res) const override {
         res->left_right = count_left(piece) + count_right(piece);
         res->up_down    = count_up(piece) + count_down(piece);
         res->up_left_down_right = count_up_left(piece) + count_down_right(piece);
@@ -279,11 +277,12 @@ public:
     virtual void refresh() = 0;
 protected:
     virtual void show_board() const = 0;
+    std::vector<std::vector<std::shared_ptr<Position>>> board_;
 private:
     void _init_board() {
         for (size_t i = 0; i < len(); i++) {
             for (size_t j = 0; j < len(); j++) {
-                board_[i][j] = std::make_unique<Position>(i, j);
+                board_[i][j] = std::make_shared<Position>(i, j);
             }
         }
     } 
@@ -297,54 +296,49 @@ private:
     static bool is_valid_row_col(int row, int col) {
         return is_valid_row(row) && is_valid_col(col);
     }
-
-    std::vector<std::vector<std::unique_ptr<Position>>> board_;
-    
 };  // endof class ChessBoard
 
+// template <BoardSize Size=BoardSize::Small>
+// class GUIBoard : public ChessBoard<Size> {
+// public:
+//     Command get_command() override {
+//         return Command{CommandType::PIECE, {0, 0}};
+//     }
+
+//     void show() const override {
+
+//     }
+//     void refresh() override {
+//         show();
+//     }
+
+//     using Archive_type = std::string;
+
+// };  // endof class GUIBoard
+
 template <BoardSize Size=BoardSize::Small>
-class GUIBoard : public ChessBoard<Size> {
-public:
-    Command get_command() override {
-
-    }
-
-    void show() const override {
-
-    }
-    void refresh() override {
-        show();
-    }
-
-    using Archive_type = std::string;
-
-};  // endof class GUIBoard
-
-template <BoardSize Size=BoardSize::Small>
-class CMDBoard : ChessBoard<Size> {
+class CMDBoard : public ChessBoard<Size> {
 public:
     static constexpr size_t frwk_size = 2 * (3 + static_cast<size_t>(Size));
     CMDBoard() 
-        : ChessBoard<Size>(), framework_(std::vector<std::string>(
-                                    frwk_size, std::string(frwk_size, inner_border_char))) {
+        : ChessBoard<Size>(), framework_(frwk_size, std::string(frwk_size, inner_border_char)) {
         _init_framework();
     }
-    CMDBoard() 
-        : ChessBoard<Size>(), framework_(std::vector<std::string>(
-                                    frwk_size, std::string(frwk_size, inner_border_char))) {
+    CMDBoard(const std::vector<std::vector<size_t>>& input_board) 
+        : ChessBoard<Size>(input_board), framework_(frwk_size, std::string(frwk_size, inner_border_char)) {
         _init_framework();
         reconstruct_framework();
     }
-    CMDBoard(const CMDBoard& board) = delete;
+    CMDBoard(const CMDBoard& board) = default;  // really work?
     CMDBoard(CMDBoard&& board) = default;
 
-    CMDBoard operator=(const CMDBoard& board) = delete;
-    CMDBoard operator=(CMDBoard&& board) = default;
+    CMDBoard& operator=(const CMDBoard& board) = default;
+    CMDBoard& operator=(CMDBoard&& board) = default;
 
     void update(const Piece& piece) override {
-            ChessBoard<Size>::update(piece);
-            update_framework();
-        }
+        ChessBoard<Size>::update(piece);
+        update_framework();
+    }
 
     Command get_command() override {
         std::string input_str;
@@ -352,7 +346,7 @@ public:
         Command ret = CMDBoard::validate_input(input_str);
         if (ret.pos.row < 0 or ret.pos.col < 0) {
             std::cout << "invalid input, plz try again\n";
-            ret = this->wait_input();
+            ret = this->get_command();
         }
         return ret;
     }
@@ -393,7 +387,7 @@ private:
         } else {
             return -1;
         }
-        if (res >= size_) { return -1; }
+        if (res >= static_cast<size_t>(Size)) { return -1; }
         return res;
     }
     void show_board() const {
@@ -435,7 +429,7 @@ private:
     static constexpr const char highlight_up_down_char = '-';
     static constexpr const char highlight_left_right_char = '|';
 
-    std::vector<std::vector<char>> framework_;
+    std::vector<std::string> framework_;
     //  board: 2 * 3
     /*
             A B C 
@@ -487,7 +481,7 @@ private:
     void remove_sp() {
         for (auto line : framework_) {
             for (auto c : line) {
-                if (c == wihte_sp_piece_char) {
+                if (c == white_sp_piece_char) {
                     c = white_piece_char;
                 } else if (c == black_sp_piece_char) {
                     c = black_piece_char;
@@ -501,7 +495,7 @@ private:
         if (this->last_piece_.color == Piece::Color::BlackSp) {
             framework_[row][col] = black_sp_piece_char;
         } else if (this->last_piece_.color == Piece::Color::WhiteSp) {
-            framework_[row][col] = wihte_sp_piece_char;
+            framework_[row][col] = white_sp_piece_char;
         } else {
             std::cout << "Last piece is not highlighted\n";
         }
@@ -533,7 +527,7 @@ private:
     void reconstruct_framework() {
         for (int i = 0; i <= static_cast<size_t>(Size); i++) {
             for (int j = 0; j <= static_cast<size_t>(Size); j++) {
-                switch (board_[i][j]->get_status()) {
+                switch (this->board_[i][j]->get_status()) {
                 // Invalid = 0,
                 // White   = 1,
                 // WhiteSp = 2,

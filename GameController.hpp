@@ -22,7 +22,7 @@ template <typename Player1_type, typename Player2_type, typename ChessBoard_type
 class GameController_base : public GameController_base_base {
 public:
     GameController_base() 
-        : board_(new ChessBoard_type()), 
+        : board_(std::make_shared<ChessBoard_type>()), 
           player1_(board_, Piece::Color::White), 
           player2_(board_, Piece::Color::Black),
           current_player_(player1_),
@@ -31,11 +31,11 @@ public:
           logger_(), archive_() {
         init_game();
     }
-    ~GameController_base() {}
+    virtual ~GameController_base() {}
     
     virtual GameStatus start() {
         CommandType cmd_type;
-        std::thread t(&GameController_base::game_play_task, this, cmd_type);  // we really need this?
+        std::thread t(&GameController_base::game_play_task, this, std::ref(cmd_type));  // we really need this?
         t.join();
         switch (cmd_type) {
         case CommandType::PIECE : {
@@ -78,7 +78,7 @@ public:
 
     virtual bool check_end() const {
         const Piece& p = board_->get_last_piece();
-        typename ChessBoard_type::count_res_4 res;
+        count_res_4 res;
         board_->count_dir(p, &res);
         if (is_end(res)) { return true; }
         else return false;
@@ -92,7 +92,7 @@ public:
         archive_.flush();
     }
     virtual void reset_game() {
-        board_->clear();
+        board_->reset();
         std::swap(player1_.get_color(), player2_.get_color());
         player1_first_ = !player1_first_;
         if (player1_first_) {
@@ -106,7 +106,7 @@ public:
         archive_.flush();
     }
 private:
-    static bool is_end(const Chessboard_type::count_res_4& res) {
+    static bool is_end(const count_res_4& res) {
         if (res.left_right >= 5
             || res.up_down >= 5
             || res.up_left_down_right >= 5
@@ -129,18 +129,26 @@ private:
 };  // endof class GameController_base
 
 template <typename Player1_type, typename Player2_type, typename ChessBoard_type>
-class GameController : public GameController_base<Player1_type, Player2_type, ChessBoard_type>;
-
-template <typename Player1_type, typename Player2_type, BoardSize Size>
-class GameController<Player1_type, Player2_type, GUIBoard<Size>> : public GameController_base<Player1_type, Player2_type, GUIBoard<Size>> {
-
+class GameController : public GameController_base<Player1_type, Player2_type, ChessBoard_type> {
+    GameController() : GameController_base<Player1_type, Player2_type, ChessBoard_type>() {}
+    virtual ~GameController() {}
 };
+
+// template <typename Player1_type, typename Player2_type, BoardSize Size>
+// class GameController<Player1_type, Player2_type, GUIBoard<Size>> : public GameController_base<Player1_type, Player2_type, GUIBoard<Size>> {
+// public:
+//     GameController<Player1_type, Player2_type, GUIBoard<Size>>()
+//         : GameController_base<Player1_type, Player2_type, GUIBoard<Size>>() {}
+//     virtual ~GameController<Player1_type, Player2_type, GUIBoard<Size>>() {}
+// };
 
 
 template <typename Player1_type, typename Player2_type, BoardSize Size>
 class GameController<Player1_type, Player2_type, CMDBoard<Size>> : public GameController_base<Player1_type, Player2_type, CMDBoard<Size>> {
 public:
-
+    GameController<Player1_type, Player2_type, CMDBoard<Size>>() 
+        : GameController_base<Player1_type, Player2_type, CMDBoard<Size>>() {}
+    virtual ~GameController<Player1_type, Player2_type, CMDBoard<Size>>() {}
     
 private:
     
