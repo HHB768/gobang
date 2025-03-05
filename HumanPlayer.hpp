@@ -12,7 +12,6 @@ public:
 
     virtual CommandType play() override {
         Command cmd = this->board_->get_command();
-        std::cout << "get_cmd\n";
         switch (cmd.type) {
         case CommandType::PIECE : {
             this->place(cmd.pos);

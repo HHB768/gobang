@@ -52,10 +52,13 @@ public:
             std::cout << line << "\n";
         }
     }
-
-    void update_step(Piece last_piece) {
-        remove_highlight(); add_highlight(last_piece);
-        remove_sp(); add_sp(last_piece);
+    void remove_last_sp(const Piece& last_piece) {
+        remove_highlight(last_piece.row, last_piece.col);
+        remove_sp(last_piece.row, last_piece.col);
+    }
+    void update_new_sp(Piece last_piece) {
+        add_sp(last_piece);
+        add_highlight(last_piece);
     }
 
     void reconstruct(const std::vector<std::vector<std::shared_ptr<Position>>>& board_) {
@@ -90,6 +93,13 @@ public:
         }
     }
 
+    void load_empty_board() {
+        for (int i = 0; i < static_cast<size_t>(Size); i++) {
+            for (int j = 0; j < static_cast<size_t>(Size); j++) {
+                print_empty_position(i, j);
+            }
+        }
+    }
 
 private:
     void _init_framework() {
@@ -153,6 +163,17 @@ private:
             }
         }
     }
+    void remove_highlight(size_t r, size_t c) {
+        auto [row, col] = get_pos_in_framework(r, c);
+        char* ch = &framework_[row][col - 1];
+        if (*ch == highlight_left_char) {
+            *ch = inner_border_char;
+        }
+        ch = &framework_[row][col + 1];
+        if (*ch == highlight_right_char) {
+            *ch = inner_border_char;
+        }
+    }
     void add_highlight(const Piece& last_piece) {
         auto [row, col] = get_pos_in_framework(last_piece.row, 
                                                last_piece.col);
@@ -180,6 +201,15 @@ private:
             }
         }
     }
+    void remove_sp(size_t r, size_t c) {
+        auto [row, col] = get_pos_in_framework(r, c);
+        char& ch = framework_[row][col];
+        if (ch == white_sp_piece_char) {
+            ch = white_piece_char;
+        } else if (ch == black_sp_piece_char) {
+            ch = black_piece_char;
+        }
+    }
     void add_sp(const Piece& last_piece) {
         auto [row, col] = get_pos_in_framework(last_piece.row, 
                                                last_piece.col);
@@ -189,14 +219,6 @@ private:
             framework_[row][col] = white_sp_piece_char;
         } else {
             std::cout << "Last piece is not highlighted\n";
-        }
-    }
-
-    void load_empty_board() {
-        for (int i = 0; i < static_cast<size_t>(Size); i++) {
-            for (int j = 0; j < static_cast<size_t>(Size); j++) {
-                print_empty_position(i, j);
-            }
         }
     }
 

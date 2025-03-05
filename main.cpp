@@ -78,15 +78,16 @@ int main() {
         std::cerr << NEW_GC_ERROR << "\n";
         }
         
-        auto pid = fork();
-        if (pid == 0) {
+        // auto pid = fork();
+        // if (pid == 0) {
             bool ret_memu_flag = false;
             while (!ret_memu_flag) {
                 GameStatus status = game->start();
                 switch (status) {
                 case GameStatus::RESTART : {
                     while (status == GameStatus::RESTART) {
-                        GameStatus status = game->start();
+                        
+                        status = game->start();  // CAN I?
                     }
                 } /*break;*/
                 case GameStatus::NORMAL : {
@@ -104,21 +105,21 @@ int main() {
                     exit(-1);
                 }
             }
-            exit(0);
-        }
-        int status = 42;
-        wait(&status);
+        //     exit(0);
+        // }
+        // int status = 42;
+        // wait(&status);
 
-        if (WIFEXITED(status)){
-            printf("fork exit success status code is %d\n",WEXITSTATUS(status));
-        } else if (WIFSIGNALED(status)){
-            printf("fork was killed by %d\n",WTERMSIG(status));
-        } else if (WIFSTOPPED(status)){
-            printf("fork was stop by %d\n",WSTOPSIG(status));
-        }
-        // return to help menu
-        if (status) { std::cerr << "last game ends with " << status << "\n"; }
-        // TODO: quit func
+        // if (WIFEXITED(status)){
+        //     printf("fork exit success status code is %d\n",WEXITSTATUS(status));
+        // } else if (WIFSIGNALED(status)){
+        //     printf("fork was killed by %d\n",WTERMSIG(status));
+        // } else if (WIFSTOPPED(status)){
+        //     printf("fork was stop by %d\n",WSTOPSIG(status));
+        // }
+        // // return to help menu
+        // if (status) { std::cerr << "last game ends with " << status << "\n"; }
+        // // TODO: quit func
     }
 
     return 0;

@@ -96,15 +96,18 @@ public:
     virtual ~ChessBoard() {}
     
     void reset() override {
-        _init_board();
+        this->_init_board();
     }
 
     virtual void update(const Piece& piece) override {
-        board_[last_piece_.row][last_piece_.col] 
-            = std::make_shared<Position>(Piece{last_piece_.row, last_piece_.col, 
-                                               Piece::Color{last_piece_.get_status() - 1}});
+        last_piece_ = Piece{piece.row, piece.col, Piece::Color{piece.get_status() + 1}};
+
+        // has been move to rm_last_sp
+        // board_[last_piece_.row][last_piece_.col] 
+        //     = std::make_shared<Position>(Piece{last_piece_.row, last_piece_.col, 
+        //                                        Piece::Color{last_piece_.get_status() - 1}});
         board_[piece.row][piece.col] 
-            = std::make_shared<Position>(piece);
+            = std::make_shared<Piece>(last_piece_);
     }
     size_t get_status(int row, int col) const {
         assert(is_valid_row_col(row, col));
@@ -277,16 +280,15 @@ public:
     virtual void refresh() = 0;
 protected:
     virtual void show_board() const = 0;
-    std::vector<std::vector<std::shared_ptr<Position>>> board_;
-private:
-    void _init_board() {
+    virtual void _init_board() {
         for (size_t i = 0; i < len(); i++) {
             for (size_t j = 0; j < len(); j++) {
                 board_[i][j] = std::make_shared<Position>(i, j);
             }
         }
     } 
-    
+    std::vector<std::vector<std::shared_ptr<Position>>> board_;
+private:
     static bool is_valid_row(int row) {  // i want them static
         return row >= 0 and row < static_cast<size_t>(Size);
     }
@@ -331,18 +333,17 @@ public:
     CMDBoard& operator=(CMDBoard&& board) = default;
 
     void update(const Piece& piece) override {
-        ChessBoard<Size>::update(piece);
-        framework_.update_step(this->last_piece_);
+        rm_last_sp();
+        update_new_piece(piece);
     }
 
     Command get_command() override {
         std::string input_str;
-        std::cout << "wait input\n";
         std::cin >> input_str;
-        std::cout << "input\n";
         Command ret = CMDBoard::validate_input(input_str);
-        if (ret.pos.row < 0 or ret.pos.col < 0) {
-            std::cout << "invalid input, plz try again\n";
+        if (ret.type == CommandType::PIECE 
+            &&ret.pos.row < 0 or ret.pos.col < 0) {
+            std::cout << "invalid piece position, plz try again\n";
             ret = this->get_command();
         }
         return ret;
@@ -358,7 +359,21 @@ public:
     }
 
 private:
-    static Command validate_input(const std::string& str) {
+    void _init_board() override {
+        ChessBoard<Size>::_init_board();
+        framework_.load_empty_board();
+    } 
+    void rm_last_sp() {
+        if (this->last_piece_.get_status() == 0) { return ; }  // empty last_piece
+        framework_.remove_last_sp(this->last_piece_);
+        this->last_piece_.color = Piece::Color{this->last_piece_.get_status() - 1};
+    }
+    void update_new_piece(const Piece& piece) {
+        ChessBoard<Size>::update(piece);
+        framework_.update_new_sp(this->last_piece_);
+    }
+
+    Command validate_input(const std::string& str) {
         if (str == std::string(QUIT_CMD1)
             || str == std::string(QUIT_CMD2)
             || str == std::string(QUIT_CMD3)) {
@@ -373,7 +388,12 @@ private:
             return Command{CommandType::RESTART, {}};
         }
         if (str.size() != 2) return Command{CommandType::INVALID, {}};
-        return Command{CommandType::PIECE, {get_int(str[0]), get_int(str[1])}};
+        auto ret = Command{CommandType::PIECE, {get_int(str[0]), get_int(str[1])}};
+        if (this->board_[ret.pos.row][ret.pos.col]->get_status()) {
+            ret.pos.row = ret.pos.col = -1;  // occupied pos
+            std::cout << "invalid position: occupied\n";
+        }
+        return ret;
     }
     static int get_int(char c) {
         int res = -1;

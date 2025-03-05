@@ -25,8 +25,8 @@ public:
         : board_(std::make_shared<ChessBoard_type>()), 
           player1_(board_, Piece::Color::White), 
           player2_(board_, Piece::Color::Black),
-          current_player_(player1_),
-          idle_player_(player2_),
+          current_player_(&player1_),
+          idle_player_(&player2_),
           player1_first_(true),
           logger_(), archive_() {
         init_game();
@@ -34,9 +34,11 @@ public:
     virtual ~GameController_base() {}
     
     virtual GameStatus start() {
+
         CommandType cmd_type;
-        std::thread t(&GameController_base::game_play_task, this, std::ref(cmd_type));  // we really need this?
-        t.join();
+        // std::thread t(&GameController_base::game_play_task, this, std::ref(cmd_type));  // we really need this?
+        this->game_play_task(cmd_type);
+        // t.join();
         switch (cmd_type) {
         case CommandType::PIECE : {
             return GameStatus::NORMAL;
@@ -57,21 +59,21 @@ public:
     }
     
     virtual void game_play_task(CommandType& cmd_type) {
-        while (!check_end()) {
-            cmd_type = advance();
+        do {
+            cmd_type = this->advance();
             if (cmd_type != CommandType::PIECE) {
                 return ;
             }
-        }
+        } while (!this->check_end());
     }
     
     virtual CommandType advance() {
-        CommandType cmd_type = current_player_.play();
+        CommandType cmd_type = current_player_->play();
         if (cmd_type == CommandType::PIECE) {
             board_->refresh();
-            Player& temp = current_player_;
+            Player* temp = current_player_;
             current_player_ = idle_player_;
-            idle_player_ = temp;  // CHECK
+            idle_player_ = temp;
         }
         return cmd_type;
     }
@@ -86,8 +88,14 @@ public:
     virtual void init_game() {
         board_->show();
         player1_first_ = true;
-        current_player_ = player1_;
-        idle_player_ = player2_;
+        current_player_ = &player1_;
+        idle_player_ = &player2_;
+        logger_.new_game();
+        archive_.flush();
+    }
+    virtual void restart_game() {
+        board_->reset();
+        // doesnt swap
         logger_.new_game();
         archive_.flush();
     }
@@ -96,21 +104,22 @@ public:
         std::swap(player1_.get_color(), player2_.get_color());
         player1_first_ = !player1_first_;
         if (player1_first_) {
-            current_player_ = player1_;
-            idle_player_ = player2_;
+            current_player_ = &player1_;
+            idle_player_ = &player2_;
         } else {
-            current_player_ = player2_;
-            idle_player_ = player1_;
+            current_player_ = &player2_;
+            idle_player_ = &player1_;
         }
         logger_.new_game();
         archive_.flush();
     }
 private:
     static bool is_end(const count_res_4& res) {
-        if (res.left_right >= 5
-            || res.up_down >= 5
-            || res.up_left_down_right >= 5
-            || res.up_right_down_left >= 5) {
+        constexpr size_t NEED = 5;
+        if (res.left_right >= NEED - 1
+            || res.up_down >= NEED - 1
+            || res.up_left_down_right >= NEED - 1
+            || res.up_right_down_left >= NEED - 1) {
             return true;
         } else return false;
     }
@@ -118,8 +127,8 @@ private:
     std::shared_ptr<ChessBoard_base> board_;
     Player1_type player1_;
     Player2_type player2_;
-    Player& current_player_;
-    Player& idle_player_;
+    Player* current_player_;  // doesnt alloc any mem
+    Player* idle_player_;
     bool player1_first_;
 
     Logger logger_;

@@ -36,6 +36,7 @@ private:
             row = rand() % len;
             col = rand() % len;
         }
+        sleep(1);
         return {row, col};
     }
 
