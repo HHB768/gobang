@@ -85,13 +85,13 @@ int main() {
                 GameStatus status = game->start();
                 switch (status) {
                 case GameStatus::RESTART : {
-                    while (status == GameStatus::RESTART) {
-                        
-                        status = game->start();  // CAN I?
-                    }
+                    game->restart_game_init();
                 } /*break;*/
                 case GameStatus::NORMAL : {
-                    game->reset_game();
+                    game->reset_game_init();
+                    std::cout << "Tap 'Enter' to start a new game\n";
+                    std::string str;
+                    std::cin >> str;
                 } break;
                 case GameStatus::MENU : {
                     ret_memu_flag = true;

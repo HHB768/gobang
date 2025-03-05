@@ -29,7 +29,7 @@ public:
 
     virtual void show() const = 0;
     virtual void refresh() = 0;
-
+    virtual void winner_display(const Piece::Color& color) const = 0;
 
     virtual int count_left(const Piece&) const = 0;
     virtual int count_right(const Piece&) const = 0;
@@ -341,8 +341,9 @@ public:
         std::string input_str;
         std::cin >> input_str;
         Command ret = CMDBoard::validate_input(input_str);
-        if (ret.type == CommandType::PIECE 
-            &&ret.pos.row < 0 or ret.pos.col < 0) {
+        if (ret.type == CommandType::INVALID
+            ||(ret.type == CommandType::PIECE 
+               && (ret.pos.row < 0 or ret.pos.col < 0))) {
             std::cout << "invalid piece position, plz try again\n";
             ret = this->get_command();
         }
@@ -359,6 +360,23 @@ public:
     }
 
 private:
+    void winner_display(const Piece::Color& color) const override {
+        std::stringstream ss;
+        if (Piece::is_same_color(color, Piece::Color::Black)) {
+            ss << DisplayFramework<Size>::black_piece_char;
+            ss << DisplayFramework<Size>::black_sp_piece_char;
+            ss << " Black player wins! ";
+            ss << DisplayFramework<Size>::black_sp_piece_char;
+            ss << DisplayFramework<Size>::black_piece_char << "\n";
+        } else {
+            ss << DisplayFramework<Size>::white_piece_char;
+            ss << DisplayFramework<Size>::white_sp_piece_char;
+            ss << " White player wins! ";
+            ss << DisplayFramework<Size>::white_sp_piece_char;
+            ss << DisplayFramework<Size>::white_piece_char << "\n";
+        }
+        std::cout << ss.str();
+    }
     void _init_board() override {
         ChessBoard<Size>::_init_board();
         framework_.load_empty_board();
@@ -389,6 +407,7 @@ private:
         }
         if (str.size() != 2) return Command{CommandType::INVALID, {}};
         auto ret = Command{CommandType::PIECE, {get_int(str[0]), get_int(str[1])}};
+        if (ret.pos.row == -1 or ret.pos.col == -1) return ret;
         if (this->board_[ret.pos.row][ret.pos.col]->get_status()) {
             ret.pos.row = ret.pos.col = -1;  // occupied pos
             std::cout << "invalid position: occupied\n";

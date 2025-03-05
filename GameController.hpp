@@ -15,7 +15,8 @@ namespace mfwu {
 class GameController_base_base {
 public:
     virtual GameStatus start() = 0;
-    virtual void reset_game() = 0;
+    virtual void restart_game_init() = 0;
+    virtual void reset_game_init() = 0;
 };  // endof class GameController_base_base
 
 template <typename Player1_type, typename Player2_type, typename ChessBoard_type>  // TODO: type check
@@ -65,6 +66,8 @@ public:
                 return ;
             }
         } while (!this->check_end());
+        // only victory comes here
+        winner_display(idle_player_->get_color());
     }
     
     virtual CommandType advance() {
@@ -93,13 +96,13 @@ public:
         logger_.new_game();
         archive_.flush();
     }
-    virtual void restart_game() {
+    virtual void restart_game_init() {
         board_->reset();
         // doesnt swap
         logger_.new_game();
         archive_.flush();
     }
-    virtual void reset_game() {
+    virtual void reset_game_init() {
         board_->reset();
         std::swap(player1_.get_color(), player2_.get_color());
         player1_first_ = !player1_first_;
@@ -113,6 +116,10 @@ public:
         logger_.new_game();
         archive_.flush();
     }
+protected:
+    virtual void winner_display(const Piece::Color& color) const {
+        board_->winner_display(color);
+    }
 private:
     static bool is_end(const count_res_4& res) {
         constexpr size_t NEED = 5;
@@ -123,6 +130,7 @@ private:
             return true;
         } else return false;
     }
+    
 
     std::shared_ptr<ChessBoard_base> board_;
     Player1_type player1_;
