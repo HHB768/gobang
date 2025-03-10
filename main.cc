@@ -1,4 +1,5 @@
 #include "GameController.hpp"
+#include <cstdlib>
 using namespace mfwu;
 
 #define __CMD_MODE__
@@ -86,12 +87,12 @@ int main() {
                 switch (status) {
                 case GameStatus::RESTART : {
                     game->restart_game_init();
-                } /*break;*/
+                } break;
                 case GameStatus::NORMAL : {
+                    std::cout << PRESS_ANY_KEY_HELPER << "\n";
+                    sleep(1);  // TODO: del this after transfering to win platf
+                    fgetc(stdin);
                     game->reset_game_init();
-                    std::cout << "Tap 'Enter' to start a new game\n";
-                    std::string str;
-                    std::cin >> str;
                 } break;
                 case GameStatus::MENU : {
                     ret_memu_flag = true;

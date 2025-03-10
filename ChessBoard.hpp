@@ -29,7 +29,7 @@ public:
 
     virtual void show() const = 0;
     virtual void refresh() = 0;
-    virtual void winner_display(const Piece::Color& color) const = 0;
+    virtual void winner_display(const Piece::Color&) = 0;
 
     virtual int count_left(const Piece&) const = 0;
     virtual int count_right(const Piece&) const = 0;
@@ -286,6 +286,7 @@ protected:
                 board_[i][j] = std::make_shared<Position>(i, j);
             }
         }
+        last_piece_ = Piece{Position{-1, -1}, Piece::Color::Invalid};
     } 
     std::vector<std::vector<std::shared_ptr<Position>>> board_;
 private:
@@ -339,6 +340,8 @@ public:
 
     Command get_command() override {
         std::string input_str;
+        std::cout << CMD_HELPER << "\n";
+        std::cout << INPUT_HELPER << "\n";
         std::cin >> input_str;
         Command ret = CMDBoard::validate_input(input_str);
         if (ret.type == CommandType::INVALID
@@ -352,31 +355,115 @@ public:
     void show() const override {
         cmd_clear();
         show_board();
-        std::cout << CMD_HELPER << "\n";
-        std::cout << INPUT_HELPER << "\n";
     }
     void refresh() override {
         show();
     }
 
 private:
-    void winner_display(const Piece::Color& color) const override {
-        std::stringstream ss;
+    static std::string winner_printer(const std::string& winner_name, const Piece::Color& color) {
+        char piece_char, sp_piece_char;
         if (Piece::is_same_color(color, Piece::Color::Black)) {
-            ss << DisplayFramework<Size>::black_piece_char;
-            ss << DisplayFramework<Size>::black_sp_piece_char;
-            ss << " Black player wins! ";
-            ss << DisplayFramework<Size>::black_sp_piece_char;
-            ss << DisplayFramework<Size>::black_piece_char << "\n";
+            piece_char = DisplayFramework<Size>::black_piece_char;
+            sp_piece_char = DisplayFramework<Size>::black_sp_piece_char;
         } else {
-            ss << DisplayFramework<Size>::white_piece_char;
-            ss << DisplayFramework<Size>::white_sp_piece_char;
-            ss << " White player wins! ";
-            ss << DisplayFramework<Size>::white_sp_piece_char;
-            ss << DisplayFramework<Size>::white_piece_char << "\n";
+            piece_char = DisplayFramework<Size>::white_piece_char;
+            sp_piece_char = DisplayFramework<Size>::white_sp_piece_char;
         }
-        std::cout << ss.str();
+        std::string str(3, sp_piece_char);
+        str += " --- ";
+        str += winner_name;
+        str += " wins! --- ";
+        str += std::string(3, sp_piece_char);
+        std::stringstream ss;
+        ss << std::string(str.size(), piece_char) << "\n";
+        ss << str << "\n";
+        ss << std::string(str.size(), piece_char) << "\n";
+        return ss.str();
     }
+    void winner_display(const Piece::Color&) override {
+        show_pieces_in_a_row();
+        if (Piece::is_same_color(this->last_piece_.color, 
+                                 Piece::Color::Black)) {
+            std::cout << winner_printer("Black player", Piece::Color::Black);
+        } else {
+            std::cout << winner_printer("White player", Piece::Color::White);
+        }
+        std::cout << "\n";
+    }
+    void show_pieces_in_a_row() {
+        count_res_8 res;
+        this->count_dir(this->last_piece_, &res);
+        for (int i = 0; i < 10; i++) {
+            if (res.left + res.right >= NEED - 1) {
+                display_left_right(this->last_piece_, res.left, res.right);
+            } else if (res.up + res.down >= NEED - 1) {
+                display_up_down(this->last_piece_, res.up, res.down);
+            } else if (res.up_left + res.down_right >= NEED - 1) {
+                display_up_left_down_right(
+                    this->last_piece_, res.up_left, res.down_right
+                );
+            } else if (res.down_left + res.up_right >= NEED - 1) {
+                display_down_left_up_right(
+                    this->last_piece_, res.down_left, res.up_right
+                );
+            } else {
+                std::cerr << "NOT END YET\n";
+            }  
+            usleep(200000);
+        }
+    }
+    static constexpr int usec = 100000;
+    void display_left_right(const Piece& piece, int left, int right) {
+        int row = piece.row, col = piece.col;
+        while (left > 0 or right > 0) {
+            if (left > 0) { framework_.set_highlight(row, col - left); }
+            if (right > 0) { framework_.set_highlight(row, col + right); }
+            left--; right--;
+            this->show();
+            usleep(usec);
+        }
+        framework_.set_highlight(row, col);
+        this->show();
+    }
+    void display_up_down(const Piece& piece, int up, int down) {
+        int row = piece.row, col = piece.col;
+        while (up > 0 or down > 0) {
+            if (up > 0) { framework_.set_highlight(row - up, col); }
+            if (down > 0) { framework_.set_highlight(row + down, col); }
+            up--; down--;
+            this->show();
+            usleep(usec);
+        }
+        framework_.set_highlight(row, col);
+        this->show();
+    }
+    void display_up_left_down_right(const Piece& piece, int up_left, int down_right) {
+        int row = piece.row, col = piece.col;
+        while (up_left > 0 or down_right > 0) {
+            if (up_left > 0) { framework_.set_highlight(row - up_left, col - up_left); }
+            if (down_right > 0) { framework_.set_highlight(row + down_right, col + down_right); }
+            up_left--; down_right--;
+            this->show();
+            usleep(usec);
+        }
+        framework_.set_highlight(row, col);
+        this->show();
+    }
+    void display_down_left_up_right(const Piece& piece, int down_left, int up_right) {
+        int row = piece.row, col = piece.col;
+        while (down_left > 0 or up_right > 0) {
+            if (down_left > 0) { framework_.set_highlight(row + down_left, col - down_left); }
+            if (up_right > 0) { framework_.set_highlight(row - up_right, col + up_right); }
+            down_left--; up_right--;
+            this->show();
+            usleep(usec);
+        }
+        framework_.set_highlight(row, col);
+        this->show();
+    }
+
+
     void _init_board() override {
         ChessBoard<Size>::_init_board();
         framework_.load_empty_board();
@@ -404,6 +491,8 @@ private:
             || str == std::string(RESTART_CMD2)
             || str == std::string(RESTART_CMD3)) {
             return Command{CommandType::RESTART, {}};
+        } else if (str == std::string(XQ4GB_CMD)) {
+            return Command{CommandType::XQ4GB};
         }
         if (str.size() != 2) return Command{CommandType::INVALID, {}};
         auto ret = Command{CommandType::PIECE, {get_int(str[0]), get_int(str[1])}};
@@ -416,9 +505,9 @@ private:
     }
     static int get_int(char c) {
         int res = -1;
-        if ('a' <= c && c <= 'z') {
+        if (is_lowercase(c)) {
             res = c - 'a';
-        } else if ('A' <= c && c <= 'Z') {
+        } else if (is_uppercase(c)) {
             res = c - 'A';
         } else {
             return -1;

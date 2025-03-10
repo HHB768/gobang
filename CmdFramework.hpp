@@ -99,6 +99,10 @@ public:
                 print_empty_position(i, j);
             }
         }
+        remove_highlight();
+    }
+    void set_highlight(size_t r, size_t c) {
+        add_highlight(r, c);
     }
 
 private:

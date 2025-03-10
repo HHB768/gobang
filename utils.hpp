@@ -105,7 +105,8 @@ namespace mfwu {
         RESTART = 1,
         MENU = 2,
         QUIT = 3,
-        INVALID = 4
+        INVALID = 4,
+        XQ4GB = 5
     };  // endof enum class CommandType
     struct Command {
         CommandType type;
@@ -130,17 +131,22 @@ namespace mfwu {
     constexpr const char* MENU_CMD1 = "\\MENU";
     constexpr const char* MENU_CMD2 = "\\M";
     constexpr const char* MENU_CMD3 = "\\menu";
+    constexpr const char* XQ4GB_CMD = "\\XQ4GB";
     constexpr const char* CMD_HELPER = "Key in \\RESTART or \\MENU or \\QUIT if you want";
     constexpr const char* INPUT_HELPER = "Key in a pair of character to play, e.g., AB for the first row & the second col";
     constexpr const char* NEW_GC_ERROR = "An error occurs when we new GameController()";
-    constexpr const char* CMD_CLEAR = "clear screen\n";  // \033[2J\033[1;1H
+    // constexpr const char* CMD_CLEAR = "clear screen\n";
+    constexpr const char* CMD_CLEAR = "\033[2J\033[1;1H";
     void cmd_clear() { std::cout << CMD_CLEAR; }
     constexpr const char* UNKNOWN_PIECE_STATUS = "Unknown piece status";
     constexpr const char* UNKNOWN_COMMAND_TYPE = "Unknown CommandType by HumanPlayer";
     constexpr const char* MODE_SELECTION_HELPER = "Plz key in your game mode: A.1. PVE, B.2. PVP, C.3. EVE, "
                                                   "default: A";
+    constexpr const char* INVALID_MODE_HELPER = "INVALID MODE SELECTION";
     constexpr const char* SIZE_SELECTION_HELPER = "Plz key in your scale of board: A.1 Small, B.2 Middle, C.3. Large, "
                                                   "default: A";
+    constexpr const char* INVALID_SIZE_HELPER = "INVALID SIZE SELECTION";
+    constexpr const char* PRESS_ANY_KEY_HELPER = "Press any key to continue...";
 
 
     bool is_digit(char c) {
@@ -171,7 +177,7 @@ namespace mfwu {
             } else if (is_lowercase(mode)) {
                 mode -= 'a' - 1;
             } else {
-                std::cout << "INVALID MODE SELECTION\n";
+                std::cout << INVALID_MODE_HELPER << "\n";
                 mode = -1; continue;
             }
             switch (mode) {
@@ -234,6 +240,8 @@ namespace mfwu {
     
         return BoardSize::Small;
     }
+
+    constexpr const size_t NEED = 5;
 
 }  // endof namespace mfwu
 

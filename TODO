@@ -1,3 +1,7 @@
-restart & reset : something wrong near the 'Enter' region
+restart & reset : 
+    NO GETCH
+    NO BOARDSHOW WHEN restart -
+    LAST PIECE HL REMAINS -
+    win count show -
 
-add clear_cmd back?
+add clear_cmd back? -

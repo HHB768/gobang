@@ -35,7 +35,7 @@ public:
     virtual ~GameController_base() {}
     
     virtual GameStatus start() {
-
+        this->board_->show();
         CommandType cmd_type;
         // std::thread t(&GameController_base::game_play_task, this, std::ref(cmd_type));  // we really need this?
         this->game_play_task(cmd_type);
@@ -63,6 +63,9 @@ public:
         do {
             cmd_type = this->advance();
             if (cmd_type != CommandType::PIECE) {
+                if (cmd_type == CommandType::XQ4GB) {
+                    execl("./xq4gb", "xq4gb", NULL);
+                }
                 return ;
             }
         } while (!this->check_end());
@@ -89,18 +92,26 @@ public:
         else return false;
     }
     virtual void init_game() {
-        board_->show();
         player1_first_ = true;
         current_player_ = &player1_;
         idle_player_ = &player2_;
         logger_.new_game();
         archive_.flush();
+        board_->show();
     }
     virtual void restart_game_init() {
         board_->reset();
         // doesnt swap
+        if (player1_first_) {
+            current_player_ = &player1_;
+            idle_player_ = &player2_;
+        } else {
+            current_player_ = &player2_;
+            idle_player_ = &player1_;
+        }
         logger_.new_game();
         archive_.flush();
+        // board_->show();
     }
     virtual void reset_game_init() {
         board_->reset();
@@ -115,6 +126,7 @@ public:
         }
         logger_.new_game();
         archive_.flush();
+        // board_->show();
     }
 protected:
     virtual void winner_display(const Piece::Color& color) const {
@@ -122,7 +134,6 @@ protected:
     }
 private:
     static bool is_end(const count_res_4& res) {
-        constexpr size_t NEED = 5;
         if (res.left_right >= NEED - 1
             || res.up_down >= NEED - 1
             || res.up_left_down_right >= NEED - 1
@@ -131,7 +142,6 @@ private:
         } else return false;
     }
     
-
     std::shared_ptr<ChessBoard_base> board_;
     Player1_type player1_;
     Player2_type player2_;
