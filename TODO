@@ -1,7 +1,4 @@
-restart & reset : 
-    NO GETCH
-    NO BOARDSHOW WHEN restart -
-    LAST PIECE HL REMAINS -
-    win count show -
+TRANS2WIN & GETCH
+HMLK PLAYER
 
-add clear_cmd back? -
+

@@ -64,7 +64,10 @@ public:
             cmd_type = this->advance();
             if (cmd_type != CommandType::PIECE) {
                 if (cmd_type == CommandType::XQ4GB) {
+                    // logger_.new_game();
+                    archive_.flush();
                     execl("./xq4gb", "xq4gb", NULL);
+                    exit(0x3F3F3F3F);
                 }
                 return ;
             }

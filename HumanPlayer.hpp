@@ -22,6 +22,10 @@ public:
         } break;
         case CommandType::QUIT : {
         } break;
+        case CommandType::XQ4GB: {
+            std::cout << "XQ4-GB cheater begins...\n";
+            sleep(2);
+        } break;
         default :
             std::cerr << UNKNOWN_COMMAND_TYPE << "\n";
         }
