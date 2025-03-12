@@ -50,9 +50,9 @@ private:
 
 class DummyRobot : public RobotPlayer {
 public:
-    DummyRobot() : RobotPlayer(), scores_(this->board_->size(), std::vector<float>(this->board_->size(), 0.0F)) {}
-    DummyRobot(std::shared_ptr<ChessBoard_base> board, Piece::Color color) : RobotPlayer(board, color),
-        scores_(board->size(), std::vector<float>(board->size(), 0.0F)) {}
+    DummyRobot() : RobotPlayer()/*, scores_(this->board_->size(), std::vector<float>(this->board_->size(), 0.0F)) */{}
+    DummyRobot(std::shared_ptr<ChessBoard_base> board, Piece::Color color) : RobotPlayer(board, color)/*,
+        scores_(board->size(), std::vector<float>(board->size(), 0.0F))*/ {}
     ~DummyRobot() {}
 private:
     Position get_best_position() const override {
@@ -84,7 +84,7 @@ private:
         float res = calc_dir(cnt.left_right) + calc_dir(cnt.up_down)
                     + calc_dir(cnt.up_left_down_right)
                     + calc_dir(cnt.up_right_down_left);
-        scores_[row][col] = res;
+        // scores_[row][col] = res;
         return res;
     }
 
@@ -119,11 +119,23 @@ private:
     //     return true;
     // }
 
-    mutable std::vector<std::vector<float>> scores_;
+    // mutable std::vector<std::vector<float>> scores_;
 };  // endof class DummyRobot
 
 class HumanLikeRobot : public RobotPlayer {
+public:
+    HumanLikeRobot() : RobotPlayer() {}
+    HumanLikeRobot(std::shared_ptr<ChessBoard_base> board, Piece::Color color) : RobotPlayer(board, color) {}
+    ~HumanLikeRobot() {}
+private:
+    Position get_best_position() const override {
 
+        return {};
+    }
+    float calc_pos(int row, int col, int color) const {
+
+        return 0;
+    }
 };  // endof class HumanLikeRobot
 
 class SmartRobot : public RobotPlayer {
