@@ -1,19 +1,22 @@
 #include <iostream>
 #include "xq4_gb_printer.hpp"
 #include <unistd.h>
+#include <sstream>
 
 void clear_and_print_once(const mfwu::printer::M_type& res) {
     std::cout << "\033[2J\033[1;1H";
+    std::stringstream ss;
     for (const auto& line : res) {
         for (const auto& ch : line) {
             if (ch == 1) {
-                std::cout << "♣";
+                ss << "♣";
             } else {
-                std::cout << "~";
+                ss << "~";
             }
         }
-        std::cout << "\n";
+        ss << "\n";
     } 
+    std::cout << ss.str();
 }
 
 int main() {

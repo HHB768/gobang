@@ -5,8 +5,8 @@
 
 namespace mfwu {
     enum class BoardSize : size_t {
-        Small  = 12,
-        Middle = 20,
+        Small  = 13,
+        Middle = 21,
         Large  = 25
     };  // endof enum class BoardSize
 
