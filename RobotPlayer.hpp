@@ -139,7 +139,16 @@ private:
 };  // endof class HumanLikeRobot
 
 class SmartRobot : public RobotPlayer {
+public:
+    SmartRobot() : RobotPlayer() {}
+    SmartRobot(std::shared_ptr<ChessBoard_base> board, Piece::Color color) : RobotPlayer(board, color) {}
+    ~SmartRobot() {}
 
+private:
+    Position get_best_position() const override {
+
+        return {};
+    }
 };  // enof class SmartRobot
 
 

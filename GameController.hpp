@@ -17,6 +17,7 @@ public:
     virtual GameStatus start() = 0;
     virtual void restart_game_init() = 0;
     virtual void reset_game_init() = 0;
+    virtual void abrupt_flush(GameStatus status) = 0;
 };  // endof class GameController_base_base
 
 template <typename Player1_type, typename Player2_type, typename ChessBoard_type>  // TODO: type check
@@ -29,7 +30,7 @@ public:
           current_player_(&player1_),
           idle_player_(&player2_),
           player1_first_(true),
-          logger_(), archive_() {
+          /*logger_(),*/ archive_() {
         init_game();
     }
     virtual ~GameController_base() {}
@@ -54,7 +55,7 @@ public:
             return GameStatus::QUIT;
         } break;
         default:
-            std::cerr << "game end with cmd type: " << static_cast<size_t>(cmd_type) << "\n"; 
+            log_error("game end with cmd type: %lu", static_cast<size_t>(cmd_type));
         }
         return GameStatus::INVALID;
     }
@@ -64,8 +65,8 @@ public:
             cmd_type = this->advance();
             if (cmd_type != CommandType::PIECE) {
                 if (cmd_type == CommandType::XQ4GB) {
-                    // logger_.new_game();
-                    archive_.flush();
+                    // log_new_game();
+                    archive_.flush(GameStatus::XQ4GB);
                     execl("./xq4gb", "xq4gb", NULL);
                     exit(0x3F3F3F3F);
                 }
@@ -83,6 +84,8 @@ public:
             Player* temp = current_player_;
             current_player_ = idle_player_;
             idle_player_ = temp;
+            // log_info("step");
+            archive_.record(board_->serialize());
         }
         return cmd_type;
     }
@@ -98,8 +101,8 @@ public:
         player1_first_ = true;
         current_player_ = &player1_;
         idle_player_ = &player2_;
-        logger_.new_game();
-        archive_.flush();
+        // log_new_game();
+        // archive_.flush();
         board_->show();
     }
     virtual void restart_game_init() {
@@ -112,8 +115,8 @@ public:
             current_player_ = &player2_;
             idle_player_ = &player1_;
         }
-        logger_.new_game();
-        archive_.flush();
+        log_new_game(GameStatus::RESTART);
+        archive_.flush(GameStatus::RESTART);
         // board_->show();
     }
     virtual void reset_game_init() {
@@ -127,9 +130,13 @@ public:
             current_player_ = &player2_;
             idle_player_ = &player1_;
         }
-        logger_.new_game();
-        archive_.flush();
+        log_new_game(GameStatus::NORMAL);
+        archive_.flush(GameStatus::NORMAL);
         // board_->show();
+    }
+    virtual void abrupt_flush(GameStatus status) {
+        log_end_game(status);
+        archive_.flush(status);
     }
 protected:
     virtual void winner_display(const Piece::Color& color) const {
@@ -137,10 +144,10 @@ protected:
     }
 private:
     static bool is_end(const count_res_4& res) {
-        if (res.left_right >= NEED - 1
-            || res.up_down >= NEED - 1
-            || res.up_left_down_right >= NEED - 1
-            || res.up_right_down_left >= NEED - 1) {
+        if (res.left_right >= NoPtW - 1
+            || res.up_down >= NoPtW - 1
+            || res.up_left_down_right >= NoPtW - 1
+            || res.up_right_down_left >= NoPtW - 1) {
             return true;
         } else return false;
     }
@@ -152,7 +159,6 @@ private:
     Player* idle_player_;
     bool player1_first_;
 
-    Logger logger_;
     Archive<std::string> archive_;
     // std::vector<typename ChessBoard_type::Archive_type> archive_; 
 

@@ -86,7 +86,7 @@ public:
                     print_black_sp_piece(i, j);
                 } break;
                 default:
-                    std::cerr << UNKNOWN_PIECE_STATUS << "\n";
+                    cerr_unknown_piece_status();
                     print_unknown_status_piece(i, j);
                 }
             }

@@ -27,7 +27,7 @@ public:
             sleep(2);
         } break;
         default :
-            std::cerr << UNKNOWN_COMMAND_TYPE << "\n";
+            cerr_unknown_cmdtype();
         }
         return cmd.type;
     }

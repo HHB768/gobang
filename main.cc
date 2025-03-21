@@ -5,7 +5,6 @@ using namespace mfwu;
 #define __CMD_MODE__
 
 int main() {
-
     while (true) {
 
 #ifdef __CMD_MODE__
@@ -43,7 +42,7 @@ int main() {
                 game = std::make_unique<GameController<Human_type, Robot_type, __CHESSBOARD_TYPE__<BoardSize::Large>>>();
             }; break;
             default:
-                std::cerr << NEW_GC_ERROR << "\n";
+                gc_error_exit(mode, size);
             }; break;
         }; break;
         case GameMode::PVP : {
@@ -58,7 +57,7 @@ int main() {
                 game = std::make_unique<GameController<Human_type, Human_type, __CHESSBOARD_TYPE__<BoardSize::Large>>>();
             }; break;
             default:
-            std::cerr << NEW_GC_ERROR << "\n";
+                gc_error_exit(mode, size);
             }; break;
         }; break;
         case GameMode::EVE : {
@@ -73,11 +72,11 @@ int main() {
                 game = std::make_unique< GameController<Robot_type, Robot_type, __CHESSBOARD_TYPE__<BoardSize::Large>>>();
             }; break;
             default:
-            std::cerr << NEW_GC_ERROR << "\n";
+                gc_error_exit(mode, size);
             }; break;
         }; break;
         default:
-        std::cerr << NEW_GC_ERROR << "\n";
+            gc_error_exit(mode, size);
         }
         
         // auto pid = fork();
@@ -90,20 +89,23 @@ int main() {
                     game->restart_game_init();
                 } break;
                 case GameStatus::NORMAL : {
-                    std::cout << PRESS_ANY_KEY_HELPER << "\n";
+                    std::cout << HELPER_PRESS_ANY_KEY << "\n";
                     sleep(1);  // TODO: del this after transfering to win platf
                     fgetc(stdin);
                     game->reset_game_init();
                 } break;
                 case GameStatus::MENU : {
                     ret_memu_flag = true;
+                    game->abrupt_flush(status);
                     break;
                 } break;
                 case GameStatus::QUIT : {
-                    exit(1);
+                    game->abrupt_flush(status);
+                    exit(0);
                 } break;
                 default:
-                    std::cerr << "...\n";
+                    game->abrupt_flush(status);
+                    cerr_unknown_game_status();
                     exit(-1);
                 }
             }

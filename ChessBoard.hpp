@@ -44,6 +44,9 @@ public:
     virtual void count_dir(const Piece& piece, count_res_8* res) const = 0;
     virtual void count_dir(const Piece& piece, count_res_4* res) const = 0;
 
+    virtual std::string serialize() const = 0;
+    virtual std::vector<std::vector<size_t>> snap() const = 0;
+
 protected:
     Piece last_piece_;
     bool status_;
@@ -61,31 +64,7 @@ public:
     }
     ChessBoard(const std::vector<std::vector<size_t>>& input_board) 
         : board_(Size, std::vector<std::shared_ptr<Position>>(Size)) {
-        for (size_t i = 0; i < static_cast<size_t>(Size); i++) {
-            for (size_t j = 0; j < static_cast<size_t>(Size); j++) {
-                switch (input_board[i][j]) {
-                case static_cast<size_t>(Color::Invalid) : {
-                    board_[i][j] = std::make_shared<Position>(i, j);
-                } break;
-                case static_cast<size_t>(Color::White) : {
-                    board_[i][j] = std::make_shared<Position>(Piece(i, j, Color::White));
-                } break;
-                case static_cast<size_t>(Color::Black) : {
-                    board_[i][j] = std::make_shared<Position>(Piece(i, j, Color::Black));
-                } break;
-                case static_cast<size_t>(Color::BlackSp) : {
-                    board_[i][j] = std::make_shared<Position>(Piece(i, j, Color::BlackSp));
-                } break;
-                case static_cast<size_t>(Color::WhiteSp) : {
-                    board_[i][j] = std::make_shared<Position>(Piece(i, j, Color::WhiteSp));
-                } break;
-                default:
-                    std::cout << "Position [" << i << ", " << j << "] init failed: UNKOWN PIECE COLOR\n";
-                    // TODO: LOG IT
-                    board_[i][j] = std::make_shared<Position>(i, j);
-                }
-            }
-        }
+        apply_board(input_board);
     }
     ChessBoard(const ChessBoard& board) = default;
     ChessBoard(ChessBoard&& board) = default;
@@ -123,6 +102,19 @@ public:
             ss << "\n";
         }
         return ss.str();
+    }
+    // deserialize()
+    // wait for more functions in class Archive
+    std::vector<std::vector<size_t>> snap() const {
+        std::vector<std::vector<size_t>> res(
+            len(), std::vector<size_t>(len())
+        );
+        for (size_t i = 0; i < len(); i++) {
+            for (size_t j = 0; j < len(); j++) {
+                res[i][j] = board_[i][j]->get_status();
+            }
+        }
+        return res;
     }
 
     size_t len() const { return size(); }
@@ -290,6 +282,49 @@ protected:
     } 
     std::vector<std::vector<std::shared_ptr<Position>>> board_;
 private:
+    Piece apply_board(const std::vector<std::vector<size_t>>& input_board) {
+        Piece invalid_piece = Piece{-1, -1, Color::Invalid};
+        Piece last_piece = invalid_piece;
+        for (size_t i = 0; i < static_cast<size_t>(Size); i++) {
+            for (size_t j = 0; j < static_cast<size_t>(Size); j++) {
+                switch (input_board[i][j]) {
+                case static_cast<size_t>(Color::Invalid) : {
+                    board_[i][j] = std::make_shared<Position>(i, j);
+                } break;
+                case static_cast<size_t>(Color::White) : {
+                    board_[i][j] = std::make_shared<Position>(Piece(i, j, Color::White));
+                } break;
+                case static_cast<size_t>(Color::Black) : {
+                    board_[i][j] = std::make_shared<Position>(Piece(i, j, Color::Black));
+                } break;
+                case static_cast<size_t>(Color::BlackSp) : {
+                    board_[i][j] = std::make_shared<Position>(Piece(i, j, Color::BlackSp));
+                    if (last_piece == invalid_piece) {
+                        last_piece = Piece{i, j, Color::BlackSp};
+                    } else {
+                        std::cout << "repeated sp\n";
+                    }
+                } break;
+                case static_cast<size_t>(Color::WhiteSp) : {
+                    board_[i][j] = std::make_shared<Position>(Piece(i, j, Color::WhiteSp));
+                    if (last_piece == invalid_piece) {
+                        last_piece = Piece{i, j, Color::WhiteSp};
+                    } else {
+                        std::cout << "repeated sp\n";
+                    }
+                } break;
+                default:
+                    std::cout << "Position [" << i << ", " << j << "] init failed: UNKOWN PIECE COLOR\n";
+                    // TODO: LOG IT
+                    board_[i][j] = std::make_shared<Position>(i, j);
+                }
+            }
+        }
+        if (last_piece == invalid_piece) {
+            std::cout << "no last piece found\n";
+        }
+        return last_piece;
+    }
     static bool is_valid_row(int row) {  // i want them static
         return row >= 0 and row < static_cast<size_t>(Size);
     }
@@ -340,8 +375,8 @@ public:
 
     Command get_command() override {
         std::string input_str;
-        std::cout << CMD_HELPER << "\n";
-        std::cout << INPUT_HELPER << "\n";
+        std::cout << HELPER_RETURN2MENU << "\n";
+        std::cout << HELPER_PLACE_PIECE << "\n";
         std::cin >> input_str;
         Command ret = CMDBoard::validate_input(input_str);
         if (ret.type == CommandType::INVALID
@@ -395,15 +430,15 @@ private:
         count_res_8 res;
         this->count_dir(this->last_piece_, &res);
         for (int i = 0; i < 10; i++) {
-            if (res.left + res.right >= NEED - 1) {
+            if (res.left + res.right >= NoPtW - 1) {
                 display_left_right(this->last_piece_, res.left, res.right);
-            } else if (res.up + res.down >= NEED - 1) {
+            } else if (res.up + res.down >= NoPtW - 1) {
                 display_up_down(this->last_piece_, res.up, res.down);
-            } else if (res.up_left + res.down_right >= NEED - 1) {
+            } else if (res.up_left + res.down_right >= NoPtW - 1) {
                 display_up_left_down_right(
                     this->last_piece_, res.up_left, res.down_right
                 );
-            } else if (res.down_left + res.up_right >= NEED - 1) {
+            } else if (res.down_left + res.up_right >= NoPtW - 1) {
                 display_down_left_up_right(
                     this->last_piece_, res.down_left, res.up_right
                 );
@@ -499,7 +534,7 @@ private:
         if (ret.pos.row == -1 or ret.pos.col == -1) return ret;
         if (this->board_[ret.pos.row][ret.pos.col]->get_status()) {
             ret.pos.row = ret.pos.col = -1;  // occupied pos
-            std::cout << "invalid position: occupied\n";
+            std::cout << HELPER_OCCUPIED_POSITION << "\n";
         }
         return ret;
     }
