@@ -12,6 +12,7 @@
 
 namespace mfwu {
 
+// interfaces exposed to main func
 class GameController_base_base {
 public:
     virtual GameStatus start() = 0;
@@ -25,13 +26,13 @@ class GameController_base : public GameController_base_base {
 public:
     GameController_base() 
         : board_(std::make_shared<ChessBoard_type>()), 
-          player1_(board_, Piece::Color::White), 
-          player2_(board_, Piece::Color::Black),
+          player1_(board_, Piece::Color::Black), 
+          player2_(board_, Piece::Color::White),
           current_player_(&player1_),
           idle_player_(&player2_),
           player1_first_(true),
           /*logger_(),*/ archive_() {
-        init_game();
+        _gc_init_();
     }
     virtual ~GameController_base() {}
     
@@ -55,7 +56,8 @@ public:
             return GameStatus::QUIT;
         } break;
         default:
-            log_error("game end with cmd type: %lu", static_cast<size_t>(cmd_type));
+            log_error("game end with cmd type: %lu", 
+                      static_cast<size_t>(cmd_type));
         }
         return GameStatus::INVALID;
     }
@@ -97,14 +99,6 @@ public:
         if (is_end(res)) { return true; }
         else return false;
     }
-    virtual void init_game() {
-        player1_first_ = true;
-        current_player_ = &player1_;
-        idle_player_ = &player2_;
-        // log_new_game();
-        // archive_.flush();
-        board_->show();
-    }
     virtual void restart_game_init() {
         board_->reset();
         // doesnt swap
@@ -143,6 +137,36 @@ protected:
         board_->winner_display(color);
     }
 private:
+    virtual void _gc_init_() {
+        // in init list now
+        // player1_first_ = true;
+        // current_player_ = &player1_;
+        // idle_player_ = &player2_;
+        // log_new_game();
+        // archive_.flush();
+
+        // log
+        log_info("game controller inits...");
+        log_debug("-----------------------------------------");
+        log_debug("player1 color: %s", 
+                  (Piece::get_real_color(player1_.get_color_const()) 
+                   == Piece::get_real_color(Piece::Color::White) ? "White" : "Black"));
+        log_debug("player2 color: %s", 
+                  (Piece::get_real_color(player2_.get_color_const()) 
+                   == Piece::get_real_color(Piece::Color::White) ? "White" : "Black"));
+        log_debug("player1 plays first: %s", (player1_first_ ? "True" : "False"));
+        log_debug("current player: %s", (current_player_ == &player1_ ? "Player1" : "Player2"));
+        log_debug("idle_:D player: %s", (current_player_ == &player1_ ? "Player1" : "Player2"));  // :D
+        if (archive_.get_status() == true) {
+            log_debug("archive status: online");
+        } else {
+            log_error("archive status: offline");
+            log_error(XQ4GB_TIMESTAMP, "your archive may be lost");
+        }
+        log_debug("-----------------------------------------");
+        // show CHECK: we really need this?
+        // board_->show();
+    }
     static bool is_end(const count_res_4& res) {
         if (res.left_right >= NoPtW - 1
             || res.up_down >= NoPtW - 1

@@ -2,6 +2,9 @@
 #define __CONSTDEF_HPP__
 
 #include <iostream>
+#include "Logger.hpp"
+
+namespace mfwu {
 
 constexpr const size_t NUM_OF_PIECE_TO_WIN = 5;
 constexpr const size_t NoPtW = NUM_OF_PIECE_TO_WIN;
@@ -51,22 +54,43 @@ constexpr const char* ERROR_UNKNOWN_COMMAND_TYPE = "Unknown CommandType by Human
 constexpr const char* ERROR_UNKNOWN_PIECE_STATUS = "Unknown piece status";
 constexpr const char* ERROR_UNKNOWN_GAME_STATUS  = "Unknown game status";
 
-// cerr shortcut
+// logerr shortcuts
 #define gc_error_exit(mode, size) do {  \
-    std::cerr << ERROR_NEW_GC << "\n";  \
-    std::cerr << "mode: " << static_cast<size_t>(mode)  \
-            << ", size: " << static_cast<size_t>(size) << "\n";  \
+    log_error(ERROR_NEW_GC);  \
+    log_error(XQ4GB_TIMESTAMP, "mode: %ld, size: %ld", \
+              static_cast<size_t>(mode), static_cast<size_t>(size));  \
     exit(-10086);  \
 } while (0);
-inline void cerr_unknown_cmdtype() { std::cerr << ERROR_UNKNOWN_COMMAND_TYPE << "\n"; }
-inline void cerr_unknown_piece_status() { std::cerr << ERROR_UNKNOWN_PIECE_STATUS << "\n"; }
-inline void cerr_unknown_game_status() { std::cerr << ERROR_UNKNOWN_GAME_STATUS << "\n"; }
+inline void logerr_unknown_cmdtype()      { log_error(ERROR_UNKNOWN_COMMAND_TYPE); }
+inline void logerr_unknown_piece_status() { log_error(ERROR_UNKNOWN_PIECE_STATUS); }
+inline void logerr_unknown_game_status()  { log_error(ERROR_UNKNOWN_GAME_STATUS);  }
 // -------------------------------------------------------------------------
 
+// warn messages
+constexpr const char* WARN_MULTIPLE_SP = "Multiple sp piece applied on the board";
+constexpr const char* WARN_INVALID_POS = "Invalid pos is found when init the board";
+
+// logwarn shortcuts
+inline void logwarn_multiple_sp(int i, int j) { 
+    log_warn(WARN_MULTIPLE_SP); 
+    log_warn(XQ4GB_TIMESTAMP, 
+             "Position [%d, %d] init failed: MULTIPLE SP PIECE",
+             i, j);
+    log_warn(XQ4GB_TIMESTAMP, "Init as real-color piece");
+}
+inline void logwarn_invalid_pos(int i, int j) { 
+    log_warn(WARN_INVALID_POS);
+    log_warn(XQ4GB_TIMESTAMP, 
+             "Position [%d, %d] init failed: UNKOWN PIECE COLOR",
+             i, j);
+    log_warn(XQ4GB_TIMESTAMP, "Init as empty position"); 
+}
 
 // constexpr const char* CMD_CLEAR = "clear screen\n";
 constexpr const char* CMD_CLEAR = "\033[2J\033[1;1H";
 inline void cmd_clear() { std::cout << CMD_CLEAR; }
 
+constexpr const time_t XQ4GB_TIMESTAMP = 1741352220;
 
+}  // endof namespace mfwu
 #endif  // __CONSTDEF_HPP__

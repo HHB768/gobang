@@ -12,6 +12,7 @@ public:
 
     virtual CommandType play() override {
         Position pos = this->get_best_position();
+        log_info("Robot's pos: [%d, %d]", pos.row, pos.col);
         this->place(pos);
         return CommandType::PIECE;
     }

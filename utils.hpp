@@ -88,6 +88,7 @@ namespace mfwu {
             return !(*this == p);
         }
     };  // endof struct Piece
+    const Piece invalid_piece = Piece{-1, -1, Piece::Color::Invalid};
 
     const std::vector<std::pair<int, int>> dirs = {
         {1, 0}, {0, 1}, {-1, 0}, {0, -1},
@@ -125,6 +126,10 @@ namespace mfwu {
         INVALID = 4,
         XQ4GB = 5
     };  // endof enum class CommandType
+    const std::unordered_map<size_t, std::string> CommandTypeDescription = {
+        {0, "PIECE"}, {1, "RESTART"}, {2, "MENU"},
+        {3, "QUIT"}, {4, "INVALID"}, {5, "XQ4GB"}
+    };
     struct Command {
         CommandType type;
         Position pos;
@@ -152,6 +157,14 @@ namespace mfwu {
     }
     inline bool is_lowercase(char c) {
         return c <= 'z' and c >= 'a';
+    }
+    inline std::string tolower(const std::string& str) {
+        std::string ret; ret.reserve(str.size());
+        std::transform(str.begin(), str.end(), ret.begin(), ::tolower);
+    }
+    inline std::string toupper(const std::string& str) {
+        std::string ret; ret.reserve(str.size());
+        std::transform(str.begin(), str.end(), ret.begin(), ::toupper);
     }
 
     inline GameMode print_mode_choice_help_cmd() {

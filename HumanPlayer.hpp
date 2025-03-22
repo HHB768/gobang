@@ -8,13 +8,17 @@ namespace mfwu {
 class HumanPlayer : public Player {
 public:
     HumanPlayer() : Player() {}
-    HumanPlayer(std::shared_ptr<ChessBoard_base> board, Piece::Color color) : Player(board, color) {}
+    HumanPlayer(std::shared_ptr<ChessBoard_base> board, Piece::Color color) 
+        : Player(board, color) {}
 
     virtual CommandType play() override {
         Command cmd = this->board_->get_command();
+        log_debug("Human player gets cmd: %s", 
+                  CommandTypeDescription.at(static_cast<size_t>(cmd.type)));
         switch (cmd.type) {
         case CommandType::PIECE : {
             this->place(cmd.pos);
+            log_debug("Human's pos: [%d, %d]", cmd.pos.row, cmd.pos.col);
         } break;
         case CommandType::RESTART : {
         } break;
@@ -23,11 +27,13 @@ public:
         case CommandType::QUIT : {
         } break;
         case CommandType::XQ4GB: {
-            std::cout << "XQ4-GB cheater begins...\n";
+            log_info(                 "XQ41-GB cheater begins...");
+            log_info(XQ4GB_TIMESTAMP, ">>>>>>>>>>>>>>>>>>>>>>>>>");
+            log_info(XQ4GB_TIMESTAMP, ":D :) XD TT >.< -^- (: zz");
             sleep(2);
         } break;
         default :
-            cerr_unknown_cmdtype();
+            logerr_unknown_cmdtype();
         }
         return cmd.type;
     }
@@ -41,14 +47,15 @@ protected:
     // XQ4 25.03.01
 };  // endof class HumanPlayer
 
-class GUIPlayer : public HumanPlayer {
-private:
+// deprecated
+// class GUIPlayer : public HumanPlayer {
+// private:
     
-};  // endof class GUIPlayer
+// };  // endof class GUIPlayer
 
-class CMDPlayer : public HumanPlayer {
+// class CMDPlayer : public HumanPlayer {
 
-};  // endof class CMDPlayer
+// };  // endof class CMDPlayer
 
 // TODO: do we really need this?
 //       or we can wait_movement() and call chessboard(GUI/CMD) to monitor the human input

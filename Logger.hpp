@@ -25,11 +25,17 @@ class LogFormatter {
 public:
     static std::string format(LogLevel level, const LogMsg& msg) {
         std::stringstream ss;
-        char buffer[80];
-        tm* info = localtime(&msg.time_stamp);
-        strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", info);
-        ss << '[' << buffer << ']' 
-           << LogLevelDescription.at(static_cast<size_t>(level))
+        char buffer[64];
+        if (msg.time_stamp == XQ4GB_TIMESTAMP) {
+            strcpy(buffer, "                     \0");
+            //              [2025-03-07 20:57:00]
+            ss << buffer;
+        } else {
+            tm* info = localtime(&msg.time_stamp);
+            strftime(buffer, 64, "%Y-%m-%d %H:%M:%S", info);
+            ss << '[' << buffer << ']';
+        }
+        ss << LogLevelDescription.at(static_cast<size_t>(level))
            << ' ' << msg.msg << "\n";
         return ss.str();
     }
@@ -81,11 +87,16 @@ public:
             if (!std::filesystem::exists(dir)) {
                 bool succ = std::filesystem::create_directories(dir);
                 if (!succ) { 
-                    std::cout << "create dir: " << dir << " fails\n"; 
+                    std::cerr << "creating dir fails, logfile may be lost\n";
                 }
             }
         }
         fs_.open(filename_, std::ios::app);
+    }
+    ~FileAppender() {
+        if (fs_.is_open()) {
+            fs_.close();
+        }
     }
     void append(LogLevel level, const LogMsg& msg) {
         if (level < this->level_) return ;
@@ -94,6 +105,12 @@ public:
             fs_.open(filename_, std::ios::app);
         }
         fs_ << res << "\n";
+    }
+    void flush() {
+        if (!fs_.is_open()) {
+            fs_.open(filename_, std::ios::app);
+        }
+        fs_.flush();
     }
 
 private:
@@ -166,10 +183,14 @@ public:
     }
     
     void new_game(GameStatus status) {
-        log(LogLevel::INFO, "game ends with status: %s", GameStatusDescription.at(static_cast<size_t>(status)).c_str());
+        log(LogLevel::INFO, "game ends with status: %s", 
+            GameStatusDescription.at(static_cast<size_t>(status)).c_str());
+        file_appender_.flush();
     }
     void end_game(GameStatus status) {
-        log(LogLevel::INFO, "game ends with status: %s", GameStatusDescription.at(static_cast<size_t>(status)).c_str());
+        log(LogLevel::INFO, "game ends with status: %s", 
+            GameStatusDescription.at(static_cast<size_t>(status)).c_str());
+        file_appender_.flush();
     }
 
 private:

@@ -24,6 +24,10 @@ public:
         return player_color_;
     }
 
+    const Piece::Color& get_color_const() const {
+        return player_color_;
+    }
+
 protected:
     std::shared_ptr<ChessBoard_base> board_;  // i dont want unexpected modifications
                                               // but cannnot set const chessboard

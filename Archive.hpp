@@ -26,9 +26,10 @@ public:
             str += '_'; str += std::to_string(lt->tm_sec); 
             archive_filename_ = str;
             if (!std::filesystem::exists(dir)) {
-                bool succ = std::filesystem::create_directories(dir);
-                if (!succ) { 
-                    std::cout << "create dir: " << dir << " fails\n";
+                status_ = std::filesystem::create_directories(dir);
+                if (!status_) { 
+                    log_error("archive error: ");
+                    log_error(XQ4GB_TIMESTAMP, "cannot create dir");
                 }
             }
         }
@@ -61,12 +62,16 @@ public:
     void pop_last_record() const {
         frames_.pop_back();
     }
+    bool get_status() const {
+        return status_;
+    }
 private:
     void flush_log(GameStatus status) {
         if (!fs_.is_open()) {
             fs_.open(archive_filename_, std::ios::app);
         }
-        fs_ << "this game end with status:" 
+        fs_ << "[XQ4GB-SEP]\n"
+            << "this game end with status:" 
             << GameStatusDescription.at(static_cast<size_t>(status))
             << "\n\n";
     }
@@ -80,6 +85,7 @@ private:
 
     std::string archive_filename_;
     std::fstream fs_;
+    bool status_ = true;
     
     std::vector<Seq_type> frames_;
 };  // endof class Archive

@@ -22,8 +22,9 @@ class DisplayFramework {
         [i, j] -> [2 + 1 * i, 4 + 2 * j]
     */
 public:
-    static constexpr size_t height = 1 * (3 + static_cast<size_t>(Size));
-    static constexpr size_t width  = 2 * (3 + static_cast<size_t>(Size));
+    static constexpr size_t size_   = static_cast<size_t>(Size);
+    static constexpr size_t height_ = 1 * (3 + size_);
+    static constexpr size_t width_  = 2 * (3 + size_);
 
     static constexpr const char empty_position_char = '+';
     static constexpr const char white_piece_char = 'O';
@@ -37,12 +38,12 @@ public:
     static constexpr const char highlight_left_char = '[';
     static constexpr const char highlight_right_char = ']';
 
-    DisplayFramework() : framework_(height, std::string(width, inner_border_char)) {
+    DisplayFramework() : framework_(height_, std::string(width_, inner_border_char)) {
         _init_framework();
         load_empty_board();
     }
     DisplayFramework(const std::vector<std::vector<std::shared_ptr<Position>>>& board_) 
-        : framework_(height, std::string(width, inner_border_char)) {
+        : framework_(height_, std::string(width_, inner_border_char)) {
         _init_framework();
         reconstruct(board_);
     } 
@@ -62,8 +63,8 @@ public:
     }
 
     void reconstruct(const std::vector<std::vector<std::shared_ptr<Position>>>& board_) {
-        for (int i = 0; i < static_cast<size_t>(Size); i++) {
-            for (int j = 0; j < static_cast<size_t>(Size); j++) {
+        for (int i = 0; i < size_; i++) {
+            for (int j = 0; j < size_; j++) {
                 switch (board_[i][j]->get_status()) {
                 // Invalid = 0,
                 // White   = 1,
@@ -86,7 +87,7 @@ public:
                     print_black_sp_piece(i, j);
                 } break;
                 default:
-                    cerr_unknown_piece_status();
+                    logerr_unknown_piece_status();
                     print_unknown_status_piece(i, j);
                 }
             }
@@ -94,67 +95,82 @@ public:
     }
 
     void load_empty_board() {
-        for (int i = 0; i < static_cast<size_t>(Size); i++) {
-            for (int j = 0; j < static_cast<size_t>(Size); j++) {
+        for (int i = 0; i < size_; i++) {
+            for (int j = 0; j < size_; j++) {
                 print_empty_position(i, j);
             }
         }
         remove_highlight();
     }
-    void set_highlight(size_t r, size_t c) {
+    void set_highlight(int r, int c) {
         add_highlight(r, c);
     }
 
 private:
     void _init_framework() {
-        for (int j = 0; j < static_cast<size_t>(Size); j++) {
+        for (int j = 0; j < size_; j++) {
             framework_[0][get_col_in_framework(j)] = 'A' + j;
         }
-        for (int i = 0; i < static_cast<size_t>(Size); i++) {
+        for (int i = 0; i < size_; i++) {
             framework_[get_row_in_framework(i)][0] = 'A' + i;
         }
-        for (int j = 0; j <= static_cast<size_t>(Size); j++) {
-            framework_[get_row_in_framework(-1)][get_col_in_framework(j)] = outer_border_char;
+        for (int j = 0; j <= size_; j++) {
+            // framework_[get_row_in_framework(-1)][get_col_in_framework(j)] = outer_border_char;
+            get_pos_ref_in_framework(-1, j) = outer_border_char;
         }
-        for (int j = 0; j <= static_cast<size_t>(Size); j++) {
-            framework_[get_row_in_framework(static_cast<size_t>(Size))][get_col_in_framework(j)] = outer_border_char;
+        for (int j = 0; j <= size_; j++) {
+            // framework_[get_row_in_framework(size_)][get_col_in_framework(j)] = outer_border_char;
+            get_pos_ref_in_framework((int)size_, j) = outer_border_char;
         }
-        for (int i = 0; i <= static_cast<size_t>(Size); i++) {
-            framework_[get_row_in_framework(i)][get_col_in_framework(-1)] = outer_border_char;
+        for (int i = 0; i <= size_; i++) {
+            // framework_[get_row_in_framework(i)][get_col_in_framework(-1)] = outer_border_char;
+            get_pos_ref_in_framework(i, -1) = outer_border_char;
         }
-        for (int i = 0; i <= static_cast<size_t>(Size); i++) {
-            framework_[get_row_in_framework(i)][get_col_in_framework(static_cast<size_t>(Size))] = outer_border_char;
+        for (int i = 0; i <= size_; i++) {
+            // framework_[get_row_in_framework(i)][get_col_in_framework(size_)] = outer_border_char;
+            get_pos_ref_in_framework(i, (int)size_) = outer_border_char;
         }
-        framework_[get_row_in_framework(-1)][get_col_in_framework(-1)] = outer_border_char;
+        // framework_[get_row_in_framework(-1)][get_col_in_framework(-1)] = outer_border_char;
+        get_pos_ref_in_framework(-1, -1) = outer_border_char;
     }
-
-    static std::pair<size_t, size_t> get_pos_in_framework(size_t r, size_t c) {
+    // i change size_t into int on 03.22
+    // but i havent found init problem before
+    char& get_pos_ref_in_framework(int r, int c) {
+        return framework_[get_row_in_framework(i)][get_col_in_framework(j)];
+    }
+    static std::pair<size_t, size_t> get_pos_in_framework(int r, int c) {
         return {get_row_in_framework(r), get_col_in_framework(c)};
     }
-    static size_t get_row_in_framework(size_t r) {
+    static size_t get_row_in_framework(int r) {
         return 2 + 1 * r;
     }
-    static size_t get_col_in_framework(size_t c) {
+    static size_t get_col_in_framework(int c) {
         return 4 + 2 * c;
     }
 
-    void print_empty_position(size_t r, size_t c) {
-        framework_[get_row_in_framework(r)][get_col_in_framework(c)] = empty_position_char;
+    void print_empty_position(int r, int c) {
+        // framework_[get_row_in_framework(r)][get_col_in_framework(c)] = empty_position_char;
+        get_pos_ref_in_framework(r, c) = empty_position_char;
     }
-    void print_white_piece(size_t r, size_t c) {
-        framework_[get_row_in_framework(r)][get_col_in_framework(c)] = white_piece_char;
+    void print_white_piece(int r, int c) {
+        // framework_[get_row_in_framework(r)][get_col_in_framework(c)] = white_piece_char;
+        get_pos_ref_in_framework(r, c) = white_piece_char;
     }
-    void print_white_sp_piece(size_t r, size_t c) {
-        framework_[get_row_in_framework(r)][get_col_in_framework(c)] = white_sp_piece_char;
+    void print_white_sp_piece(int r, int c) {
+        // framework_[get_row_in_framework(r)][get_col_in_framework(c)] = white_sp_piece_char;
+        get_pos_ref_in_framework(r, c) = white_sp_piece_char;
     }
-    void print_black_piece(size_t r, size_t c) {
-        framework_[get_row_in_framework(r)][get_col_in_framework(c)] = black_piece_char;
+    void print_black_piece(int r, int c) {
+        // framework_[get_row_in_framework(r)][get_col_in_framework(c)] = black_piece_char;
+        get_pos_ref_in_framework(r, c) = black_piece_char;
     }
-    void print_black_sp_piece(size_t r, size_t c) {
-        framework_[get_row_in_framework(r)][get_col_in_framework(c)] = black_sp_piece_char;
+    void print_black_sp_piece(int r, int c) {
+        // framework_[get_row_in_framework(r)][get_col_in_framework(c)] = black_sp_piece_char;
+        get_pos_ref_in_framework(r, c) = black_sp_piece_char;
     }
-    void print_unknown_status_piece(size_t r, size_t c) {
-        framework_[get_row_in_framework(r)][get_col_in_framework(c)] = unknown_status_piece_char;
+    void print_unknown_status_piece(int r, int c) {
+        // framework_[get_row_in_framework(r)][get_col_in_framework(c)] = unknown_status_piece_char;
+        get_pos_ref_in_framework(r, c) = unknown_status_piece_char;
     }
 
     void remove_highlight() {
@@ -167,7 +183,7 @@ private:
             }
         }
     }
-    void remove_highlight(size_t r, size_t c) {
+    void remove_highlight(int r, int c) {
         auto [row, col] = get_pos_in_framework(r, c);
         char* ch = &framework_[row][col - 1];
         if (*ch == highlight_left_char) {
@@ -186,7 +202,7 @@ private:
         framework_[row][col - 1] = highlight_left_char;
         framework_[row][col + 1] = highlight_right_char;
     }
-    void add_highlight(size_t r, size_t c) {
+    void add_highlight(int r, int c) {
         // assert(...)
         auto [row, col] = get_pos_in_framework(r, c);
         // framework_[row - 1][col] = highlight_up_down_char;
@@ -205,7 +221,7 @@ private:
             }
         }
     }
-    void remove_sp(size_t r, size_t c) {
+    void remove_sp(int r, int c) {
         auto [row, col] = get_pos_in_framework(r, c);
         char& ch = framework_[row][col];
         if (ch == white_sp_piece_char) {
@@ -222,7 +238,14 @@ private:
         } else if (last_piece.color == Piece::Color::WhiteSp) {
             framework_[row][col] = white_sp_piece_char;
         } else {
-            std::cout << "Last piece is not highlighted\n";
+            log_warn("Last piece is not colored as sp");
+            log_warn(XQ4GB_TIMESTAMP, "trying to fix it with real color...");
+            if (last_piece.get_status() == 0) {
+                log_error("last piece is not placed yet");
+            } else {
+                add_sp(Piece{last_piece.row, last_piece.col, 
+                       Piece::Color{last_piece.get_real_color() + 1}});  // CHECK: can i?
+            }
         }
     }
 

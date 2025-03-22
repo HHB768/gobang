@@ -2,19 +2,25 @@
 #include <cstdlib>
 using namespace mfwu;
 
+// #define __GUI_MODE__
 #define __CMD_MODE__
+#ifdef __GUI_MODE__
+#undef __CMD_MODE__
+#endif // __GUI_MODE__
+
 
 int main() {
     while (true) {
 
 #ifdef __CMD_MODE__
-        GameMode  mode = print_mode_choice_help_cmd();
-        BoardSize size = print_size_choice_help_cmd();
-#else  // GUI_HELP
-        GameMode mode = print_mode_choice_help_gui();
-        BoardSize size = print_size_choice_help_gui();
+        const GameMode  mode = print_mode_choice_help_cmd();
+        const BoardSize size = print_size_choice_help_cmd();
+#else  // __GUI_MODE__
+        const GameMode mode = print_mode_choice_help_gui();
+        const BoardSize size = print_size_choice_help_gui();
 #endif  // __CMD_MODE__
 
+        // ONLY ONE GAMECONTROLLER
         std::unique_ptr<GameController_base_base> game = nullptr;
 
 #ifdef __CMD_MODE__
@@ -25,21 +31,24 @@ int main() {
         using Human_type = HumanPlayer;
 #endif
 
-        // using Robot_type = DebugRobot;
-        using Robot_type = DummyRobot;
+        using Robot_type = DebugRobot;
+        // using Robot_type = DummyRobot;
         
 
         switch (mode) {
         case GameMode::PVE : {
             switch (size) {
             case BoardSize::Small : {
-                game = std::make_unique<GameController<Human_type, Robot_type, __CHESSBOARD_TYPE__<BoardSize::Small>>>();
+                game = std::make_unique<GameController<Human_type, Robot_type, 
+                                        __CHESSBOARD_TYPE__<BoardSize::Small>>>();
             }; break;
             case BoardSize::Middle : {
-                game = std::make_unique<GameController<Human_type, Robot_type, __CHESSBOARD_TYPE__<BoardSize::Middle>>>();
+                game = std::make_unique<GameController<Human_type, Robot_type,
+                                        __CHESSBOARD_TYPE__<BoardSize::Middle>>>();
             }; break;
             case BoardSize::Large : {
-                game = std::make_unique<GameController<Human_type, Robot_type, __CHESSBOARD_TYPE__<BoardSize::Large>>>();
+                game = std::make_unique<GameController<Human_type, Robot_type, 
+                                        __CHESSBOARD_TYPE__<BoardSize::Large>>>();
             }; break;
             default:
                 gc_error_exit(mode, size);
@@ -48,13 +57,16 @@ int main() {
         case GameMode::PVP : {
             switch (size) {
             case BoardSize::Small : {
-                game = std::make_unique<GameController<Human_type, Human_type, __CHESSBOARD_TYPE__<BoardSize::Small>>>();
+                game = std::make_unique<GameController<Human_type, Human_type, 
+                                        __CHESSBOARD_TYPE__<BoardSize::Small>>>();
             }; break;
             case BoardSize::Middle : {
-                game = std::make_unique<GameController<Human_type, Human_type, __CHESSBOARD_TYPE__<BoardSize::Middle>>>();
+                game = std::make_unique<GameController<Human_type, Human_type, 
+                                        __CHESSBOARD_TYPE__<BoardSize::Middle>>>();
             }; break;
             case BoardSize::Large : {
-                game = std::make_unique<GameController<Human_type, Human_type, __CHESSBOARD_TYPE__<BoardSize::Large>>>();
+                game = std::make_unique<GameController<Human_type, Human_type, 
+                                        __CHESSBOARD_TYPE__<BoardSize::Large>>>();
             }; break;
             default:
                 gc_error_exit(mode, size);
@@ -63,13 +75,16 @@ int main() {
         case GameMode::EVE : {
             switch (size) {
             case BoardSize::Small : {
-                game = std::make_unique< GameController<Robot_type, Robot_type, __CHESSBOARD_TYPE__<BoardSize::Small>>>();
+                game = std::make_unique<GameController<Robot_type, Robot_type, 
+                                        __CHESSBOARD_TYPE__<BoardSize::Small>>>();
             }; break;
             case BoardSize::Middle : {
-                game = std::make_unique<GameController<Robot_type, Robot_type, __CHESSBOARD_TYPE__<BoardSize::Middle>>>();
+                game = std::make_unique<GameController<Robot_type, Robot_type, 
+                                        __CHESSBOARD_TYPE__<BoardSize::Middle>>>();
             }; break;
             case BoardSize::Large : {
-                game = std::make_unique< GameController<Robot_type, Robot_type, __CHESSBOARD_TYPE__<BoardSize::Large>>>();
+                game = std::make_unique<GameController<Robot_type, Robot_type, 
+                                        __CHESSBOARD_TYPE__<BoardSize::Large>>>();
             }; break;
             default:
                 gc_error_exit(mode, size);
@@ -79,10 +94,11 @@ int main() {
             gc_error_exit(mode, size);
         }
         
+        // TODO: 
         // auto pid = fork();
         // if (pid == 0) {
-            bool ret_memu_flag = false;
-            while (!ret_memu_flag) {
+            bool ret2memu_flag = false;
+            while (!ret2memu_flag) {
                 GameStatus status = game->start();
                 switch (status) {
                 case GameStatus::RESTART : {
@@ -95,7 +111,7 @@ int main() {
                     game->reset_game_init();
                 } break;
                 case GameStatus::MENU : {
-                    ret_memu_flag = true;
+                    ret2memu_flag = true;
                     game->abrupt_flush(status);
                     break;
                 } break;
@@ -105,7 +121,7 @@ int main() {
                 } break;
                 default:
                     game->abrupt_flush(status);
-                    cerr_unknown_game_status();
+                    logerr_unknown_game_status();
                     exit(-1);
                 }
             }

@@ -57,14 +57,15 @@ class ChessBoard : public ChessBoard_base {
 public:
     static constexpr size_t size_ = static_cast<size_t>(Size);
     ChessBoard() 
-        : board_(static_cast<size_t>(Size), 
+        : board_(size_, 
             std::vector<std::shared_ptr<Position>>(
-                static_cast<size_t>(Size))) {
+                size_)) {
         _init_board();
     }
-    ChessBoard(const std::vector<std::vector<size_t>>& input_board) 
+    ChessBoard(const std::vector<std::vector<size_t>>& input_board, 
+               const Piece& last_piece=invalid_piece) 
         : board_(Size, std::vector<std::shared_ptr<Position>>(Size)) {
-        apply_board(input_board);
+        apply_board(input_board, last_piece);
     }
     ChessBoard(const ChessBoard& board) = default;
     ChessBoard(ChessBoard&& board) = default;
@@ -79,7 +80,8 @@ public:
     }
 
     virtual void update(const Piece& piece) override {
-        last_piece_ = Piece{piece.row, piece.col, Piece::Color{piece.get_status() + 1}};
+        last_piece_ = Piece{piece.row, piece.col, 
+                            Piece::Color{piece.get_status() + 1}};
 
         // has been move to rm_last_sp
         // board_[last_piece_.row][last_piece_.col] 
@@ -118,7 +120,7 @@ public:
     }
 
     size_t len() const { return size(); }
-    size_t size() const override { return static_cast<size_t>(Size); }
+    size_t size() const override { return size_; }
 
     int count_left(const Piece& piece) const override {
         int row = piece.row;
@@ -278,15 +280,21 @@ protected:
                 board_[i][j] = std::make_shared<Position>(i, j);
             }
         }
-        last_piece_ = Piece{Position{-1, -1}, Piece::Color::Invalid};
+        last_piece_ = invalid_piece;
     } 
     std::vector<std::vector<std::shared_ptr<Position>>> board_;
 private:
-    Piece apply_board(const std::vector<std::vector<size_t>>& input_board) {
-        Piece invalid_piece = Piece{-1, -1, Color::Invalid};
-        Piece last_piece = invalid_piece;
-        for (size_t i = 0; i < static_cast<size_t>(Size); i++) {
-            for (size_t j = 0; j < static_cast<size_t>(Size); j++) {
+    /*
+        if you specify a _last_piece, it will be the one,
+        even when there are other sp pieces on the input_board.
+        if not, the first sp piece found in the input_board
+        will be the last_piece_
+    */
+    Piece apply_board(const std::vector<std::vector<size_t>>& input_board, 
+                      const Piece& last_piece=invalid_piece) {
+        last_piece_ = last_piece;
+        for (size_t i = 0; i < size_; i++) {
+            for (size_t j = 0; j < size_; j++) {
                 switch (input_board[i][j]) {
                 case static_cast<size_t>(Color::Invalid) : {
                     board_[i][j] = std::make_shared<Position>(i, j);
@@ -299,37 +307,36 @@ private:
                 } break;
                 case static_cast<size_t>(Color::BlackSp) : {
                     board_[i][j] = std::make_shared<Position>(Piece(i, j, Color::BlackSp));
-                    if (last_piece == invalid_piece) {
-                        last_piece = Piece{i, j, Color::BlackSp};
+                    if (last_piece_ == invalid_piece) {
+                        last_piece_ = Piece{i, j, Color::BlackSp};
                     } else {
-                        std::cout << "repeated sp\n";
+                        logwarn_multiple_sp(i, j);
                     }
                 } break;
                 case static_cast<size_t>(Color::WhiteSp) : {
                     board_[i][j] = std::make_shared<Position>(Piece(i, j, Color::WhiteSp));
-                    if (last_piece == invalid_piece) {
-                        last_piece = Piece{i, j, Color::WhiteSp};
+                    if (last_piece_ == invalid_piece) {
+                        last_piece_ = Piece{i, j, Color::WhiteSp};
                     } else {
-                        std::cout << "repeated sp\n";
+                        logwarn_multiple_sp(i, j);
                     }
                 } break;
                 default:
-                    std::cout << "Position [" << i << ", " << j << "] init failed: UNKOWN PIECE COLOR\n";
-                    // TODO: LOG IT
+                    logwarn_invalid_pos(i, j);
                     board_[i][j] = std::make_shared<Position>(i, j);
                 }
             }
         }
-        if (last_piece == invalid_piece) {
-            std::cout << "no last piece found\n";
+        if (last_piece_ == invalid_piece) {
+            log_error("No last piece found after board application");
         }
         return last_piece;
     }
-    static bool is_valid_row(int row) {  // i want them static
-        return row >= 0 and row < static_cast<size_t>(Size);
+    static bool is_valid_row(int row) {  // i want them static  // ok :D  25.03.22
+        return row >= 0 and row < size_;
     }
     static bool is_valid_col(int col) {
-        return col >= 0 and col < static_cast<size_t>(Size);
+        return col >= 0 and col < size_;
     }
     static bool is_valid_row_col(int row, int col) {
         return is_valid_row(row) && is_valid_col(col);
@@ -359,8 +366,10 @@ class CMDBoard : public ChessBoard<Size> {
 public:
     CMDBoard() 
         : ChessBoard<Size>(), framework_() {}
-    CMDBoard(const std::vector<std::vector<size_t>>& input_board) 
-        : ChessBoard<Size>(input_board), framework_(this->board_) {
+    CMDBoard(const std::vector<std::vector<size_t>>& input_board,
+             const Piece& last_piece=invalid_piece) 
+        : ChessBoard<Size>(input_board, last_piece), 
+          framework_(this->board_) {
     }
     CMDBoard(const CMDBoard& board) = default;  // really work?
     CMDBoard(CMDBoard&& board) = default;
@@ -411,9 +420,10 @@ private:
         str += " wins! --- ";
         str += std::string(3, sp_piece_char);
         std::stringstream ss;
-        ss << std::string(str.size(), piece_char) << "\n";
+        ss << std::string(str.size(), piece_char) << "\n"; 
         ss << str << "\n";
         ss << std::string(str.size(), piece_char) << "\n";
+        log_info(str);
         return ss.str();
     }
     void winner_display(const Piece::Color&) override {
@@ -443,7 +453,7 @@ private:
                     this->last_piece_, res.down_left, res.up_right
                 );
             } else {
-                std::cerr << "NOT END YET\n";
+                log_error("game is not over yet");
             }  
             usleep(200000);
         }
@@ -514,21 +524,24 @@ private:
     }
 
     Command validate_input(const std::string& str) {
-        if (str == std::string(QUIT_CMD1)
-            || str == std::string(QUIT_CMD2)
-            || str == std::string(QUIT_CMD3)) {
+        if (str.size() > 10) return Command{CommandType::INVALID, {}};
+        std::string STR = toupper(str);
+        if (STR == std::string(QUIT_CMD1)
+            || STR == std::string(QUIT_CMD2)
+            /*|| str == std::string(QUIT_CMD3)*/) {
             return Command{CommandType::QUIT, {}};
-        } else if (str == std::string(MENU_CMD1)
-            || str == std::string(MENU_CMD2)
-            || str == std::string(MENU_CMD3)) {
+        } else if (STR == std::string(MENU_CMD1)
+            || STR == std::string(MENU_CMD2)
+            /*|| str == std::string(MENU_CMD3)*/) {
             return Command{CommandType::MENU, {}};
-        } else if (str == std::string(RESTART_CMD1)
-            || str == std::string(RESTART_CMD2)
-            || str == std::string(RESTART_CMD3)) {
+        } else if (STR == std::string(RESTART_CMD1)
+            || STR == std::string(RESTART_CMD2)
+            /*|| str == std::string(RESTART_CMD3)*/) {
             return Command{CommandType::RESTART, {}};
-        } else if (str == std::string(XQ4GB_CMD)) {
+        } else if (STR == std::string(XQ4GB_CMD)) {
             return Command{CommandType::XQ4GB};
         }
+
         if (str.size() != 2) return Command{CommandType::INVALID, {}};
         auto ret = Command{CommandType::PIECE, {get_int(str[0]), get_int(str[1])}};
         if (ret.pos.row == -1 or ret.pos.col == -1) return ret;
