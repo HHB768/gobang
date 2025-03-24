@@ -4,6 +4,7 @@
 #include "utils.hpp"
 
 namespace mfwu {
+
 enum class LogLevel : size_t {
     DEBUG = 0,
     INFO  = 1,
@@ -36,7 +37,7 @@ public:
             ss << '[' << buffer << ']';
         }
         ss << LogLevelDescription.at(static_cast<size_t>(level))
-           << ' ' << msg.msg << "\n";
+           << ' ' << msg.msg;
         return ss.str();
     }
 private:
@@ -74,15 +75,10 @@ public:
     FileAppender(LogLevel level, std::string filename="") 
         : LogAppender(level), filename_(filename), fs_() {
         if (filename == std::string("")) {
-            time_t now = time(0);
-            tm* lt = localtime(&now);
             std::string str = dir;
-            str += '/'; str += std::to_string(1900 + lt->tm_year);
-            str += '_'; str += std::to_string(1 + lt->tm_mon);
-            str += '_'; str += std::to_string(lt->tm_mday);
-            str += '_'; str += std::to_string(lt->tm_hour);
-            str += '_'; str += std::to_string(lt->tm_min);
-            str += '_'; str += std::to_string(lt->tm_sec); 
+            str += '/'; 
+            append_time_info(str);
+            str += ".log";
             filename_ = str;
             if (!std::filesystem::exists(dir)) {
                 bool succ = std::filesystem::create_directories(dir);
@@ -133,6 +129,14 @@ public:
     void log(LogLevel level, time_t time_stamp, const char* fmt, Args&&... args) {
         log(level, time_stamp, format(fmt, std::forward<Args>(args)...));
     }
+    template <typename... Args>
+    void log(LogLevel level, const std::string& fmt, Args&&... args) {
+        log(level, format(fmt.c_str(), std::forward<Args>(args)...));
+    }
+    template <typename... Args>
+    void log(LogLevel level, time_t time_stamp, const std::string& fmt, Args&&... args) {
+        log(level, time_stamp, format(fmt.c_str(), std::forward<Args>(args)...));
+    }
     // check: if we pass a string with const char*, 
     // should it be accepted by the first one?
     void log(LogLevel level, const std::string& msg) {
@@ -158,6 +162,15 @@ public:
         log(LogLevel::DEBUG, time_stamp, fmt, std::forward<Args>(args)...);
     }
     template <typename... Args>
+    void log_debug(const std::string& fmt, Args&&... args) {
+        log(LogLevel::DEBUG, fmt, std::forward<Args>(args)...);
+    }
+    template <typename... Args>
+    void log_debug(time_t time_stamp, const std::string& fmt, Args&&... args) {
+        log(LogLevel::DEBUG, time_stamp, fmt, std::forward<Args>(args)...);
+    }
+
+    template <typename... Args>
     void log_info(const char* fmt, Args&&... args) {
         log(LogLevel::INFO, fmt, std::forward<Args>(args)...);
     }
@@ -165,6 +178,15 @@ public:
     void log_info(time_t time_stamp, const char* fmt, Args&&... args) {
         log(LogLevel::INFO, time_stamp, fmt, std::forward<Args>(args)...);
     }
+    template <typename... Args>
+    void log_info(const std::string& fmt, Args&&... args) {
+        log(LogLevel::INFO, fmt, std::forward<Args>(args)...);
+    }
+    template <typename... Args>
+    void log_info(time_t time_stamp, const std::string& fmt, Args&&... args) {
+        log(LogLevel::INFO, time_stamp, fmt, std::forward<Args>(args)...);
+    }
+
     template <typename... Args>
     void log_warn(const char* fmt, Args&&... args) {
         log(LogLevel::WARN, fmt, std::forward<Args>(args)...);
@@ -174,11 +196,28 @@ public:
         log(LogLevel::WARN, time_stamp, fmt, std::forward<Args>(args)...);
     }
     template <typename... Args>
+    void log_warn(const std::string& fmt, Args&&... args) {
+        log(LogLevel::WARN, fmt, std::forward<Args>(args)...);
+    }
+    template <typename... Args>
+    void log_warn(time_t time_stamp, const std::string& fmt, Args&&... args) {
+        log(LogLevel::WARN, time_stamp, fmt, std::forward<Args>(args)...);
+    }
+
+    template <typename... Args>
     void log_error(const char* fmt, Args&&... args) {
         log(LogLevel::ERROR, fmt, std::forward<Args>(args)...);
     }
     template <typename... Args>
     void log_error(time_t time_stamp, const char* fmt, Args&&... args) {
+        log(LogLevel::ERROR, time_stamp, fmt, std::forward<Args>(args)...);
+    }
+    template <typename... Args>
+    void log_error(const std::string& fmt, Args&&... args) {
+        log(LogLevel::ERROR, fmt, std::forward<Args>(args)...);
+    }
+    template <typename... Args>
+    void log_error(time_t time_stamp, const std::string& fmt, Args&&... args) {
         log(LogLevel::ERROR, time_stamp, fmt, std::forward<Args>(args)...);
     }
     
@@ -297,6 +336,36 @@ void log_end_game(GameStatus status) {
     Logger& logger = Logger::Instance();
     logger.end_game(status);
 }
+
+
+// ---------------------------------------------
+// logerr shortcuts
+#define gc_error_exit(mode, size) do {  \
+    log_error(ERROR_NEW_GC);  \
+    log_error(XQ4GB_TIMESTAMP, "mode: %ld, size: %ld", \
+              static_cast<size_t>(mode), static_cast<size_t>(size));  \
+    exit(-10086);  \
+} while (0);
+inline void logerr_unknown_cmdtype()      { log_error(ERROR_UNKNOWN_COMMAND_TYPE); }
+inline void logerr_unknown_piece_status() { log_error(ERROR_UNKNOWN_PIECE_STATUS); }
+inline void logerr_unknown_game_status()  { log_error(ERROR_UNKNOWN_GAME_STATUS);  }
+
+// logwarn shortcuts
+inline void logwarn_multiple_sp(int i, int j) { 
+    log_warn(WARN_MULTIPLE_SP); 
+    log_warn(XQ4GB_TIMESTAMP, 
+             "Position [%d, %d] init failed: MULTIPLE SP PIECE",
+             i, j);
+    log_warn(XQ4GB_TIMESTAMP, "Init as real-color piece");
+}
+inline void logwarn_invalid_pos(int i, int j) { 
+    log_warn(WARN_INVALID_POS);
+    log_warn(XQ4GB_TIMESTAMP, 
+             "Position [%d, %d] init failed: UNKOWN PIECE COLOR",
+             i, j);
+    log_warn(XQ4GB_TIMESTAMP, "Init as empty position"); 
+}
+// -----------------------------------------------
 
 }  // endof namespace mfwu
 

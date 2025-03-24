@@ -35,7 +35,7 @@ protected:
 
 private:
     void place(const Piece& piece) {
-        board_->update(piece);
+        this->board_->update(piece);
     }
 };  // endof class Player
 

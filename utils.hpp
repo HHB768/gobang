@@ -158,13 +158,12 @@ namespace mfwu {
     inline bool is_lowercase(char c) {
         return c <= 'z' and c >= 'a';
     }
-    inline std::string tolower(const std::string& str) {
-        std::string ret; ret.reserve(str.size());
-        std::transform(str.begin(), str.end(), ret.begin(), ::tolower);
+    inline void tolower(std::string& str) {
+        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
     }
-    inline std::string toupper(const std::string& str) {
-        std::string ret; ret.reserve(str.size());
-        std::transform(str.begin(), str.end(), ret.begin(), ::toupper);
+    inline void toupper(std::string& str) {
+        std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+        // with unknown reason, only in-place usage will effect
     }
 
     inline GameMode print_mode_choice_help_cmd() {
@@ -258,6 +257,17 @@ namespace mfwu {
         return BoardSize::Small;
     }
 
+    inline void append_time_info(std::string& str) {
+        time_t now = time(0);
+        tm* lt = localtime(&now);
+        str += std::to_string(1900 + lt->tm_year);
+            str += '-'; str += std::to_string(1 + lt->tm_mon);
+            str += '-'; str += std::to_string(lt->tm_mday);
+            str += '_'; str += std::to_string(lt->tm_hour);
+            str += 'h'; str += std::to_string(lt->tm_min);
+            str += 'm'; str += std::to_string(lt->tm_sec); 
+            str += 's';
+    }
 }  // endof namespace mfwu
 
 

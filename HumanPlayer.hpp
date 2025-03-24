@@ -14,7 +14,7 @@ public:
     virtual CommandType play() override {
         Command cmd = this->board_->get_command();
         log_debug("Human player gets cmd: %s", 
-                  CommandTypeDescription.at(static_cast<size_t>(cmd.type)));
+                  CommandTypeDescription.at(static_cast<size_t>(cmd.type)).c_str());
         switch (cmd.type) {
         case CommandType::PIECE : {
             this->place(cmd.pos);

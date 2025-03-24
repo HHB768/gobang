@@ -3,6 +3,7 @@
 
 #include "utils.hpp"
 #include "CmdFramework.hpp"
+#include "Logger.hpp"
 
 namespace mfwu {
 
@@ -99,7 +100,7 @@ public:
         std::stringstream ss;
         for (size_t i = 0; i < len(); i++) {
             for (size_t j = 0; j < len(); j++) {
-                ss<< board_[i][j]->get_status() << " ";
+                ss<< this->board_[i][j]->get_status() << " ";
             }
             ss << "\n";
         }
@@ -400,6 +401,10 @@ public:
         cmd_clear();
         show_board();
     }
+    void show_without_log() const {
+        cmd_clear();
+        show_board_without_log();
+    }
     void refresh() override {
         show();
     }
@@ -423,7 +428,7 @@ private:
         ss << std::string(str.size(), piece_char) << "\n"; 
         ss << str << "\n";
         ss << std::string(str.size(), piece_char) << "\n";
-        log_info(str);
+        log_info(str.c_str());
         return ss.str();
     }
     void winner_display(const Piece::Color&) override {
@@ -439,6 +444,7 @@ private:
     void show_pieces_in_a_row() {
         count_res_8 res;
         this->count_dir(this->last_piece_, &res);
+        bool is_not_over = false;
         for (int i = 0; i < 10; i++) {
             if (res.left + res.right >= NoPtW - 1) {
                 display_left_right(this->last_piece_, res.left, res.right);
@@ -453,10 +459,14 @@ private:
                     this->last_piece_, res.down_left, res.up_right
                 );
             } else {
-                log_error("game is not over yet");
+                is_not_over = true;
             }  
             usleep(200000);
         }
+        if (is_not_over) {
+            log_error("game is not over yet");
+        }
+        this->show();
     }
     static constexpr int usec = 100000;
     void display_left_right(const Piece& piece, int left, int right) {
@@ -465,11 +475,11 @@ private:
             if (left > 0) { framework_.set_highlight(row, col - left); }
             if (right > 0) { framework_.set_highlight(row, col + right); }
             left--; right--;
-            this->show();
+            this->show_without_log();
             usleep(usec);
         }
         framework_.set_highlight(row, col);
-        this->show();
+        this->show_without_log();
     }
     void display_up_down(const Piece& piece, int up, int down) {
         int row = piece.row, col = piece.col;
@@ -477,11 +487,11 @@ private:
             if (up > 0) { framework_.set_highlight(row - up, col); }
             if (down > 0) { framework_.set_highlight(row + down, col); }
             up--; down--;
-            this->show();
+            this->show_without_log();
             usleep(usec);
         }
         framework_.set_highlight(row, col);
-        this->show();
+        this->show_without_log();
     }
     void display_up_left_down_right(const Piece& piece, int up_left, int down_right) {
         int row = piece.row, col = piece.col;
@@ -489,11 +499,11 @@ private:
             if (up_left > 0) { framework_.set_highlight(row - up_left, col - up_left); }
             if (down_right > 0) { framework_.set_highlight(row + down_right, col + down_right); }
             up_left--; down_right--;
-            this->show();
+            this->show_without_log();
             usleep(usec);
         }
         framework_.set_highlight(row, col);
-        this->show();
+        this->show_without_log();
     }
     void display_down_left_up_right(const Piece& piece, int down_left, int up_right) {
         int row = piece.row, col = piece.col;
@@ -501,11 +511,11 @@ private:
             if (down_left > 0) { framework_.set_highlight(row + down_left, col - down_left); }
             if (up_right > 0) { framework_.set_highlight(row - up_right, col + up_right); }
             down_left--; up_right--;
-            this->show();
+            this->show_without_log();
             usleep(usec);
         }
         framework_.set_highlight(row, col);
-        this->show();
+        this->show_without_log();
     }
 
 
@@ -517,28 +527,33 @@ private:
         if (this->last_piece_.get_status() == 0) { return ; }  // empty last_piece
         framework_.remove_last_sp(this->last_piece_);
         this->last_piece_.color = Piece::Color{this->last_piece_.get_status() - 1};
+        // LOL, you update this last_piece_ that is going to be reset here
+        // and forget to update the board_ XD XQX 25.03.24
+        this->board_[this->last_piece_.row][this->last_piece_.col]
+            = std::make_shared<Piece>(this->last_piece_);  // CHECK: MEMLEAK
     }
     void update_new_piece(const Piece& piece) {
         ChessBoard<Size>::update(piece);
         framework_.update_new_sp(this->last_piece_);
     }
 
-    Command validate_input(const std::string& str) {
-        if (str.size() > 10) return Command{CommandType::INVALID, {}};
-        std::string STR = toupper(str);
-        if (STR == std::string(QUIT_CMD1)
-            || STR == std::string(QUIT_CMD2)
+    Command validate_input(const std::string& rstr) {
+        if (rstr.size() > 10) return Command{CommandType::INVALID, {}};
+        std::string str = rstr;
+        toupper(str);
+        if (str == std::string(QUIT_CMD1)
+            || str == std::string(QUIT_CMD2)
             /*|| str == std::string(QUIT_CMD3)*/) {
             return Command{CommandType::QUIT, {}};
-        } else if (STR == std::string(MENU_CMD1)
-            || STR == std::string(MENU_CMD2)
+        } else if (str == std::string(MENU_CMD1)
+            || str == std::string(MENU_CMD2)
             /*|| str == std::string(MENU_CMD3)*/) {
             return Command{CommandType::MENU, {}};
-        } else if (STR == std::string(RESTART_CMD1)
-            || STR == std::string(RESTART_CMD2)
+        } else if (str == std::string(RESTART_CMD1)
+            || str == std::string(RESTART_CMD2)
             /*|| str == std::string(RESTART_CMD3)*/) {
             return Command{CommandType::RESTART, {}};
-        } else if (STR == std::string(XQ4GB_CMD)) {
+        } else if (str == std::string(XQ4GB_CMD)) {
             return Command{CommandType::XQ4GB};
         }
 
@@ -570,6 +585,9 @@ private:
         // TODO: better design:
         // make framework a class
         framework_.show();
+    }
+    void show_board_without_log() const {
+        framework_.show_without_log();
     }
     
     DisplayFramework<Size> framework_;

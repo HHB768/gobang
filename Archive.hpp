@@ -15,15 +15,10 @@ public:
     static constexpr const char* dir = "./archive";
     Archive(const std::string& archive_filename="") {
         if (archive_filename == std::string("")) {
-            time_t now = time(0);
-            tm* lt = localtime(&now);
             std::string str = dir;
-            str += '/'; str += std::to_string(1900 + lt->tm_year);
-            str += '_'; str += std::to_string(1 + lt->tm_mon);
-            str += '_'; str += std::to_string(lt->tm_mday);
-            str += '_'; str += std::to_string(lt->tm_hour);
-            str += '_'; str += std::to_string(lt->tm_min);
-            str += '_'; str += std::to_string(lt->tm_sec); 
+            str += '/'; 
+            append_time_info(str);
+            str += ".arc";
             archive_filename_ = str;
             if (!std::filesystem::exists(dir)) {
                 status_ = std::filesystem::create_directories(dir);

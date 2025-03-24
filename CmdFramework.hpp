@@ -2,6 +2,7 @@
 #define __CMD_FRAMEWORK_HPP__
 
 #include "utils.hpp"
+#include "Logger.hpp"
 
 // gui(?) of cmd mode lol
 namespace mfwu {
@@ -49,9 +50,20 @@ public:
     } 
 
     void show() const {
+        std::stringstream ss;
+        log_debug("board: ");
         for (const std::string& line : framework_) {
-            std::cout << line << "\n";
+            ss << line << "\n";
+            log_debug(XQ4GB_TIMESTAMP, line.c_str());
         }
+        std::cout << ss.str();
+    }
+    void show_without_log() const {
+        std::stringstream ss;
+        for (const std::string& line : framework_) {
+            ss << line << "\n";
+        }
+        std::cout << ss.str();
     }
     void remove_last_sp(const Piece& last_piece) {
         remove_highlight(last_piece.row, last_piece.col);
@@ -136,7 +148,7 @@ private:
     // i change size_t into int on 03.22
     // but i havent found init problem before
     char& get_pos_ref_in_framework(int r, int c) {
-        return framework_[get_row_in_framework(i)][get_col_in_framework(j)];
+        return framework_[get_row_in_framework(r)][get_col_in_framework(c)];
     }
     static std::pair<size_t, size_t> get_pos_in_framework(int r, int c) {
         return {get_row_in_framework(r), get_col_in_framework(c)};
@@ -244,7 +256,7 @@ private:
                 log_error("last piece is not placed yet");
             } else {
                 add_sp(Piece{last_piece.row, last_piece.col, 
-                       Piece::Color{last_piece.get_real_color() + 1}});  // CHECK: can i?
+                       Piece::Color{Piece::get_real_color(last_piece.color) + 1}});  // CHECK: can i?
             }
         }
     }
