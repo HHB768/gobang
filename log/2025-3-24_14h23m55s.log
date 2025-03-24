@@ -1,0 +1,323 @@
+[2025-03-24 14:23:55][INFO]  game controller inits...
+[2025-03-24 14:23:55][DEBUG] ------------------------------
+[2025-03-24 14:23:55][DEBUG] player1 color: Black
+[2025-03-24 14:23:55][DEBUG] player2 color: White
+[2025-03-24 14:23:55][DEBUG] player1 plays first: True
+[2025-03-24 14:23:55][DEBUG] current player: Player1
+[2025-03-24 14:23:55][DEBUG] idle_:D player: Player2
+[2025-03-24 14:23:55][DEBUG] archive status: online
+[2025-03-24 14:23:55][DEBUG] ------------------------------
+[2025-03-24 14:23:55][DEBUG] board: 
+                     [DEBUG]     A B C D E F G H I J K L M   
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+                     [DEBUG] A . + + + + + + + + + + + + + . 
+                     [DEBUG] B . + + + + + + + + + + + + + . 
+                     [DEBUG] C . + + + + + + + + + + + + + . 
+                     [DEBUG] D . + + + + + + + + + + + + + . 
+                     [DEBUG] E . + + + + + + + + + + + + + . 
+                     [DEBUG] F . + + + + + + + + + + + + + . 
+                     [DEBUG] G . + + + + + + + + + + + + + . 
+                     [DEBUG] H . + + + + + + + + + + + + + . 
+                     [DEBUG] I . + + + + + + + + + + + + + . 
+                     [DEBUG] J . + + + + + + + + + + + + + . 
+                     [DEBUG] K . + + + + + + + + + + + + + . 
+                     [DEBUG] L . + + + + + + + + + + + + + . 
+                     [DEBUG] M . + + + + + + + + + + + + + . 
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+[2025-03-24 14:23:57][DEBUG] Human player puts cmd: PIECE
+[2025-03-24 14:23:57][DEBUG] Human's pos: [0, 0]
+[2025-03-24 14:23:57][DEBUG] board: 
+                     [DEBUG]     A B C D E F G H I J K L M   
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+                     [DEBUG] A .[*]+ + + + + + + + + + + + . 
+                     [DEBUG] B . + + + + + + + + + + + + + . 
+                     [DEBUG] C . + + + + + + + + + + + + + . 
+                     [DEBUG] D . + + + + + + + + + + + + + . 
+                     [DEBUG] E . + + + + + + + + + + + + + . 
+                     [DEBUG] F . + + + + + + + + + + + + + . 
+                     [DEBUG] G . + + + + + + + + + + + + + . 
+                     [DEBUG] H . + + + + + + + + + + + + + . 
+                     [DEBUG] I . + + + + + + + + + + + + + . 
+                     [DEBUG] J . + + + + + + + + + + + + + . 
+                     [DEBUG] K . + + + + + + + + + + + + + . 
+                     [DEBUG] L . + + + + + + + + + + + + + . 
+                     [DEBUG] M . + + + + + + + + + + + + + . 
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+[2025-03-24 14:23:58][INFO]  Robot's pos: [0, 9]
+[2025-03-24 14:23:58][DEBUG] board: 
+                     [DEBUG]     A B C D E F G H I J K L M   
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+                     [DEBUG] A . X + + + + + + + +[@]+ + + . 
+                     [DEBUG] B . + + + + + + + + + + + + + . 
+                     [DEBUG] C . + + + + + + + + + + + + + . 
+                     [DEBUG] D . + + + + + + + + + + + + + . 
+                     [DEBUG] E . + + + + + + + + + + + + + . 
+                     [DEBUG] F . + + + + + + + + + + + + + . 
+                     [DEBUG] G . + + + + + + + + + + + + + . 
+                     [DEBUG] H . + + + + + + + + + + + + + . 
+                     [DEBUG] I . + + + + + + + + + + + + + . 
+                     [DEBUG] J . + + + + + + + + + + + + + . 
+                     [DEBUG] K . + + + + + + + + + + + + + . 
+                     [DEBUG] L . + + + + + + + + + + + + + . 
+                     [DEBUG] M . + + + + + + + + + + + + + . 
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+[2025-03-24 14:23:58][DEBUG] Human player puts cmd: PIECE
+[2025-03-24 14:23:58][DEBUG] Human's pos: [0, 1]
+[2025-03-24 14:23:58][DEBUG] board: 
+                     [DEBUG]     A B C D E F G H I J K L M   
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+                     [DEBUG] A . X[*]+ + + + + + + O + + + . 
+                     [DEBUG] B . + + + + + + + + + + + + + . 
+                     [DEBUG] C . + + + + + + + + + + + + + . 
+                     [DEBUG] D . + + + + + + + + + + + + + . 
+                     [DEBUG] E . + + + + + + + + + + + + + . 
+                     [DEBUG] F . + + + + + + + + + + + + + . 
+                     [DEBUG] G . + + + + + + + + + + + + + . 
+                     [DEBUG] H . + + + + + + + + + + + + + . 
+                     [DEBUG] I . + + + + + + + + + + + + + . 
+                     [DEBUG] J . + + + + + + + + + + + + + . 
+                     [DEBUG] K . + + + + + + + + + + + + + . 
+                     [DEBUG] L . + + + + + + + + + + + + + . 
+                     [DEBUG] M . + + + + + + + + + + + + + . 
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+[2025-03-24 14:23:59][INFO]  Robot's pos: [11, 4]
+[2025-03-24 14:23:59][DEBUG] board: 
+                     [DEBUG]     A B C D E F G H I J K L M   
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+                     [DEBUG] A . X X + + + + + + + O + + + . 
+                     [DEBUG] B . + + + + + + + + + + + + + . 
+                     [DEBUG] C . + + + + + + + + + + + + + . 
+                     [DEBUG] D . + + + + + + + + + + + + + . 
+                     [DEBUG] E . + + + + + + + + + + + + + . 
+                     [DEBUG] F . + + + + + + + + + + + + + . 
+                     [DEBUG] G . + + + + + + + + + + + + + . 
+                     [DEBUG] H . + + + + + + + + + + + + + . 
+                     [DEBUG] I . + + + + + + + + + + + + + . 
+                     [DEBUG] J . + + + + + + + + + + + + + . 
+                     [DEBUG] K . + + + + + + + + + + + + + . 
+                     [DEBUG] L . + + + +[@]+ + + + + + + + . 
+                     [DEBUG] M . + + + + + + + + + + + + + . 
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+[2025-03-24 14:23:59][DEBUG] Human player puts cmd: PIECE
+[2025-03-24 14:23:59][DEBUG] Human's pos: [0, 2]
+[2025-03-24 14:23:59][DEBUG] board: 
+                     [DEBUG]     A B C D E F G H I J K L M   
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+                     [DEBUG] A . X X[*]+ + + + + + O + + + . 
+                     [DEBUG] B . + + + + + + + + + + + + + . 
+                     [DEBUG] C . + + + + + + + + + + + + + . 
+                     [DEBUG] D . + + + + + + + + + + + + + . 
+                     [DEBUG] E . + + + + + + + + + + + + + . 
+                     [DEBUG] F . + + + + + + + + + + + + + . 
+                     [DEBUG] G . + + + + + + + + + + + + + . 
+                     [DEBUG] H . + + + + + + + + + + + + + . 
+                     [DEBUG] I . + + + + + + + + + + + + + . 
+                     [DEBUG] J . + + + + + + + + + + + + + . 
+                     [DEBUG] K . + + + + + + + + + + + + + . 
+                     [DEBUG] L . + + + + O + + + + + + + + . 
+                     [DEBUG] M . + + + + + + + + + + + + + . 
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+[2025-03-24 14:24:00][INFO]  Robot's pos: [1, 1]
+[2025-03-24 14:24:00][DEBUG] board: 
+                     [DEBUG]     A B C D E F G H I J K L M   
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+                     [DEBUG] A . X X X + + + + + + O + + + . 
+                     [DEBUG] B . +[@]+ + + + + + + + + + + . 
+                     [DEBUG] C . + + + + + + + + + + + + + . 
+                     [DEBUG] D . + + + + + + + + + + + + + . 
+                     [DEBUG] E . + + + + + + + + + + + + + . 
+                     [DEBUG] F . + + + + + + + + + + + + + . 
+                     [DEBUG] G . + + + + + + + + + + + + + . 
+                     [DEBUG] H . + + + + + + + + + + + + + . 
+                     [DEBUG] I . + + + + + + + + + + + + + . 
+                     [DEBUG] J . + + + + + + + + + + + + + . 
+                     [DEBUG] K . + + + + + + + + + + + + + . 
+                     [DEBUG] L . + + + + O + + + + + + + + . 
+                     [DEBUG] M . + + + + + + + + + + + + + . 
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+[2025-03-24 14:24:00][DEBUG] Human player puts cmd: PIECE
+[2025-03-24 14:24:00][DEBUG] Human's pos: [0, 3]
+[2025-03-24 14:24:00][DEBUG] board: 
+                     [DEBUG]     A B C D E F G H I J K L M   
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+                     [DEBUG] A . X X X[*]+ + + + + O + + + . 
+                     [DEBUG] B . + O + + + + + + + + + + + . 
+                     [DEBUG] C . + + + + + + + + + + + + + . 
+                     [DEBUG] D . + + + + + + + + + + + + + . 
+                     [DEBUG] E . + + + + + + + + + + + + + . 
+                     [DEBUG] F . + + + + + + + + + + + + + . 
+                     [DEBUG] G . + + + + + + + + + + + + + . 
+                     [DEBUG] H . + + + + + + + + + + + + + . 
+                     [DEBUG] I . + + + + + + + + + + + + + . 
+                     [DEBUG] J . + + + + + + + + + + + + + . 
+                     [DEBUG] K . + + + + + + + + + + + + + . 
+                     [DEBUG] L . + + + + O + + + + + + + + . 
+                     [DEBUG] M . + + + + + + + + + + + + + . 
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+[2025-03-24 14:24:01][INFO]  Robot's pos: [12, 3]
+[2025-03-24 14:24:01][DEBUG] board: 
+                     [DEBUG]     A B C D E F G H I J K L M   
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+                     [DEBUG] A . X X X X + + + + + O + + + . 
+                     [DEBUG] B . + O + + + + + + + + + + + . 
+                     [DEBUG] C . + + + + + + + + + + + + + . 
+                     [DEBUG] D . + + + + + + + + + + + + + . 
+                     [DEBUG] E . + + + + + + + + + + + + + . 
+                     [DEBUG] F . + + + + + + + + + + + + + . 
+                     [DEBUG] G . + + + + + + + + + + + + + . 
+                     [DEBUG] H . + + + + + + + + + + + + + . 
+                     [DEBUG] I . + + + + + + + + + + + + + . 
+                     [DEBUG] J . + + + + + + + + + + + + + . 
+                     [DEBUG] K . + + + + + + + + + + + + + . 
+                     [DEBUG] L . + + + + O + + + + + + + + . 
+                     [DEBUG] M . + + +[@]+ + + + + + + + + . 
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+[2025-03-24 14:24:01][DEBUG] Human player puts cmd: PIECE
+[2025-03-24 14:24:01][DEBUG] Human's pos: [0, 4]
+[2025-03-24 14:24:01][DEBUG] board: 
+                     [DEBUG]     A B C D E F G H I J K L M   
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+                     [DEBUG] A . X X X X[*]+ + + + O + + + . 
+                     [DEBUG] B . + O + + + + + + + + + + + . 
+                     [DEBUG] C . + + + + + + + + + + + + + . 
+                     [DEBUG] D . + + + + + + + + + + + + + . 
+                     [DEBUG] E . + + + + + + + + + + + + + . 
+                     [DEBUG] F . + + + + + + + + + + + + + . 
+                     [DEBUG] G . + + + + + + + + + + + + + . 
+                     [DEBUG] H . + + + + + + + + + + + + + . 
+                     [DEBUG] I . + + + + + + + + + + + + + . 
+                     [DEBUG] J . + + + + + + + + + + + + + . 
+                     [DEBUG] K . + + + + + + + + + + + + + . 
+                     [DEBUG] L . + + + + O + + + + + + + + . 
+                     [DEBUG] M . + + + O + + + + + + + + + . 
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+[2025-03-24 14:24:07][DEBUG] board: 
+                     [DEBUG]     A B C D E F G H I J K L M   
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+                     [DEBUG] A .[X[X[X[X[*]+ + + + O + + + . 
+                     [DEBUG] B . + O + + + + + + + + + + + . 
+                     [DEBUG] C . + + + + + + + + + + + + + . 
+                     [DEBUG] D . + + + + + + + + + + + + + . 
+                     [DEBUG] E . + + + + + + + + + + + + + . 
+                     [DEBUG] F . + + + + + + + + + + + + + . 
+                     [DEBUG] G . + + + + + + + + + + + + + . 
+                     [DEBUG] H . + + + + + + + + + + + + + . 
+                     [DEBUG] I . + + + + + + + + + + + + + . 
+                     [DEBUG] J . + + + + + + + + + + + + + . 
+                     [DEBUG] K . + + + + + + + + + + + + + . 
+                     [DEBUG] L . + + + + O + + + + + + + + . 
+                     [DEBUG] M . + + + O + + + + + + + + + . 
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+[2025-03-24 14:24:07][INFO]  *** --- Black player wins! --- ***
+[2025-03-24 14:24:08][INFO]  game ends with status: NORMAL
+[2025-03-24 14:24:08][DEBUG] board: 
+                     [DEBUG]     A B C D E F G H I J K L M   
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+                     [DEBUG] A . + + + + + + + + + + + + + . 
+                     [DEBUG] B . + + + + + + + + + + + + + . 
+                     [DEBUG] C . + + + + + + + + + + + + + . 
+                     [DEBUG] D . + + + + + + + + + + + + + . 
+                     [DEBUG] E . + + + + + + + + + + + + + . 
+                     [DEBUG] F . + + + + + + + + + + + + + . 
+                     [DEBUG] G . + + + + + + + + + + + + + . 
+                     [DEBUG] H . + + + + + + + + + + + + + . 
+                     [DEBUG] I . + + + + + + + + + + + + + . 
+                     [DEBUG] J . + + + + + + + + + + + + + . 
+                     [DEBUG] K . + + + + + + + + + + + + + . 
+                     [DEBUG] L . + + + + + + + + + + + + + . 
+                     [DEBUG] M . + + + + + + + + + + + + + . 
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+[2025-03-24 14:24:09][INFO]  Robot's pos: [1, 7]
+[2025-03-24 14:24:09][DEBUG] board: 
+                     [DEBUG]     A B C D E F G H I J K L M   
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+                     [DEBUG] A . + + + + + + + + + + + + + . 
+                     [DEBUG] B . + + + + + + +[*]+ + + + + . 
+                     [DEBUG] C . + + + + + + + + + + + + + . 
+                     [DEBUG] D . + + + + + + + + + + + + + . 
+                     [DEBUG] E . + + + + + + + + + + + + + . 
+                     [DEBUG] F . + + + + + + + + + + + + + . 
+                     [DEBUG] G . + + + + + + + + + + + + + . 
+                     [DEBUG] H . + + + + + + + + + + + + + . 
+                     [DEBUG] I . + + + + + + + + + + + + + . 
+                     [DEBUG] J . + + + + + + + + + + + + + . 
+                     [DEBUG] K . + + + + + + + + + + + + + . 
+                     [DEBUG] L . + + + + + + + + + + + + + . 
+                     [DEBUG] M . + + + + + + + + + + + + + . 
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+[2025-03-24 14:24:15][DEBUG] Human player puts cmd: PIECE
+[2025-03-24 14:24:15][DEBUG] Human's pos: [0, 2]
+[2025-03-24 14:24:15][DEBUG] board: 
+                     [DEBUG]     A B C D E F G H I J K L M   
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+                     [DEBUG] A . + +[@]+ + + + + + + + + + . 
+                     [DEBUG] B . + + + + + + + X + + + + + . 
+                     [DEBUG] C . + + + + + + + + + + + + + . 
+                     [DEBUG] D . + + + + + + + + + + + + + . 
+                     [DEBUG] E . + + + + + + + + + + + + + . 
+                     [DEBUG] F . + + + + + + + + + + + + + . 
+                     [DEBUG] G . + + + + + + + + + + + + + . 
+                     [DEBUG] H . + + + + + + + + + + + + + . 
+                     [DEBUG] I . + + + + + + + + + + + + + . 
+                     [DEBUG] J . + + + + + + + + + + + + + . 
+                     [DEBUG] K . + + + + + + + + + + + + + . 
+                     [DEBUG] L . + + + + + + + + + + + + + . 
+                     [DEBUG] M . + + + + + + + + + + + + + . 
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+[2025-03-24 14:24:16][INFO]  Robot's pos: [2, 3]
+[2025-03-24 14:24:16][DEBUG] board: 
+                     [DEBUG]     A B C D E F G H I J K L M   
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+                     [DEBUG] A . + + O + + + + + + + + + + . 
+                     [DEBUG] B . + + + + + + + X + + + + + . 
+                     [DEBUG] C . + + +[*]+ + + + + + + + + . 
+                     [DEBUG] D . + + + + + + + + + + + + + . 
+                     [DEBUG] E . + + + + + + + + + + + + + . 
+                     [DEBUG] F . + + + + + + + + + + + + + . 
+                     [DEBUG] G . + + + + + + + + + + + + + . 
+                     [DEBUG] H . + + + + + + + + + + + + + . 
+                     [DEBUG] I . + + + + + + + + + + + + + . 
+                     [DEBUG] J . + + + + + + + + + + + + + . 
+                     [DEBUG] K . + + + + + + + + + + + + + . 
+                     [DEBUG] L . + + + + + + + + + + + + + . 
+                     [DEBUG] M . + + + + + + + + + + + + + . 
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+[2025-03-24 14:24:20][DEBUG] Human player puts cmd: RESTART
+[2025-03-24 14:24:20][INFO]  game ends with status: RESTART
+[2025-03-24 14:24:20][DEBUG] board: 
+                     [DEBUG]     A B C D E F G H I J K L M   
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+                     [DEBUG] A . + + + + + + + + + + + + + . 
+                     [DEBUG] B . + + + + + + + + + + + + + . 
+                     [DEBUG] C . + + + + + + + + + + + + + . 
+                     [DEBUG] D . + + + + + + + + + + + + + . 
+                     [DEBUG] E . + + + + + + + + + + + + + . 
+                     [DEBUG] F . + + + + + + + + + + + + + . 
+                     [DEBUG] G . + + + + + + + + + + + + + . 
+                     [DEBUG] H . + + + + + + + + + + + + + . 
+                     [DEBUG] I . + + + + + + + + + + + + + . 
+                     [DEBUG] J . + + + + + + + + + + + + + . 
+                     [DEBUG] K . + + + + + + + + + + + + + . 
+                     [DEBUG] L . + + + + + + + + + + + + + . 
+                     [DEBUG] M . + + + + + + + + + + + + + . 
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+[2025-03-24 14:24:21][INFO]  Robot's pos: [0, 4]
+[2025-03-24 14:24:21][DEBUG] board: 
+                     [DEBUG]     A B C D E F G H I J K L M   
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+                     [DEBUG] A . + + + +[*]+ + + + + + + + . 
+                     [DEBUG] B . + + + + + + + + + + + + + . 
+                     [DEBUG] C . + + + + + + + + + + + + + . 
+                     [DEBUG] D . + + + + + + + + + + + + + . 
+                     [DEBUG] E . + + + + + + + + + + + + + . 
+                     [DEBUG] F . + + + + + + + + + + + + + . 
+                     [DEBUG] G . + + + + + + + + + + + + + . 
+                     [DEBUG] H . + + + + + + + + + + + + + . 
+                     [DEBUG] I . + + + + + + + + + + + + + . 
+                     [DEBUG] J . + + + + + + + + + + + + + . 
+                     [DEBUG] K . + + + + + + + + + + + + + . 
+                     [DEBUG] L . + + + + + + + + + + + + + . 
+                     [DEBUG] M . + + + + + + + + + + + + + . 
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+[2025-03-24 14:24:23][DEBUG] Human player puts cmd: QUIT
+[2025-03-24 14:24:23][INFO]  game ends with status: QUIT

@@ -163,7 +163,11 @@ namespace mfwu {
     }
     inline void toupper(std::string& str) {
         std::transform(str.begin(), str.end(), str.begin(), ::toupper);
-        // with unknown reason, only in-place usage will effect
+        // wrong usage:
+        // std::string ret; ret.reserve(str.size());
+        // std::transform(str.begin(), str.end(), ret.begin(), ::toupper);
+        // return ret;
+        // reason: ret.begin() == ret.end();
     }
 
     inline GameMode print_mode_choice_help_cmd() {

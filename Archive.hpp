@@ -54,8 +54,10 @@ public:
     std::string get_last_frame() const {
         return frames_.back();
     }
-    void pop_last_record() const {
-        frames_.pop_back();
+    void pop_last_record(int num=1) {
+        for (int i = 0; i < num; i++) {
+            frames_.pop_back();     
+        }
     }
     bool get_status() const {
         return status_;

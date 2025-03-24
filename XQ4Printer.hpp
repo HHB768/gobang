@@ -162,7 +162,7 @@ matrix_empty = {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
                 {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
                 {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
 
-class printer {
+class XQ4Printer {
 public:
     using M_type = std::vector<std::list<int>>;
     
@@ -199,7 +199,7 @@ private:
     static M_type _copy(const M_type& m1) {
         return M_type(m1);
     }
-};  // endof class printer
+};  // endof class XQ4Printer
 
 
 

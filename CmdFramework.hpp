@@ -9,8 +9,8 @@ namespace mfwu {
 
 template <BoardSize Size=BoardSize::Small>
 class DisplayFramework {
-    //  board: 2 * 3
-    /*
+    /*  
+        board: 2 * 3
             A B C 
           . . . . .
         A . O + X .

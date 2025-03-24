@@ -75,7 +75,7 @@ public:
                 return ;
             }
         } while (!this->check_end());
-        // only victory comes here
+        // only is_end() == true comes here
         winner_display(idle_player_->get_color());
     }
     
@@ -147,7 +147,7 @@ private:
 
         // log
         log_info("game controller inits...");
-        log_debug("-----------------------------------------");
+        log_debug("------------------------------");
         log_debug("player1 color: %s", 
                   (Piece::get_real_color(player1_.get_color_const()) 
                    == Piece::get_real_color(Piece::Color::White) ? "White" : "Black"));
@@ -156,14 +156,14 @@ private:
                    == Piece::get_real_color(Piece::Color::White) ? "White" : "Black"));
         log_debug("player1 plays first: %s", (player1_first_ ? "True" : "False"));
         log_debug("current player: %s", (current_player_ == &player1_ ? "Player1" : "Player2"));
-        log_debug("idle_:D player: %s", (current_player_ == &player1_ ? "Player1" : "Player2"));  // :D
+        log_debug("idle_:D player: %s", (idle_player_ == &player1_ ? "Player1" : "Player2"));  // :D
         if (archive_.get_status() == true) {
             log_debug("archive status: online");
         } else {
             log_error("archive status: offline");
             log_error(XQ4GB_TIMESTAMP, "your archive may be lost");
         }
-        log_debug("-----------------------------------------");
+        log_debug("------------------------------");
         // show CHECK: we really need this?
         // board_->show();
     }
