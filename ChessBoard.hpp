@@ -48,6 +48,8 @@ public:
     virtual std::string serialize() const = 0;
     virtual std::vector<std::vector<size_t>> snap() const = 0;
 
+    virtual bool is_valid_pos(int r, int c) = 0;
+
 protected:
     Piece last_piece_;
     bool status_;
@@ -92,7 +94,7 @@ public:
             = std::make_shared<Piece>(last_piece_);
     }
     size_t get_status(int row, int col) const {
-        assert(is_valid_row_col(row, col));
+        assert(is_valid_pos(row, col));
         return board_[row][col]->get_status();
     }
 
@@ -273,6 +275,18 @@ public:
 
     virtual void show() const = 0;
     virtual void refresh() = 0;
+
+    bool is_clear() const {
+        for (auto&& row : this->board_) {
+            for (auto&& pos : row) {
+                if (pos->get_status()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    
 protected:
     virtual void show_board() const = 0;
     virtual void _init_board() {
@@ -339,7 +353,7 @@ private:
     static bool is_valid_col(int col) {
         return col >= 0 and col < size_;
     }
-    static bool is_valid_row_col(int row, int col) {
+    static bool is_valid_pos(int row, int col) override {
         return is_valid_row(row) && is_valid_col(col);
     }
 };  // endof class ChessBoard

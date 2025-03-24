@@ -103,6 +103,19 @@ namespace mfwu {
     const std::pair<int, int> dir_up_rihgt   = dirs[6];
     const std::pair<int, int> dir_up_left    = dirs[7];
 
+    const std::vector<std::pair<int, int>> half_dirs = {
+        {1, 0}, {0, 1}, {1, 1}, {1, -1}
+    };
+    const std::vector<size_t> score_map = {
+        1000,
+        100,
+        80,
+        50,
+        20,
+        8,
+        0
+    };
+
     struct count_res_4 {
         int left_right, up_down;
         int up_left_down_right, up_right_down_left;

@@ -65,6 +65,7 @@ constexpr const char* CMD_CLEAR = "\033[2J\033[1;1H";
 inline void cmd_clear() { std::cout << CMD_CLEAR; }
 
 constexpr const time_t XQ4GB_TIMESTAMP = 1741352220;
+constexpr const float eps = 0.01F;
 
 }  // endof namespace mfwu
 #endif  // __CONSTDEF_HPP__
