@@ -45,6 +45,7 @@ constexpr const char* HELPER_INVALIDSIZE_2 = "Invalid size selection: input is n
 constexpr const char* HELPER_INVALIDSIZE_3 = "Invalid size selection: input is not in alternative options -.- \n"
                                              "Just key in A/B/C or 1/2/3";
 constexpr const char* HELPER_OCCUPIED_POSITION = "invalid position: occupied";
+constexpr const char* HELPER_INVALID_POSITION  = "invalid piece position, plz try again";
 // ---------------------------------------------------------------------------
 
 // error messages

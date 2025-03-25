@@ -31,8 +31,9 @@ int main() {
         using Human_type = HumanPlayer;
 #endif
 
-        using Robot_type = DebugRobot;
+        // using Robot_type = DebugRobot;
         // using Robot_type = DummyRobot;
+        using Robot_type = HumanLikeRobot;
         
 
         switch (mode) {

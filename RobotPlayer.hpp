@@ -203,9 +203,9 @@ private:
                             || seq == 1 && (emp + jump1 + jump2) >= 3) {
             rank = 4;
         } else if (seq == 2 || seq == 1 && (emp + jump1 + jump2 >= 2)) {
-            rank = 6;
-        } else if (seq == 1) {
             rank = 5;
+        } else if (seq == 1) {
+            rank = 6;
         } else {
             assert(1 == 0);
             log_error("lol upi forget this situation");

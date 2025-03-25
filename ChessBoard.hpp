@@ -48,7 +48,7 @@ public:
     virtual std::string serialize() const = 0;
     virtual std::vector<std::vector<size_t>> snap() const = 0;
 
-    virtual bool is_valid_pos(int r, int c) = 0;
+    virtual bool is_valid_pos(int r, int c) const = 0;
 
 protected:
     Piece last_piece_;
@@ -353,7 +353,7 @@ private:
     static bool is_valid_col(int col) {
         return col >= 0 and col < size_;
     }
-    static bool is_valid_pos(int row, int col) override {
+    bool is_valid_pos(int row, int col) const override {
         return is_valid_row(row) && is_valid_col(col);
     }
 };  // endof class ChessBoard
@@ -406,7 +406,7 @@ public:
         if (ret.type == CommandType::INVALID
             ||(ret.type == CommandType::PIECE 
                && (ret.pos.row < 0 or ret.pos.col < 0))) {
-            std::cout << "invalid piece position, plz try again\n";
+            std::cout << HELPER_INVALID_POSITION << "\n";
             ret = this->get_command();
         }
         return ret;
