@@ -60,6 +60,9 @@ namespace mfwu {
         static size_t get_real_color(Color a) {
             return get_real_color(static_cast<size_t>(a));
         }
+        size_t get_real_color() const {
+            return get_real_color(color);
+        }
         static size_t get_real_color(size_t ca) {
             if (ca == 2 || ca == 4) return ca - 1;
             return ca;

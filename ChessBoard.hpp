@@ -102,7 +102,7 @@ public:
         std::stringstream ss;
         for (size_t i = 0; i < len(); i++) {
             for (size_t j = 0; j < len(); j++) {
-                ss<< this->board_[i][j]->get_status() << " ";
+                ss << this->board_[i][j]->get_status() << " ";
             }
             ss << "\n";
         }
