@@ -1,7 +1,7 @@
 #ifndef __CHESSBOARD_HPP__
 #define __CHESSBOARD_HPP__
 
-#include "utils.hpp"
+#include "common.hpp"
 #include "CmdFramework.hpp"
 #include "Logger.hpp"
 
@@ -24,6 +24,7 @@ public:
     virtual void reset() = 0;
     const Piece& get_last_piece() const { return last_piece_; }
     virtual void update(const Piece& piece) = 0;
+    // virtual void update(const Position& pos) = 0;
     virtual size_t size() const = 0;
     virtual size_t get_status(int row, int col) const = 0;
     virtual Command get_command() = 0;

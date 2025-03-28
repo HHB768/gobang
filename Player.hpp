@@ -1,8 +1,9 @@
 #ifndef __PLAYER_HPP__
 #define __PLAYER_HPP__
 
-#include "utils.hpp"
+#include "common.hpp"
 #include "ChessBoard.hpp"
+#include "Logger.hpp"
 
 namespace mfwu {
 

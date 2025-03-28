@@ -1,6 +1,9 @@
 #ifndef __ARCHIVE_HPP__
 #define __ARCHIVE_HPP__
 
+#include "common.hpp"
+#include "Logger.hpp"
+
 namespace mfwu {
 
 /*

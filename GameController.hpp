@@ -1,7 +1,7 @@
 # ifndef  __GAMECONTROLLER_HPP__
 # define  __GAMECONTROLLER_HPP__
 
-#include "utils.hpp"
+#include "common.hpp"
 #include "Player.hpp"
 #include "ChessBoard.hpp"
 #include "HumanPlayer.hpp"

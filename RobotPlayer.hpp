@@ -131,41 +131,96 @@ public:
 private:
     Position get_best_position() const override {
         size_t sz = this->board_->size();
-        int best_score_num = 0;
-        float max_score = -1.0F;
-        int best_row = -1, best_col = -1;
+        
         bool is_clear_flag = true;
         for (int i = 0; i < sz; i++) {
             for (int j = 0; j < sz; j++) {
                 if (this->board_->get_status(i, j)) {
                     is_clear_flag = false;
-                    continue;
-                }
-                float score = calc_pos(i, j);
-                if (std::fabs(score - max_score) <= eps) {
-                    best_score_num++;
-                    if (rand() % best_score_num < 1) {
-                        best_row = i;
-                        best_col = j;
-                    }
-                } else if (score > max_score) {
-                    best_score_num = 1;
-                    max_score = score;
-                    best_row = i;
-                    best_col = j;
-                } else {
-                    // score < max_score
                 }
             }
         }
         if (is_clear_flag) return {(int)sz / 2, (int)sz / 2};
+
+        auto deduction_board = this->board_->snap();
+        auto [_, best_row, best_col] = get_best(1, this->player_color_, deduction_board);
         return {best_row, best_col};
     }
-    float calc_pos(int row, int col) const {
+    struct cmp {
+        bool operator()(const std::tuple<float, int, int>& a, const std::tuple<float, int, int>& b) const {
+            return std::get<0>(a) > std::get<0>(b);
+        }
+    };  // endof struct cmp
+    std::tuple<float, int, int> get_best(int depth, Piece::Color color, 
+                                         std::vector<std::vector<size_t>>& deduction_board) const {
+        if (depth == 0) return get_best(color);
+        std::priority_queue<std::tuple<float, int, int>, std::vector<std::tuple<float, int, int>>, cmp> pq;
+        int num_of_choices = 3;
+        size_t sz = deduction_board.size();
+        assert(deduction_board.size() > 0 && deduction_board.size() == deduction_board[0].size());
+        std::vector<std::vector<float>> score_board(sz, std::vector<float>(sz, 0.0F));
+        for (int row = 0; row < sz; row++) {
+            for (int col = 0; col < sz; col++) {
+                if (deduction_board[row][col] != 0) { continue; }  // only search empty pos
+                score_board[row][col] += calc_pos(row, col, color)
+                    + 0.6 * calc_pos(row, col, Piece::Color{Piece::get_op_real_status(color)});
+                if (pq.empty() || score_board[row][col] - std::get<0>(pq.top()) > 0 - eps) {
+                    while (pq.size() >= num_of_choices) {
+                        pq.pop();
+                    }
+                    pq.emplace(score_board[row][col], row, col);
+                }
+            }
+        }
+        float max_score = INT_MIN / 2;
+        int best_row = -1, best_col = -1;
+        int best_score_num = 0;
+        while (!pq.empty()) {
+            auto [now_score, row, col] = pq.top();
+            pq.pop();
+            deduction_board[row][col] = Piece::get_real_status(color);
+            auto [op_score, op_row, op_col] = get_best(depth - 1, color, deduction_board);  // 不应该反向吗？
+            if (op_row < 0 || op_col < 0) {
+                deduction_board[row][col] = 0;
+                continue;
+            }
+            deduction_board[op_row][op_col] = Piece::get_op_real_status(color);
+            auto [_, next_row, next_col] = get_best(depth - 1, color, deduction_board);
+            if (next_row < 0 || next_col < 0) {
+                deduction_board[op_row][op_col] = 0;
+                deduction_board[row][col] = 0;
+                continue;
+            }
+            deduction_board[next_row][next_col] = Piece::get_real_status(color);
+            float next_eval = calc_pos(row, col, color)
+            + 0.6 * calc_pos(row, col, Piece::Color{Piece::get_op_real_status(color)});
+            // 可是我已经把这个点填上了，不就是0吗
+            now_score += 0.2 * next_eval;
+            if (std::fabs(now_score - max_score) <= eps) {
+                best_score_num++;
+                if (rand() % best_score_num < 1) {
+                    best_row = row;
+                    best_col = col;
+                }
+            } else if (now_score > max_score) {
+                best_score_num = 1;
+                max_score = now_score;
+                best_row = row;
+                best_col = col;
+            } else {
+                // score < max_score
+            }
+            deduction_board[next_row][next_col] = 0;
+            deduction_board[op_row][op_col] = 0;
+            deduction_board[row][col] = 0;
+        }
+        return {max_score, best_row, best_col};
+    }
+    float calc_pos(int row, int col, Piece::Color color) const {
         std::vector<int> res;
         res.reserve(4);
         for (auto&& [inc_r, inc_c] : half_dirs) {
-            res.emplace_back(search_dir_rank(row, col, inc_r, inc_c));
+            res.emplace_back(search_dir_rank(row, col, inc_r, inc_c, color));
         }
         std::sort(res.begin(), res.end());
 
@@ -176,12 +231,12 @@ private:
         return 0.8 * score_map[res[0]] + 0.2 * score_map[res[1]];
     }
 
-    int search_dir_rank(int row, int col, int inc_r, int inc_c) const {
+    int search_dir_rank(int row, int col, int inc_r, int inc_c, Piece::Color color) const {
         assert(this->board_->get_status(row, col) == 0);
         int seq = 1, emp = 0, jump1 = 0, jump2 = 0;
         
-        search_one_dir(row, col, inc_r,  inc_c, seq, emp, jump1);
-        search_one_dir(row, col, -inc_r, -inc_c, seq, emp, jump2);
+        search_one_dir(row, col, inc_r,  inc_c, seq, emp, jump1, color);
+        search_one_dir(row, col, -inc_r, -inc_c, seq, emp, jump2, color);
         
         int rank = 0;
         if (seq >= 5) {
@@ -209,11 +264,12 @@ private:
         } else {
             assert(1 == 0);
             log_error("lol upi forget this situation");
+            log_error(XQ4GB_TIMESTAMP, "↑ you -> upi");
         }
         return rank;
     }
     void search_one_dir(int row, int col, int inc_r, int inc_c, 
-                        int& seq, int& emp, int& jump) const {
+                        int& seq, int& emp, int& jump, Piece::Color color) const {
         size_t sz = this->board_->size();
         for (int step = 1; step < 5; step++) {
             int cur_r = row + step * inc_r;
@@ -226,13 +282,13 @@ private:
                     cur_c = col + (step + inc_step) * inc_c;
                     if (!this->board_->is_valid_pos(cur_r, cur_c)) { break; }
                     if (this->board_->get_status(cur_r, cur_c)
-                        == Piece::get_real_color(this->player_color_)) {
+                        == Piece::get_real_status(this->player_color_)) {
                         jump++;
                     } else { break; }
                 }
                 break;
             } else if (this->board_->get_status(cur_r, cur_c) 
-                       == Piece::get_real_color(this->player_color_)) {
+                       == Piece::get_real_status(this->player_color_)) {
                 seq++;
             } else {
                 break;

@@ -57,15 +57,24 @@ namespace mfwu {
             if (ca == 4 && cb == 3) return true;
             return ca == cb;
         }
-        static size_t get_real_color(Color a) {
-            return get_real_color(static_cast<size_t>(a));
+        static size_t get_real_status(Color a) {
+            return get_real_status(static_cast<size_t>(a));
         }
-        size_t get_real_color() const {
-            return get_real_color(color);
+        size_t get_real_status() const {
+            return get_real_status(color);
         }
-        static size_t get_real_color(size_t ca) {
+        static size_t get_real_status(size_t ca) {
             if (ca == 2 || ca == 4) return ca - 1;
             return ca;
+        }
+        static size_t get_op_real_status(Color a) {
+            return get_op_real_status(static_cast<size_t>(a));
+        }
+        static size_t get_op_real_status(size_t ca) {
+            size_t color = get_real_status(ca);
+            return color == static_cast<size_t>(Color::Black) ?
+                            static_cast<size_t>(Color::White) :
+                            static_cast<size_t>(Color::Black) ;
         }
 
         void update(int r, int c, Color clr) {

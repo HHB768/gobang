@@ -1,7 +1,7 @@
 #ifndef __CMD_FRAMEWORK_HPP__
 #define __CMD_FRAMEWORK_HPP__
 
-#include "utils.hpp"
+#include "common.hpp"
 #include "Logger.hpp"
 
 // gui(?) of cmd mode lol
