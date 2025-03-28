@@ -9,6 +9,9 @@ constexpr const size_t NUM_OF_PIECE_TO_WIN = 5;
 constexpr const size_t NoPtW = NUM_OF_PIECE_TO_WIN;
 constexpr const size_t NOPTW = NUM_OF_PIECE_TO_WIN;
 
+constexpr const size_t INFERENCE_DEPTH = 3;
+constexpr const size_t DEDUCTION_DEPTH = INFERENCE_DEPTH;
+
 // special commands to control games in cmd mode
 constexpr const char* QUIT_CMD1 = "\\QUIT";
 constexpr const char* QUIT_CMD2 = "\\Q";

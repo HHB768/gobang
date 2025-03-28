@@ -48,7 +48,6 @@ public:
         _init_framework();
         reconstruct(board_);
     } 
-
     void show() const {
         std::stringstream ss;
         log_debug("board: ");
@@ -99,6 +98,7 @@ public:
                     print_black_sp_piece(i, j);
                 } break;
                 default:
+                    log_error("in %s, %s", __FILE__, __LINE__);
                     logerr_unknown_piece_status();
                     print_unknown_status_piece(i, j);
                 }
@@ -256,7 +256,7 @@ private:
                 log_error("last piece is not placed yet");
             } else {
                 add_sp(Piece{last_piece.row, last_piece.col, 
-                       Piece::Color{Piece::get_real_color(last_piece.color) + 1}});  // CHECK: can i?
+                       Piece::Color{Piece::get_real_status(last_piece.color) + 1}});  // CHECK: can i?
             }
         }
     }
@@ -264,6 +264,208 @@ private:
     std::vector<std::string> framework_;
 
 };  // endof class DisplayFramework
+
+
+class DisplayFrameworkLight {
+public:
+    using Frwk = DisplayFramework<BoardSize::Small>;
+    static constexpr const char empty_position_char = Frwk::empty_position_char;
+    static constexpr const char white_piece_char = Frwk::white_piece_char;
+    static constexpr const char white_sp_piece_char = Frwk::white_sp_piece_char;
+    static constexpr const char black_piece_char = Frwk::black_piece_char;
+    static constexpr const char black_sp_piece_char = Frwk::black_sp_piece_char;
+    static constexpr const char unknown_status_piece_char = Frwk::unknown_status_piece_char;
+    static constexpr const char inner_border_char = Frwk::inner_border_char;
+    static constexpr const char outer_border_char = Frwk::outer_border_char;
+    // static constexpr const char highlight_up_down_char = Frwk::highlight_up_down_char;
+    static constexpr const char highlight_left_char = Frwk::highlight_left_char;
+    static constexpr const char highlight_right_char = Frwk::highlight_right_char;
+    DisplayFrameworkLight(const std::vector<std::vector<size_t>>& board_)
+        : size_(board_.size()),
+          height_(1 * (3 + size_)), 
+          width_(2 * (3 + size_)), 
+          framework_(height_, std::string(width_, inner_border_char)) {
+        _init_framework();
+        reconstruct(board_);
+    }
+    void reconstruct(const std::vector<std::vector<size_t>>& board_) {
+        for (int i = 0; i < size_; i++) {
+            for (int j = 0; j < size_; j++) {
+                update_directly(i, j, board_[i][j]);
+            }
+        }
+    }
+    void _init_framework() {
+        for (int j = 0; j < size_; j++) {
+            framework_[0][get_col_in_framework(j)] = 'A' + j;
+        }
+        for (int i = 0; i < size_; i++) {
+            framework_[get_row_in_framework(i)][0] = 'A' + i;
+        }
+        for (int j = 0; j <= size_; j++) {
+            // framework_[get_row_in_framework(-1)][get_col_in_framework(j)] = outer_border_char;
+            get_pos_ref_in_framework(-1, j) = outer_border_char;
+        }
+        for (int j = 0; j <= size_; j++) {
+            // framework_[get_row_in_framework(size_)][get_col_in_framework(j)] = outer_border_char;
+            get_pos_ref_in_framework((int)size_, j) = outer_border_char;
+        }
+        for (int i = 0; i <= size_; i++) {
+            // framework_[get_row_in_framework(i)][get_col_in_framework(-1)] = outer_border_char;
+            get_pos_ref_in_framework(i, -1) = outer_border_char;
+        }
+        for (int i = 0; i <= size_; i++) {
+            // framework_[get_row_in_framework(i)][get_col_in_framework(size_)] = outer_border_char;
+            get_pos_ref_in_framework(i, (int)size_) = outer_border_char;
+        }
+        // framework_[get_row_in_framework(-1)][get_col_in_framework(-1)] = outer_border_char;
+        get_pos_ref_in_framework(-1, -1) = outer_border_char;
+    }
+    void show_infer(int depth) const {
+        log_infer(depth, "deduction board:");
+        for (const std::string& line : framework_) {
+            log_infer(XQ4GB_TIMESTAMP, (size_t)depth, line.c_str());
+        }
+    }
+    void update(int i, int j, size_t status) {
+        update_directly(i, j, status);
+
+        remove_highlight();
+        if (status) add_highlight(i, j);
+        // there's efficient approach, but i'm lazy enough...
+    }
+
+private:
+    void update_directly(int i, int j, size_t status) {
+        switch (status) {
+        // Invalid = 0,
+        // White   = 1,
+        // WhiteSp = 2,
+        // Black   = 3,
+        // BlackSp = 4
+        case static_cast<size_t>(Piece::Color::Invalid) : {  // empty
+            print_empty_position(i, j);
+        } break;
+        case static_cast<size_t>(Piece::Color::White): {
+            print_white_piece(i, j);
+        } break;
+        case static_cast<size_t>(Piece::Color::WhiteSp) : {
+            print_white_sp_piece(i, j);
+        } break;
+        case static_cast<size_t>(Piece::Color::Black) : {
+            print_black_piece(i, j);
+        } break;
+        case static_cast<size_t>(Piece::Color::BlackSp) : {
+            print_black_sp_piece(i, j);
+        } break;
+        default:
+            log_error("in %s, %s", __FILE__, __LINE__);
+            logerr_unknown_piece_status();
+            print_unknown_status_piece(i, j);
+        }
+    }
+    char& get_pos_ref_in_framework(int r, int c) {
+        return framework_[get_row_in_framework(r)][get_col_in_framework(c)];
+    }
+    static std::pair<size_t, size_t> get_pos_in_framework(int r, int c) {
+        return {get_row_in_framework(r), get_col_in_framework(c)};
+    }
+    static size_t get_row_in_framework(int r) {
+        return 2 + 1 * r;
+    }
+    static size_t get_col_in_framework(int c) {
+        return 4 + 2 * c;
+    }
+
+    void print_empty_position(int r, int c) {
+        // framework_[get_row_in_framework(r)][get_col_in_framework(c)] = empty_position_char;
+        get_pos_ref_in_framework(r, c) = empty_position_char;
+    }
+    void print_white_piece(int r, int c) {
+        // framework_[get_row_in_framework(r)][get_col_in_framework(c)] = white_piece_char;
+        get_pos_ref_in_framework(r, c) = white_piece_char;
+    }
+    void print_white_sp_piece(int r, int c) {
+        // framework_[get_row_in_framework(r)][get_col_in_framework(c)] = white_sp_piece_char;
+        get_pos_ref_in_framework(r, c) = white_sp_piece_char;
+    }
+    void print_black_piece(int r, int c) {
+        // framework_[get_row_in_framework(r)][get_col_in_framework(c)] = black_piece_char;
+        get_pos_ref_in_framework(r, c) = black_piece_char;
+    }
+    void print_black_sp_piece(int r, int c) {
+        // framework_[get_row_in_framework(r)][get_col_in_framework(c)] = black_sp_piece_char;
+        get_pos_ref_in_framework(r, c) = black_sp_piece_char;
+    }
+    void print_unknown_status_piece(int r, int c) {
+        // framework_[get_row_in_framework(r)][get_col_in_framework(c)] = unknown_status_piece_char;
+        get_pos_ref_in_framework(r, c) = unknown_status_piece_char;
+    }
+
+    void remove_highlight() {
+        for (std::string& line : framework_) {
+            for (char& c : line) {
+                if (c == highlight_left_char 
+                    or c == highlight_right_char) {
+                    c = inner_border_char;
+                }
+            }
+        }
+    }
+    void remove_highlight(int r, int c) {
+        auto [row, col] = get_pos_in_framework(r, c);
+        char* ch = &framework_[row][col - 1];
+        if (*ch == highlight_left_char) {
+            *ch = inner_border_char;
+        }
+        ch = &framework_[row][col + 1];
+        if (*ch == highlight_right_char) {
+            *ch = inner_border_char;
+        }
+    }
+
+    void add_highlight(const Piece& last_piece) {
+        auto [row, col] = get_pos_in_framework(last_piece.row, 
+                                               last_piece.col);
+        // framework_[row - 1][col] = highlight_up_down_char;
+        // framework_[row + 1][col] = highlight_up_down_char;
+        framework_[row][col - 1] = highlight_left_char;
+        framework_[row][col + 1] = highlight_right_char;
+    }
+    void add_highlight(int r, int c) {
+        // assert(...)
+        auto [row, col] = get_pos_in_framework(r, c);
+        // framework_[row - 1][col] = highlight_up_down_char;
+        // framework_[row + 1][col] = highlight_up_down_char;
+        framework_[row][col - 1] = highlight_left_char;
+        framework_[row][col + 1] = highlight_right_char;
+    }
+    void remove_sp() {
+        for (auto line : framework_) {
+            for (auto c : line) {
+                if (c == white_sp_piece_char) {
+                    c = white_piece_char;
+                } else if (c == black_sp_piece_char) {
+                    c = black_piece_char;
+                }
+            }
+        }
+    }
+    void remove_sp(int r, int c) {
+        auto [row, col] = get_pos_in_framework(r, c);
+        char& ch = framework_[row][col];
+        if (ch == white_sp_piece_char) {
+            ch = white_piece_char;
+        } else if (ch == black_sp_piece_char) {
+            ch = black_piece_char;
+        }
+    }
+
+
+    size_t size_;
+    size_t height_, width_;
+    std::vector<std::string> framework_;
+};  // endof class DisplayFrameworkLight
 
 }  // endof namespace mfwu
 

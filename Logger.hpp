@@ -6,12 +6,13 @@
 namespace mfwu {
 
 enum class LogLevel : size_t {
-    DEBUG = 0,
-    INFO  = 1,
-    WARN  = 2,
-    ERROR = 3,
+    INFER = 0,
+    DEBUG = 1,
+    INFO  = 2,
+    WARN  = 3,
+    ERROR = 4,
     
-    TOTAL  
+    TOTAL
 };  // endof enum class LogLevel
 
 
@@ -45,7 +46,7 @@ private:
 };  // endof class LogFormatter
 
 const std::vector<std::string> LogFormatter::LogLevelDescription = {
-    "[DEBUG]", "[INFO] ","[WANR] ", "[ERROR]"
+    "[INFER]", "[DEBUG]", "[INFO] ","[WANR] ", "[ERROR]"
 };
 
 class LogAppender {
@@ -154,6 +155,29 @@ public:
         file_appender_.append(level, lmsg);
     }
     template <typename... Args>
+    void log_infer(size_t infer_depth, const char* fmt, Args&&... args) {
+        log_infer(LogLevel::INFER, infer_depth, fmt, std::forward<Args>(args)...);
+    }
+    template <typename... Args>
+    void log_infer(time_t time_stamp, size_t infer_depth, const char* fmt, Args&&... args) {
+        log_infer(LogLevel::INFER, time_stamp, infer_depth, fmt, std::forward<Args>(args)...);
+    }
+    template <typename... Args>
+    void log_infer(size_t infer_depth, const std::string& fmt, Args&&... args) {
+        std::string fmt_with_pref = "[Depth = %d]";
+        infer_log_space(fmt_with_pref, INFERENCE_DEPTH - infer_depth);
+        fmt_with_pref += " ::: "; fmt_with_pref += fmt; fmt_with_pref += " ::: ";
+        log(LogLevel::INFER, fmt_with_pref, INFERENCE_DEPTH - infer_depth, std::forward<Args>(args)...);
+    }
+    template <typename... Args>
+    void log_infer(time_t time_stamp, size_t infer_depth, const std::string& fmt, Args&&... args) {
+        std::string fmt_with_pref = "[Depth = %d]";
+        infer_log_space(fmt_with_pref, INFERENCE_DEPTH - infer_depth);
+        fmt_with_pref += " ::: "; fmt_with_pref += fmt; fmt_with_pref += " ::: ";
+        log(LogLevel::INFER, time_stamp, fmt_with_pref, INFERENCE_DEPTH - infer_depth, std::forward<Args>(args)...);
+    }
+
+    template <typename... Args>
     void log_debug(const char* fmt, Args&&... args) {
         log(LogLevel::DEBUG, fmt, std::forward<Args>(args)...);
     }
@@ -234,10 +258,16 @@ public:
 
 private:
 #ifdef __CMD_MODE__
-    Logger() : std_appender_(LogLevel::TOTAL), file_appender_(LogLevel::DEBUG) {}
+    Logger() : std_appender_(LogLevel::TOTAL), file_appender_(LogLevel::INFER) {}
 #else  // __GUI_MODE__
-    Logger() : std_appender_(LogLevel::ERROR), file_appender_(LogLevel::DEBUG) {}
+    Logger() : std_appender_(LogLevel::ERROR), file_appender_(LogLevel::INFER) {}
 #endif  // __CMD_MODE__
+
+    static void infer_log_space(std::string& str, int num) {
+        for (int i = 0; i < num; i++) {
+            str += "    ";
+        }
+    }
 
     ~Logger() {}
     Logger(const Logger&) = delete;
@@ -282,6 +312,17 @@ template <typename... Args>
 void log(LogLevel level, time_t time_stamp, const char* fmt, Args&&... args) {
     Logger& logger = Logger::Instance();
     logger.log(level, time_stamp, fmt, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+void log_infer(size_t infer_depth, const char* fmt, Args&&... args) {
+    Logger& logger = Logger::Instance();
+    logger.log_infer(infer_depth, fmt, std::forward<Args>(args)...);
+}
+template <typename... Args>
+void log_infer(time_t time_stamp, size_t infer_depth, const char* fmt, Args&&... args) {
+    Logger& logger = Logger::Instance();
+    logger.log_infer(time_stamp, infer_depth, fmt, std::forward<Args>(args)...);
 }
 
 template <typename... Args>

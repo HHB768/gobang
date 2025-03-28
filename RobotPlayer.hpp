@@ -143,7 +143,8 @@ private:
         if (is_clear_flag) return {(int)sz / 2, (int)sz / 2};
 
         auto deduction_board = this->board_->snap();
-        auto [_, best_row, best_col] = get_best(1, this->player_color_, deduction_board);
+        DisplayFrameworkLight board_log(deduction_board);
+        auto [_, best_row, best_col] = get_best(INFERENCE_DEPTH, this->player_color_, deduction_board, board_log);
         return {best_row, best_col};
     }
     struct cmp {
@@ -152,13 +153,14 @@ private:
         }
     };  // endof struct cmp
     std::tuple<float, int, int> get_best(int depth, Piece::Color color, 
-                                         std::vector<std::vector<size_t>>& deduction_board) const {
-        if (depth == 0) return get_best(color);
+                                         std::vector<std::vector<size_t>>& deduction_board,
+                                         DisplayFrameworkLight& board_log) const {
+        // if (depth == 0) return get_best(color);
         std::priority_queue<std::tuple<float, int, int>, std::vector<std::tuple<float, int, int>>, cmp> pq;
-        int num_of_choices = 3;
+        int num_of_choices = 8;  // 3
         size_t sz = deduction_board.size();
         assert(deduction_board.size() > 0 && deduction_board.size() == deduction_board[0].size());
-        std::vector<std::vector<float>> score_board(sz, std::vector<float>(sz, 0.0F));
+        std::vector<std::vector<float>> score_board(sz, std::vector<float>(sz, 0.0F));  // 搞一个score_board把结果存下来的意义在哪呢
         for (int row = 0; row < sz; row++) {
             for (int col = 0; col < sz; col++) {
                 if (deduction_board[row][col] != 0) { continue; }  // only search empty pos
@@ -178,24 +180,57 @@ private:
         while (!pq.empty()) {
             auto [now_score, row, col] = pq.top();
             pq.pop();
-            deduction_board[row][col] = Piece::get_real_status(color);
-            auto [op_score, op_row, op_col] = get_best(depth - 1, color, deduction_board);  // 不应该反向吗？
-            if (op_row < 0 || op_col < 0) {
-                deduction_board[row][col] = 0;
-                continue;
-            }
-            deduction_board[op_row][op_col] = Piece::get_op_real_status(color);
-            auto [_, next_row, next_col] = get_best(depth - 1, color, deduction_board);
-            if (next_row < 0 || next_col < 0) {
+            log_infer(depth, "pq_top pos: [%d, %d], score: %.2f", row, col, now_score);
+            if (depth <= 0) {
+                log_infer(XQ4GB_TIMESTAMP, depth, "max depth met");
+            } else {
+                log_infer(depth, "[1] infering %s player's optional pos: [%d, %d]",
+                          Piece::get_real_status(color) == 
+                          static_cast<size_t>(Piece::Color::Black) ? "black" : "white", 
+                          row, col);
+                deduction_board[row][col] = Piece::get_real_status(color);
+                board_log.update(row, col, Piece::get_real_status(color) + 1);
+                board_log.show_infer(depth);
+                auto [op_score, op_row, op_col] = get_best(depth - 1, color, deduction_board, board_log);  // 不应该反向吗？
+                if (op_row < 0 || op_col < 0) {
+                    deduction_board[row][col] = 0;
+                    board_log.update(row, col, 0);
+                    continue;
+                }
+                log_infer(depth, "[2] infering %s player's optional pos: [%d, %d]",
+                          Piece::get_op_real_status(color) == 
+                          static_cast<size_t>(Piece::Color::Black) ? "black" : "white", 
+                          op_row, op_col);
+                deduction_board[op_row][op_col] = Piece::get_op_real_status(color);
+                board_log.update(op_row, op_col, Piece::get_op_real_status(color) + 1);
+                board_log.show_infer(depth);
+                auto [_, next_row, next_col] = get_best(depth - 1, color, deduction_board, board_log);
+                if (next_row < 0 || next_col < 0) {
+                    deduction_board[op_row][op_col] = 0;
+                    deduction_board[row][col] = 0;
+                    board_log.update(op_row, op_col, 0);
+                    board_log.update(row, col, 0);
+                    continue;
+                }
+                log_infer(depth, "[2] infering %s player's optional pos: [%d, %d]",
+                          Piece::get_real_status(color) == 
+                          static_cast<size_t>(Piece::Color::Black) ? "black" : "white", 
+                          next_row, next_col);
+                deduction_board[next_row][next_col] = Piece::get_real_status(color);
+                board_log.update(next_row, next_col, Piece::get_real_status(color) + 1);
+                board_log.show_infer(depth);
+                float next_eval = calc_pos(row, col, color)
+                + 0.6 * calc_pos(row, col, Piece::Color{Piece::get_op_real_status(color)});
+                // 可是我已经把这个点填上了，不就是0吗
+                now_score += 0.2 * next_eval;
+                deduction_board[next_row][next_col] = 0;
                 deduction_board[op_row][op_col] = 0;
                 deduction_board[row][col] = 0;
-                continue;
+                board_log.update(next_row, next_col, 0);
+                board_log.update(op_row, op_col, 0);
+                board_log.update(row, col, 0);
             }
-            deduction_board[next_row][next_col] = Piece::get_real_status(color);
-            float next_eval = calc_pos(row, col, color)
-            + 0.6 * calc_pos(row, col, Piece::Color{Piece::get_op_real_status(color)});
-            // 可是我已经把这个点填上了，不就是0吗
-            now_score += 0.2 * next_eval;
+            
             if (std::fabs(now_score - max_score) <= eps) {
                 best_score_num++;
                 if (rand() % best_score_num < 1) {
@@ -210,9 +245,6 @@ private:
             } else {
                 // score < max_score
             }
-            deduction_board[next_row][next_col] = 0;
-            deduction_board[op_row][op_col] = 0;
-            deduction_board[row][col] = 0;
         }
         return {max_score, best_row, best_col};
     }

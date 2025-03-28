@@ -64,7 +64,9 @@ namespace mfwu {
             return get_real_status(color);
         }
         static size_t get_real_status(size_t ca) {
-            if (ca == 2 || ca == 4) return ca - 1;
+            if (ca == 2 || ca == 4) return ca - 1;  // 👈😁 急了，自己写的 enum class 现在又懒得用了
+                                                    // 你就直接写数字吧，到时出神秘 bug 一出一个不吱声
+                                                    // XQX 25.03.28
             return ca;
         }
         static size_t get_op_real_status(Color a) {

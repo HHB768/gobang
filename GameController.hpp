@@ -149,11 +149,11 @@ private:
         log_info("game controller inits...");
         log_debug("------------------------------");
         log_debug("player1 color: %s", 
-                  (Piece::get_real_color(player1_.get_color_const()) 
-                   == Piece::get_real_color(Piece::Color::White) ? "White" : "Black"));
+                  (Piece::get_real_status(player1_.get_color_const()) 
+                   == Piece::get_real_status(Piece::Color::White) ? "White" : "Black"));
         log_debug("player2 color: %s", 
-                  (Piece::get_real_color(player2_.get_color_const()) 
-                   == Piece::get_real_color(Piece::Color::White) ? "White" : "Black"));
+                  (Piece::get_real_status(player2_.get_color_const()) 
+                   == Piece::get_real_status(Piece::Color::White) ? "White" : "Black"));
         log_debug("player1 plays first: %s", (player1_first_ ? "True" : "False"));
         log_debug("current player: %s", (current_player_ == &player1_ ? "Player1" : "Player2"));
         log_debug("idle_:D player: %s", (idle_player_ == &player1_ ? "Player1" : "Player2"));  // :D
