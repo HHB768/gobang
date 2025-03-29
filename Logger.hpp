@@ -156,11 +156,11 @@ public:
     }
     template <typename... Args>
     void log_infer(size_t infer_depth, const char* fmt, Args&&... args) {
-        log_infer(LogLevel::INFER, infer_depth, fmt, std::forward<Args>(args)...);
+        log_infer(infer_depth, std::string(fmt), std::forward<Args>(args)...);
     }
     template <typename... Args>
     void log_infer(time_t time_stamp, size_t infer_depth, const char* fmt, Args&&... args) {
-        log_infer(LogLevel::INFER, time_stamp, infer_depth, fmt, std::forward<Args>(args)...);
+        log_infer(time_stamp, infer_depth, std::string(fmt), std::forward<Args>(args)...);
     }
     template <typename... Args>
     void log_infer(size_t infer_depth, const std::string& fmt, Args&&... args) {

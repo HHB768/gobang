@@ -55,6 +55,10 @@ public:
         case CommandType::QUIT: {
             return GameStatus::QUIT;
         } break;
+        case CommandType::INVALID: {
+            draw_check();
+            return GameStatus::NORMAL;
+        } break;
         default:
             log_error("game end with cmd type: %lu", 
                       static_cast<size_t>(cmd_type));
@@ -183,7 +187,7 @@ private:
     Player* idle_player_;
     bool player1_first_;
 
-    Archive<std::string> archive_;
+    Archive<ChessBoard_type> archive_;
     // std::vector<typename ChessBoard_type::Archive_type> archive_; 
 
 };  // endof class GameController_base

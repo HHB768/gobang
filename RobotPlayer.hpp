@@ -12,6 +12,10 @@ public:
 
     virtual CommandType play() override {
         Position pos = this->get_best_position();
+        if (pos.row < 0 || pos.col < 0) {
+            log_info("Robot's pos: [%d, %d], an ending may have been met");
+            return CommandType::INVALID;
+        } // else
         log_info("Robot's pos: [%d, %d]", pos.row, pos.col);
         this->place(pos);
         return CommandType::PIECE;
@@ -157,10 +161,13 @@ private:
                                          DisplayFrameworkLight& board_log) const {
         // if (depth == 0) return get_best(color);
         std::priority_queue<std::tuple<float, int, int>, std::vector<std::tuple<float, int, int>>, cmp> pq;
-        int num_of_choices = 8;  // 3
+        int num_of_choices = 3;  // 3
         size_t sz = deduction_board.size();
         assert(deduction_board.size() > 0 && deduction_board.size() == deduction_board[0].size());
-        std::vector<std::vector<float>> score_board(sz, std::vector<float>(sz, 0.0F));  // 搞一个score_board把结果存下来的意义在哪呢
+        std::vector<std::vector<float>> score_board(sz, std::vector<float>(sz, 0.0F));  
+        // 搞一个score_board把结果存下来的意义在哪呢：debug很好用:D
+        
+        // 先筛选出最有价值的三个点，后面再详细看
         for (int row = 0; row < sz; row++) {
             for (int col = 0; col < sz; col++) {
                 if (deduction_board[row][col] != 0) { continue; }  // only search empty pos
@@ -176,7 +183,7 @@ private:
         }
         float max_score = INT_MIN / 2;
         int best_row = -1, best_col = -1;
-        int best_score_num = 0;
+        int best_score_num = 1;
         while (!pq.empty()) {
             auto [now_score, row, col] = pq.top();
             pq.pop();
@@ -191,7 +198,8 @@ private:
                 deduction_board[row][col] = Piece::get_real_status(color);
                 board_log.update(row, col, Piece::get_real_status(color) + 1);
                 board_log.show_infer(depth);
-                auto [op_score, op_row, op_col] = get_best(depth - 1, color, deduction_board, board_log);  // 不应该反向吗？
+                auto [op_score, op_row, op_col] = get_best(depth - 1, Piece::Color{Piece::get_op_real_status(color)},  // Piece::Color{Piece::get_op_real_status(color)}
+                                                           deduction_board, board_log);  // 不应该反向吗？就像这样↑
                 if (op_row < 0 || op_col < 0) {
                     deduction_board[row][col] = 0;
                     board_log.update(row, col, 0);
@@ -204,7 +212,8 @@ private:
                 deduction_board[op_row][op_col] = Piece::get_op_real_status(color);
                 board_log.update(op_row, op_col, Piece::get_op_real_status(color) + 1);
                 board_log.show_infer(depth);
-                auto [_, next_row, next_col] = get_best(depth - 1, color, deduction_board, board_log);
+                auto [_, next_row, next_col] = get_best(depth - 1, color,
+                                                        deduction_board, board_log);
                 if (next_row < 0 || next_col < 0) {
                     deduction_board[op_row][op_col] = 0;
                     deduction_board[row][col] = 0;
@@ -220,8 +229,9 @@ private:
                 board_log.update(next_row, next_col, Piece::get_real_status(color) + 1);
                 board_log.show_infer(depth);
                 float next_eval = calc_pos(row, col, color)
-                + 0.6 * calc_pos(row, col, Piece::Color{Piece::get_op_real_status(color)});
-                // 可是我已经把这个点填上了，不就是0吗
+                    + 0.6 * calc_pos(row, col, Piece::Color{Piece::get_op_real_status(color)});
+                // 这里不对，推演的点在deduction board上，calc_pos没用
+                // 可是我已经把这个点填上了，不就是0吗：不是，因为calc_pos记录的是board上的数据
                 now_score += 0.2 * next_eval;
                 deduction_board[next_row][next_col] = 0;
                 deduction_board[op_row][op_col] = 0;
@@ -268,7 +278,7 @@ private:
         int seq = 1, emp = 0, jump1 = 0, jump2 = 0;
         
         search_one_dir(row, col, inc_r,  inc_c, seq, emp, jump1, color);
-        search_one_dir(row, col, -inc_r, -inc_c, seq, emp, jump2, color);
+        search_one_dir(row, col, -inc_r, -inc_c, seq, emp, jump2, color);  // bugfix
         
         int rank = 0;
         if (seq >= 5) {
@@ -283,8 +293,8 @@ private:
                                 || emp == 1 && (jump1 + jump2) >= 3)
                    || seq == 1 && (jump1 == 3 || jump2 == 3)) {
             rank = 2;
-        } else if (seq == 3 && emp == 2 && (jump1 || jump2) 
-                   || seq == 1 && emp == 2 && (jump1 == 2 || jump2 == 2)) {
+        } else if (seq == 2 && emp == 2 && (jump1 || jump2) 
+                   || seq == 1 && emp == 2 && (jump1 == 2 || jump2 == 2)) {  // 这个t级有待研究
             rank = 3;
         } else if (seq == 3 || seq == 2 && (emp + jump1 + jump2) >= 2 
                             || seq == 1 && (emp + jump1 + jump2) >= 3) {
@@ -313,14 +323,14 @@ private:
                     cur_r = row + (step + inc_step) * inc_r;
                     cur_c = col + (step + inc_step) * inc_c;
                     if (!this->board_->is_valid_pos(cur_r, cur_c)) { break; }
-                    if (this->board_->get_status(cur_r, cur_c)
-                        == Piece::get_real_status(this->player_color_)) {
+                    if (Piece::get_real_status(this->board_->get_status(cur_r, cur_c))
+                        == Piece::get_real_status(color)) {
                         jump++;
                     } else { break; }
                 }
                 break;
-            } else if (this->board_->get_status(cur_r, cur_c) 
-                       == Piece::get_real_status(this->player_color_)) {
+            } else if (Piece::get_real_status(this->board_->get_status(cur_r, cur_c))
+                       == Piece::get_real_status(color)) {
                 seq++;
             } else {
                 break;

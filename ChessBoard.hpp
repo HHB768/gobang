@@ -60,6 +60,9 @@ template <BoardSize Size=BoardSize::Small>
 class ChessBoard : public ChessBoard_base {
 public:
     static constexpr size_t size_ = static_cast<size_t>(Size);
+    using ArchiveSeq_type = std::string;
+    using ArchiveTbl_type = std::vector<std::vector<size_t>>;
+
     ChessBoard() 
         : board_(size_, 
             std::vector<std::shared_ptr<Position>>(
@@ -84,6 +87,10 @@ public:
     }
 
     virtual void update(const Piece& piece) override {
+        if (!is_valid_pos(piece)) {
+            log_error("Invalid piece should not be placed");
+            return ;
+        }
         last_piece_ = Piece{piece.row, piece.col, 
                             Piece::Color{piece.get_status() + 1}};
 
@@ -380,6 +387,9 @@ private:
 template <BoardSize Size=BoardSize::Small>
 class CMDBoard : public ChessBoard<Size> {
 public:
+    using ArchiveSeq_type = typename ChessBoard<Size>::ArchiveSeq_type;
+    using ArchiveTbl_type = typename ChessBoard<Size>::ArchiveTbl_type;
+
     CMDBoard() 
         : ChessBoard<Size>(), framework_() {}
     CMDBoard(const std::vector<std::vector<size_t>>& input_board,

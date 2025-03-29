@@ -18,12 +18,15 @@ namespace mfwu {
     simple enough, stable enough
     XQ 25.03.27
 */
-template <BoardSize Size = BoardSize::Small,
-          typename Seq_type=std::string, 
-          typename Tbl_type=std::vector<std::vector<int>>
+template <
+          size_t Size=static_cast<size_t>(BoardSize::Small),
+          typename Seq_t=std::string, 
+          typename Tbl_t=std::vector<std::vector<int>>
          >
 class Archive_base {
 public:
+    using Seq_type = Seq_t;
+    using Tbl_type = Tbl_t;
     static constexpr const char* dir = "./archive";
     Archive_base(const std::string& archive_filename="") {
         if (archive_filename == std::string("")) {
@@ -54,15 +57,28 @@ public:
     virtual void record(Seq_type&& seq) = 0;
     virtual void record(const Tbl_type& tbl) = 0;
     virtual void record(Tbl_type&& tbl) = 0;
-    virtual void record(const Piece last_piece) = 0;
+    virtual void record(const Piece& last_piece) = 0;
 
-    virtual void flush(GameStatus status) = 0;
-    virtual std::string get_last_frame_in_seq() = 0;
+    virtual Seq_type& get_last_frame_in_seq() = 0;
+    virtual Tbl_type& get_last_frame_in_tbl() = 0;
     virtual void pop_last_n_record(int num=1) = 0;
 
+
+    // warning: will destroy all the frames!
+    void flush(GameStatus status) {
+        for (Frame& frame : this->frames_) {
+            this->flush_frame(frame);
+        }
+        this->flush_log(status);
+        this->fs_.flush();  // flush once after a game
+
+        // reinit for next game
+        this->init_game();
+    }
     bool get_status() const {
         return status_;
     }
+
 protected:
     struct Frame {
         bool is_seq_valid = false;
@@ -131,7 +147,7 @@ protected:
             seq.reserve(tbl.size() * (tbl[0].size() + 1) * 2);  // check
             for (size_t i = 0; i < tbl.size(); i++) {
                 for (size_t j = 0; j < tbl[0].size(); j++) {
-                    seq += this->board_[i][j]->get_status();
+                    seq += tbl[i][j];
                     seq += ' ';
                 }
                 seq += '\n';
@@ -150,7 +166,7 @@ protected:
                         tbl.resize(i + 1);  // check
                         tbl[i].reserve(Size);  // check
                     }
-                    tbl.push_back(seq[k]);
+                    tbl[i].push_back(seq[k]);
                 } else if (seq[k] == '\n') {
                     i++;
                 } else {
@@ -215,15 +231,20 @@ private:
 };  // endof class Archive_base
 
 // always sync frames_ in record()
-template <BoardSize Size = BoardSize::Small,
-          typename Seq_type=std::string, 
-          typename Tbl_type=std::vector<std::vector<int>>
-         >
-class Archive {
+template <typename ChessBoard_type>
+class Archive : public Archive_base<ChessBoard_type::size_,
+                                    typename ChessBoard_type::ArchiveSeq_type, 
+                                    typename ChessBoard_type::ArchiveTbl_type> {
 public:
-    using Frame = Archive_base<Size, Seq_type, Tbl_type>;
+    constexpr static const size_t Size = ChessBoard_type::size_;
+    using base_type = Archive_base<Size, typename ChessBoard_type::ArchiveSeq_type, 
+                                   typename ChessBoard_type::ArchiveTbl_type>;
+    using Frame = typename base_type::Frame;
+    using Seq_type = typename base_type::Seq_type;
+    using Tbl_type = typename base_type::Tbl_type;
+
     Archive(const std::string& archive_filename="") 
-        : Archive_base<Size, Seq_type, Tbl_type>(archive_filename) {}
+        : base_type(archive_filename) {}
     ~Archive() {}
 
     void record(const Seq_type& seq) override {
@@ -245,17 +266,7 @@ public:
         // let's see...  X-Q4 25.03.27
         this->update_board_with_piece(frame.tbl, last_piece);
     }
-    // warning: will destroy all the frames!
-    void flush(GameStatus status) override {
-        for (Frame& frame : this->frames_) {
-            this->flush_frame(frame);
-        }
-        this->flush_log(status);
-        this->fs_.flush();  // flush once after a game
-
-        // reinit for next game
-        this->init_game();
-    }
+    
     Seq_type& get_last_frame_in_seq() override {
         return this->frames_.back().get_seq();
     }
@@ -270,11 +281,11 @@ public:
 
     void init_game() override {
         this->frames_.clear();
-        this->frames_.emplace(Tbl_type(Size, Tbl_type::value_type(Size, 0)));
+        this->frames_.emplace_back(Tbl_type(Size, typename Tbl_type::value_type(Size, 0)));
     }
     void init_game(const Tbl_type& board) override {
         this->frames_.clear();
-        this->frames_.emplace(board);
+        this->frames_.emplace_back(board);
     }
 };  // endof class Archive
 
@@ -282,16 +293,20 @@ public:
 // update frames_ when needed
 // less record cost
 // more deduction cost
-template <BoardSize Size = BoardSize::Small,
-          typename Seq_type=std::string, 
-          typename Tbl_type=std::vector<std::vector<int>>
-         >
-class ArchiveLight {
+template <typename ChessBoard_type>
+class ArchiveLight : public Archive_base<ChessBoard_type::size_,
+                     typename ChessBoard_type::ArchiveSeq_type, 
+                     typename ChessBoard_type::ArchiveTbl_type> {
 public:
-    using Frame = Archive_base<Size, Seq_type, Tbl_type>;
-    constexpr static const size_ = static_cast<size_t>(Size);
+    constexpr static const size_t Size = ChessBoard_type::size_;
+    using base_type = Archive_base<Size, typename ChessBoard_type::ArchiveSeq_type, 
+                                   typename ChessBoard_type::ArchiveTbl_type>;
+    using Frame = typename base_type::Frame;
+    using Seq_type = typename base_type::Seq_type;
+    using Tbl_type = typename base_type::Tbl_type;
+
     ArchiveLight(const std::string& archive_filename="") 
-        : Archive_base<Size, Seq_type, Tbl_type>(archive_filename) {}
+        : base_type(archive_filename) {}
     ~ArchiveLight() {}
 
     void record(const Seq_type& seq) override {  // can i delete it?  0327
@@ -350,7 +365,7 @@ public:
 
     void init_game() override {
         this->frames_.clear();
-        this->frames_.emplace(Tbl_type(size_, Tbl_type::value_type(size_, 0)));
+        this->frames_.emplace(Tbl_type(Size, Tbl_type::value_type(Size, 0)));
         moves_.clear();
         moves_.emplace_back(invalid_piece);
     }
@@ -360,10 +375,10 @@ public:
         moves_.clear();
         bool found_sp_flag = false;
         Piece p = invalid_piece;
-        for (int i = 0; i < size_; i++) {
-            for (int j = 0; j < size_; j++) {
+        for (int i = 0; i < Size; i++) {
+            for (int j = 0; j < Size; j++) {
                 size_t status = board[i][j];
-                if (status == static_case<size_t>(Piece::Color::BlackSp)
+                if (status == static_cast<size_t>(Piece::Color::BlackSp)
                     || status == static_cast<size_t>(Piece::Color::WhiteSp)) {
                     if (found_sp_flag) {
                         // redundant sp should be remove
@@ -377,7 +392,7 @@ public:
             }
         }
         if (!found_sp_flag) { log_warn("No sp piece found in init_game()"); }
-        moves_.emplace(p);
+        moves_.emplace_back(p);
     }
 private:
     void update_frame() {
@@ -396,7 +411,7 @@ private:
                 // this->update_board_with_piece(board, p);  // search the whole board
                 const Piece& last_p = this->moves_[i - 1];
                 board[last_p.row][last_p.col] = last_p.get_real_status();
-                board[p.row][p.col] = last_piece.get_real_status() + 1;
+                board[p.row][p.col] = p.get_real_status() + 1;
                 this->frames_.emplace_back(board);
             }
         }
@@ -407,8 +422,8 @@ private:
         const Tbl_type& last_board = this->frames_[this->frames_.size() - 2].get_tbl();
         const Tbl_type& new_board = this->frames_.back().get_tbl();
         bool found_sp_flag = false;
-        for (int i = 0; i < size_; i++) {
-            for (int j = 0; j < size_; j++) {
+        for (int i = 0; i < Size; i++) {
+            for (int j = 0; j < Size; j++) {
                 if (last_board[i][j] == 0 && new_board[i][j] != 0) {
                     if (found_sp_flag) {
                         log_error("Multiple sp pieces found in update_last_move()");
