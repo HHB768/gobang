@@ -37,6 +37,7 @@ public:
     virtual ~GameController_base() {}
     
     virtual GameStatus start() {
+        log_new_game(board_->size(), board_->size());
         this->board_->show();
         CommandType cmd_type;
         // std::thread t(&GameController_base::game_play_task, this, std::ref(cmd_type));  // we really need this?
@@ -56,11 +57,12 @@ public:
             return GameStatus::QUIT;
         } break;
         case CommandType::INVALID: {
-            draw_check();
-            return GameStatus::NORMAL;
+            if (this->check_draw()) {
+                return GameStatus::NORMAL;
+            }
         } break;
         default:
-            log_error("game end with cmd type: %lu", 
+            log_error("Game end with cmd type: %lu", 
                       static_cast<size_t>(cmd_type));
         }
         return GameStatus::INVALID;
@@ -97,13 +99,17 @@ public:
     }
 
     virtual bool check_end() const {
-        const Piece& p = board_->get_last_piece();
+        const Piece& p = this->board_->get_last_piece();
         count_res_4 res;
-        board_->count_dir(p, &res);
+        this->board_->count_dir(p, &res);
         if (is_end(res)) { return true; }
         else return false;
     }
+    virtual bool check_draw() const {
+        return this->board_->is_full();
+    }
     virtual void restart_game_init() {
+        log_new_game(board_->size(), board_->size());
         board_->reset();
         // doesnt swap
         if (player1_first_) {
@@ -113,11 +119,12 @@ public:
             current_player_ = &player2_;
             idle_player_ = &player1_;
         }
-        log_new_game(GameStatus::RESTART);
+        log_end_game(GameStatus::RESTART);
         archive_.flush(GameStatus::RESTART);
         // board_->show();
     }
     virtual void reset_game_init() {
+        log_new_game(board_->size(), board_->size());
         board_->reset();
         std::swap(player1_.get_color(), player2_.get_color());
         player1_first_ = !player1_first_;
@@ -128,7 +135,7 @@ public:
             current_player_ = &player2_;
             idle_player_ = &player1_;
         }
-        log_new_game(GameStatus::NORMAL);
+        log_end_game(GameStatus::NORMAL);
         archive_.flush(GameStatus::NORMAL);
         // board_->show();
     }
@@ -199,7 +206,8 @@ class GameController : public GameController_base<Player1_type, Player2_type, Ch
 };
 
 // template <typename Player1_type, typename Player2_type, BoardSize Size>
-// class GameController<Player1_type, Player2_type, GUIBoard<Size>> : public GameController_base<Player1_type, Player2_type, GUIBoard<Size>> {
+// class GameController<Player1_type, Player2_type, GUIBoard<Size>> 
+//     : public GameController_base<Player1_type, Player2_type, GUIBoard<Size>> {
 // public:
 //     GameController<Player1_type, Player2_type, GUIBoard<Size>>()
 //         : GameController_base<Player1_type, Player2_type, GUIBoard<Size>>() {}
@@ -208,7 +216,8 @@ class GameController : public GameController_base<Player1_type, Player2_type, Ch
 
 
 template <typename Player1_type, typename Player2_type, BoardSize Size>
-class GameController<Player1_type, Player2_type, CMDBoard<Size>> : public GameController_base<Player1_type, Player2_type, CMDBoard<Size>> {
+class GameController<Player1_type, Player2_type, CMDBoard<Size>> 
+    : public GameController_base<Player1_type, Player2_type, CMDBoard<Size>> {
 public:
     GameController<Player1_type, Player2_type, CMDBoard<Size>>() 
         : GameController_base<Player1_type, Player2_type, CMDBoard<Size>>() {}

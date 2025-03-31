@@ -321,11 +321,55 @@ public:
         // framework_[get_row_in_framework(-1)][get_col_in_framework(-1)] = outer_border_char;
         get_pos_ref_in_framework(-1, -1) = outer_border_char;
     }
-    void show_infer(int depth) const {
+#ifndef __LOG_INFERENCE_ELESWHERE__
+    void show_infer(size_t depth, const std::vector<std::vector<size_t>>&) const {
         log_infer(depth, "deduction board:");
         for (const std::string& line : framework_) {
-            log_infer(XQ4GB_TIMESTAMP, (size_t)depth, line.c_str());
+            log_infer(XQ4GB_TIMESTAMP, depth, line.c_str());
         }
+    }
+#else  // __LOG_INFERENCE_ELESWHERE__
+    void show_infer(size_t depth, const std::vector<std::vector<size_t>>& board) {
+        std::string zipped_board = zip_tbl(board);
+        log_infer(depth, zipped_board.c_str());
+    }
+#endif  // __LOG_INFERENCE_ELESWHERE__
+    std::string zip_tbl(const std::vector<std::vector<size_t>>& board) {
+        size_t status_num = board.size() * board.size();
+        std::string ret; ret.reserve(status_num + 4);
+        if (zip_mode_ == false) {
+            ret += "::";
+            for (const auto& line : board) {
+                for (const size_t& status : line) {
+                    ret += '0' + status;
+                }
+            }
+        } else {  // zip_mode = true
+            ret += "**";
+            size_t last_status = -1;
+            size_t more_num = 0;
+            for (const auto& line : board) {
+                for (const size_t& status : line) {
+                    if (status == last_status) {
+                        more_num++;
+                    } else {  // different status
+                        if (more_num) {
+                            ret += '{';
+                            ret += '0' + more_num;  // status < 10 is better
+                            ret += '}';
+                            more_num = 0;
+                        }
+                        last_status = status;
+                        ret += status;
+                    }
+                }
+            }
+            if (ret.size() > status_num / 2) {
+                zip_mode_ = false;
+            }
+        }
+        // ret += '\n';
+        return ret;
     }
     void update(int i, int j, size_t status) {
         update_directly(i, j, status);
@@ -465,6 +509,8 @@ private:
     size_t size_;
     size_t height_, width_;
     std::vector<std::string> framework_;
+
+    bool zip_mode_;  // 0 : "::0000111", 1 : "**0{3}1{2}"
 };  // endof class DisplayFrameworkLight
 
 }  // endof namespace mfwu

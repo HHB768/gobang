@@ -1,13 +1,12 @@
-#include "GameController.hpp"
-#include <cstdlib>
-using namespace mfwu;
-
 // #define __GUI_MODE__
 #define __CMD_MODE__
 #ifdef __GUI_MODE__
 #undef __CMD_MODE__
 #endif // __GUI_MODE__
 
+#include "GameController.hpp"
+#include <cstdlib>
+using namespace mfwu;
 
 int main() {
     while (true) {

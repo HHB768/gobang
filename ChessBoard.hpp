@@ -50,6 +50,7 @@ public:
     virtual std::vector<std::vector<size_t>> snap() const = 0;
 
     virtual bool is_valid_pos(int r, int c) const = 0;
+    virtual bool is_full() const = 0;
 
 protected:
     Piece last_piece_;
@@ -87,7 +88,7 @@ public:
     }
 
     virtual void update(const Piece& piece) override {
-        if (!is_valid_pos(piece)) {
+        if (!is_valid_pos(piece.row, piece.col)) {
             log_error("Invalid piece should not be placed");
             return ;
         }
@@ -288,6 +289,16 @@ public:
         for (auto&& row : this->board_) {
             for (auto&& pos : row) {
                 if (pos->get_status()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    bool is_full() const override {
+        for (auto&& row : this->board_) {
+            for (auto&& pos : row) {
+                if (pos->get_status() == 0) {
                     return false;
                 }
             }

@@ -197,7 +197,7 @@ private:
                           row, col);
                 deduction_board[row][col] = Piece::get_real_status(color);
                 board_log.update(row, col, Piece::get_real_status(color) + 1);
-                board_log.show_infer(depth);
+                board_log.show_infer(depth, deduction_board);
                 auto [op_score, op_row, op_col] = get_best(depth - 1, Piece::Color{Piece::get_op_real_status(color)},  // Piece::Color{Piece::get_op_real_status(color)}
                                                            deduction_board, board_log);  // 不应该反向吗？就像这样↑
                 if (op_row < 0 || op_col < 0) {
@@ -211,7 +211,7 @@ private:
                           op_row, op_col);
                 deduction_board[op_row][op_col] = Piece::get_op_real_status(color);
                 board_log.update(op_row, op_col, Piece::get_op_real_status(color) + 1);
-                board_log.show_infer(depth);
+                board_log.show_infer(depth, deduction_board);
                 auto [_, next_row, next_col] = get_best(depth - 1, color,
                                                         deduction_board, board_log);
                 if (next_row < 0 || next_col < 0) {
@@ -227,7 +227,7 @@ private:
                           next_row, next_col);
                 deduction_board[next_row][next_col] = Piece::get_real_status(color);
                 board_log.update(next_row, next_col, Piece::get_real_status(color) + 1);
-                board_log.show_infer(depth);
+                board_log.show_infer(depth, deduction_board);
                 float next_eval = calc_pos(row, col, color)
                     + 0.6 * calc_pos(row, col, Piece::Color{Piece::get_op_real_status(color)});
                 // 这里不对，推演的点在deduction board上，calc_pos没用
