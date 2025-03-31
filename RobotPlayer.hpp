@@ -136,7 +136,7 @@ private:
     Position get_best_position() const override {
         size_t sz = this->board_->size();
         
-        bool is_clear_flag = true;
+        bool is_clear_flag = true; // TODO: board_->is_clear
         for (int i = 0; i < sz; i++) {
             for (int j = 0; j < sz; j++) {
                 if (this->board_->get_status(i, j)) {
@@ -181,64 +181,47 @@ private:
                 }
             }
         }
-        float max_score = INT_MIN / 2;
-        int best_row = -1, best_col = -1;
+        if (pq.empty()) { return {0, -1, -1}; }
+        auto [max_score, best_row, best_col] = pq.top();
+        // float max_score = INT_MIN / 2;
+        // int best_row = -1, best_col = -1;
         int best_score_num = 1;
         while (!pq.empty()) {
             auto [now_score, row, col] = pq.top();
             pq.pop();
-            log_infer(depth, "pq_top pos: [%d, %d], score: %.2f", row, col, now_score);
+            log_infer_pq_top_pos(depth, row, col, now_score);
             if (depth <= 0) {
-                log_infer(XQ4GB_TIMESTAMP, depth, "max depth met");
+                log_infer_max_depth(depth);
             } else {
-                log_infer(depth, "[1] infering %s player's optional pos: [%d, %d]",
-                          Piece::get_real_status(color) == 
-                          static_cast<size_t>(Piece::Color::Black) ? "black" : "white", 
-                          row, col);
-                deduction_board[row][col] = Piece::get_real_status(color);
-                board_log.update(row, col, Piece::get_real_status(color) + 1);
+                log_infer_this_move(depth, color, row, col);
+                deduce_new_piece(deduction_board, board_log, row, col, Piece::get_real_status(color));  // we should zip these two into a deducer or sth
                 board_log.show_infer(depth, deduction_board);
                 auto [op_score, op_row, op_col] = get_best(depth - 1, Piece::Color{Piece::get_op_real_status(color)},  // Piece::Color{Piece::get_op_real_status(color)}
                                                            deduction_board, board_log);  // 不应该反向吗？就像这样↑
                 if (op_row < 0 || op_col < 0) {
-                    deduction_board[row][col] = 0;
-                    board_log.update(row, col, 0);
+                    deduce_reset_piece(deduction_board, board_log, row, col);
                     continue;
                 }
-                log_infer(depth, "[2] infering %s player's optional pos: [%d, %d]",
-                          Piece::get_op_real_status(color) == 
-                          static_cast<size_t>(Piece::Color::Black) ? "black" : "white", 
-                          op_row, op_col);
-                deduction_board[op_row][op_col] = Piece::get_op_real_status(color);
-                board_log.update(op_row, op_col, Piece::get_op_real_status(color) + 1);
+                log_infer_op_move(depth, color, op_row, op_col);
+                deduce_new_piece(deduction_board, board_log, op_row, op_col, Piece::get_op_real_status(color));
                 board_log.show_infer(depth, deduction_board);
                 auto [_, next_row, next_col] = get_best(depth - 1, color,
                                                         deduction_board, board_log);
                 if (next_row < 0 || next_col < 0) {
-                    deduction_board[op_row][op_col] = 0;
-                    deduction_board[row][col] = 0;
-                    board_log.update(op_row, op_col, 0);
-                    board_log.update(row, col, 0);
+                    deduce_reset_piece(deduction_board, board_log, row, col);
+                    deduce_reset_piece(deduction_board, board_log, op_row, op_col);
                     continue;
                 }
-                log_infer(depth, "[2] infering %s player's optional pos: [%d, %d]",
-                          Piece::get_real_status(color) == 
-                          static_cast<size_t>(Piece::Color::Black) ? "black" : "white", 
-                          next_row, next_col);
-                deduction_board[next_row][next_col] = Piece::get_real_status(color);
-                board_log.update(next_row, next_col, Piece::get_real_status(color) + 1);
+                log_infer_next_move(depth, color, next_row, next_col);
                 board_log.show_infer(depth, deduction_board);
                 float next_eval = calc_pos(row, col, color)
                     + 0.6 * calc_pos(row, col, Piece::Color{Piece::get_op_real_status(color)});
                 // 这里不对，推演的点在deduction board上，calc_pos没用
                 // 可是我已经把这个点填上了，不就是0吗：不是，因为calc_pos记录的是board上的数据
                 now_score += 0.2 * next_eval;
-                deduction_board[next_row][next_col] = 0;
-                deduction_board[op_row][op_col] = 0;
-                deduction_board[row][col] = 0;
-                board_log.update(next_row, next_col, 0);
-                board_log.update(op_row, op_col, 0);
-                board_log.update(row, col, 0);
+                deduce_reset_piece(deduction_board, board_log, row, col);
+                deduce_reset_piece(deduction_board, board_log, op_row, op_col);
+                deduce_reset_piece(deduction_board, board_log, next_row, next_col);
             }
             
             if (std::fabs(now_score - max_score) <= eps) {
@@ -337,6 +320,65 @@ private:
             }
         }
     }
+    static void log_infer_pq_top_pos(size_t depth, int row, int col, int now_score) {
+#ifndef __LOG_INFERENCE_ELSEWHERE__
+        log_infer(depth, "pq_top pos: [%d, %d], score: %.2f", row, col, now_score);
+#else  // __LOG_INFERENCE_ELSEWHERE__
+        log_infer(depth, "--[%d, %d]{%.2f}", row, col, now_score);
+#endif // __LOG_INFERENCE_ELSEWHERE__
+    }
+    static void log_infer_max_depth(size_t depth) {
+#ifndef __LOG_INFERENCE_ELSEWHERE__
+        log_infer(XQ4GB_TIMESTAMP, depth, "max depth met");
+#else  // __LOG_INFERENCE_ELSEWHERE__
+        log_infer(depth, "!!");
+#endif // __LOG_INFERENCE_ELSEWHERE__
+    }
+    static void log_infer_this_move(size_t depth, Piece::Color color, int row, int col) {
+#ifndef __LOG_INFERENCE_ELSEWHERE__
+        log_infer(depth, "[1] infering %s player's optional pos: [%d, %d]",
+                  Piece::get_real_status(color) == 
+                  static_cast<size_t>(Piece::Color::Black) ? "black" : "white", 
+                  row, col);
+#else  // __LOG_INFERENCE_ELSEWHERE__
+        log_infer(depth, "..1");
+#endif // __LOG_INFERENCE_ELSEWHERE__
+    }
+    static void log_infer_op_move(size_t depth, Piece::Color color, int op_row, int op_col) {
+#ifndef __LOG_INFERENCE_ELSEWHERE__
+        log_infer(depth, "[2] infering %s player's optional pos: [%d, %d]",
+                  Piece::get_op_real_status(color) == 
+                  static_cast<size_t>(Piece::Color::Black) ? "black" : "white", 
+                  op_row, op_col);
+#else  // __LOG_INFERENCE_ELSEWHERE__
+        log_infer(depth, "..2");
+#endif // __LOG_INFERENCE_ELSEWHERE__
+    }
+    static void log_infer_next_move(size_t depth, Piece::Color color, int next_row, int next_col) {
+#ifndef __LOG_INFERENCE_ELSEWHERE__
+        log_infer(depth, "[3] infering %s player's optional pos: [%d, %d]",
+                  Piece::get_real_status(color) == 
+                  static_cast<size_t>(Piece::Color::Black) ? "black" : "white", 
+                  next_row, next_col);
+#else // __LOG_INFERENCE_ELSEWHERE__
+        log_infer(depth, "..3");
+#endif // __LOG_INFERENCE_ELSEWHERE__
+    }
+    static void deduce_new_piece(std::vector<std::vector<size_t>>& deduction_board, 
+                                 DisplayFrameworkLight& board_log,
+                                 int row, int col, size_t real_status) {
+        deduction_board[row][col] = real_status;
+        board_log.update(row, col, real_status + 1);  
+        // 感觉如果board_log作为deduction_board的观察者，或者两者在一个class里面，就不用搞这么麻烦了   
+    }
+    static void deduce_reset_piece(std::vector<std::vector<size_t>>& deduction_board, 
+                                   DisplayFrameworkLight& board_log,
+                                   int row, int col) {
+        deduction_board[row][col] = 0;
+        board_log.update(row, col, 0);
+    }
+
+                    
 };  // endof class HumanLikeRobot
 
 class SmartRobot : public RobotPlayer {

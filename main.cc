@@ -4,6 +4,8 @@
 #undef __CMD_MODE__
 #endif // __GUI_MODE__
 
+#define __LOG_INFERENCE_ELSEWHERE__
+
 #include "GameController.hpp"
 #include <cstdlib>
 using namespace mfwu;

@@ -41,13 +41,42 @@ public:
            << ' ' << msg.msg;
         return ss.str();
     }
-private:
+// private:
     static const std::vector<std::string> LogLevelDescription;
+};  // endof class LogFormatter
+
+class InferFormatter {
+    public:
+        static std::string format(LogLevel level, const LogMsg& msg) {
+            // std::stringstream ss;
+            // char buffer[64];
+            // if (msg.time_stamp == XQ4GB_TIMESTAMP) {
+            //     strcpy(buffer, "                     \0");
+            //     //              [2025-03-07 20:57:00]
+            //     ss << buffer;
+            // } else {
+            //     tm* info = localtime(&msg.time_stamp);
+            //     strftime(buffer, 64, "%Y-%m-%d %H:%M:%S", info);
+            //     ss << '[' << buffer << ']';
+            // }
+            // ss << LogLevelDescription.at(static_cast<size_t>(level))
+            //    << ' ' << msg.msg;
+            std::string ret;
+            ret += '{';
+            ret += std::to_string(msg.time_stamp);
+            ret += "} ";
+            ret += msg.msg;
+            return ret;
+        }
+    private:
+        static const std::vector<std::string> LogLevelDescription;
 };  // endof class LogFormatter
 
 const std::vector<std::string> LogFormatter::LogLevelDescription = {
     "[INFER]", "[DEBUG]", "[INFO] ","[WANR] ", "[ERROR]"
 };
+const std::vector<std::string> InferFormatter::LogLevelDescription
+= LogFormatter::LogLevelDescription;
 
 class LogAppender {
 public:
@@ -115,11 +144,12 @@ private:
     std::string filename_;
 };  // endof class FileAppender
 
-class InferAppender : public LogAppender/*: public FileAppender*/ {  // TODO
+class InferAppender /*: public LogAppender*//*: public FileAppender*/ {  // TODO
 public:
-    static constexpr const char* dir = "./inf";
+    static constexpr const char* dir = "./inference";
     InferAppender(LogLevel level, std::string filename="") 
-        : LogAppender(level), filename_(filename), fs_() {
+        : level_(level), formatter_(std::make_shared<InferFormatter>()),
+          filename_(filename), fs_() {
         if (filename == std::string("")) {
             std::string str = dir;
             str += '/'; 
@@ -129,7 +159,7 @@ public:
             if (!std::filesystem::exists(dir)) {
                 bool succ = std::filesystem::create_directories(dir);
                 if (!succ) { 
-                    std::cerr << "creating dir fails, logfile may be lost\n";
+                    std::cerr << "Creating dir fails, logfile may be lost\n";
                 }
             }
         }
@@ -156,6 +186,9 @@ public:
     }
 
 private:
+    LogLevel level_;
+    std::shared_ptr<InferFormatter> formatter_; 
+
     std::fstream fs_;
     std::string filename_;
 };  // endof class InferAppender
@@ -193,7 +226,7 @@ public:
         file_appender_.append(level, lmsg);
 #ifdef __LOG_INFERENCE_ELSEWHERE__
         if (level <= LogLevel::INFER) {
-            inference_appender_.append(lmsg);
+            inference_appender_.append(level, lmsg);
         }
 #endif  // __LOG_INFERENCE_ELSEWHERE__
     } 
@@ -206,7 +239,7 @@ public:
         file_appender_.append(level, lmsg);
 #ifdef __LOG_INFERENCE_ELSEWHERE__
         if (level <= LogLevel::INFER) {
-            inference_appender_.append(lmsg);
+            inference_appender_.append(level, lmsg);
         }
 #endif  // __LOG_INFERENCE_ELSEWHERE__
     }
@@ -313,7 +346,7 @@ private:
 #ifdef __CMD_MODE__
     Logger() : std_appender_(LogLevel::TOTAL), 
 #ifdef __LOG_INFERENCE_ELSEWHERE__
-    file_appender_(LogLevel::DEBUG)
+    file_appender_(LogLevel::DEBUG),
     inference_appender_(LogLevel::INFER)
 #else  // !__LOG_INFERENCE_ELSEWHERE__
     file_appender_(LogLevel::INFER) 

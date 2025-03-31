@@ -321,19 +321,19 @@ public:
         // framework_[get_row_in_framework(-1)][get_col_in_framework(-1)] = outer_border_char;
         get_pos_ref_in_framework(-1, -1) = outer_border_char;
     }
-#ifndef __LOG_INFERENCE_ELESWHERE__
+#ifndef __LOG_INFERENCE_ELSEWHERE__
     void show_infer(size_t depth, const std::vector<std::vector<size_t>>&) const {
         log_infer(depth, "deduction board:");
         for (const std::string& line : framework_) {
             log_infer(XQ4GB_TIMESTAMP, depth, line.c_str());
         }
     }
-#else  // __LOG_INFERENCE_ELESWHERE__
+#else  // __LOG_INFERENCE_ELSEWHERE__
     void show_infer(size_t depth, const std::vector<std::vector<size_t>>& board) {
         std::string zipped_board = zip_tbl(board);
         log_infer(depth, zipped_board.c_str());
     }
-#endif  // __LOG_INFERENCE_ELESWHERE__
+#endif  // __LOG_INFERENCE_ELSEWHERE__
     std::string zip_tbl(const std::vector<std::vector<size_t>>& board) {
         size_t status_num = board.size() * board.size();
         std::string ret; ret.reserve(status_num + 4);
@@ -355,14 +355,20 @@ public:
                     } else {  // different status
                         if (more_num) {
                             ret += '{';
-                            ret += '0' + more_num;  // status < 10 is better
+                            ret += std::to_string(more_num);  // status < 10 is better
                             ret += '}';
                             more_num = 0;
                         }
                         last_status = status;
-                        ret += status;
+                        ret += '0' + status;
                     }
                 }
+            }
+            if (more_num) {
+                ret += '{';
+                ret += std::to_string(more_num);
+                ret += '}';
+                more_num = 0;
             }
             if (ret.size() > status_num / 2) {
                 zip_mode_ = false;
