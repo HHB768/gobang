@@ -320,18 +320,18 @@ private:
             }
         }
     }
-    static void log_infer_pq_top_pos(size_t depth, int row, int col, int now_score) {
+    static void log_infer_pq_top_pos(size_t depth, int row, int col, float now_score) {
 #ifndef __LOG_INFERENCE_ELSEWHERE__
-        log_infer(depth, "pq_top pos: [%d, %d], score: %.2f", row, col, now_score);
+        log_infer(depth, "Prior pos: [%d, %d], score: %.2f", row, col, now_score);
 #else  // __LOG_INFERENCE_ELSEWHERE__
-        log_infer(depth, "--[%d, %d]{%.2f}", row, col, now_score);
+        log_infer(depth, "- %d %d %.2f", row, col, now_score);
 #endif // __LOG_INFERENCE_ELSEWHERE__
     }
     static void log_infer_max_depth(size_t depth) {
 #ifndef __LOG_INFERENCE_ELSEWHERE__
         log_infer(XQ4GB_TIMESTAMP, depth, "max depth met");
 #else  // __LOG_INFERENCE_ELSEWHERE__
-        log_infer(depth, "!!");
+        log_infer(depth, "!");
 #endif // __LOG_INFERENCE_ELSEWHERE__
     }
     static void log_infer_this_move(size_t depth, Piece::Color color, int row, int col) {
@@ -341,7 +341,9 @@ private:
                   static_cast<size_t>(Piece::Color::Black) ? "black" : "white", 
                   row, col);
 #else  // __LOG_INFERENCE_ELSEWHERE__
-        log_infer(depth, "..1");
+        log_infer(depth, "1 %s %d %d", Piece::get_real_status(color) == 
+                  static_cast<size_t>(Piece::Color::Black) ? "b" : "w", 
+                  row, col);
 #endif // __LOG_INFERENCE_ELSEWHERE__
     }
     static void log_infer_op_move(size_t depth, Piece::Color color, int op_row, int op_col) {
@@ -351,7 +353,9 @@ private:
                   static_cast<size_t>(Piece::Color::Black) ? "black" : "white", 
                   op_row, op_col);
 #else  // __LOG_INFERENCE_ELSEWHERE__
-        log_infer(depth, "..2");
+        log_infer(depth, "2 %s %d %d", Piece::get_op_real_status(color) == 
+                  static_cast<size_t>(Piece::Color::Black) ? "b" : "w", 
+                  op_row, op_col);
 #endif // __LOG_INFERENCE_ELSEWHERE__
     }
     static void log_infer_next_move(size_t depth, Piece::Color color, int next_row, int next_col) {
@@ -361,7 +365,9 @@ private:
                   static_cast<size_t>(Piece::Color::Black) ? "black" : "white", 
                   next_row, next_col);
 #else // __LOG_INFERENCE_ELSEWHERE__
-        log_infer(depth, "..3");
+        log_infer(depth, "3 %s %d %d", Piece::get_real_status(color) == 
+                  static_cast<size_t>(Piece::Color::Black) ? "b" : "w", 
+                  next_row, next_col);
 #endif // __LOG_INFERENCE_ELSEWHERE__
     }
     static void deduce_new_piece(std::vector<std::vector<size_t>>& deduction_board, 

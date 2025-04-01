@@ -1,0 +1,65 @@
+[2025-04-01 21:24:12][INFO]  game controller inits...
+[2025-04-01 21:24:12][DEBUG] ------------------------------
+[2025-04-01 21:24:12][DEBUG] player1 color: Black
+[2025-04-01 21:24:12][DEBUG] player2 color: White
+[2025-04-01 21:24:12][DEBUG] player1 plays first: True
+[2025-04-01 21:24:12][DEBUG] current player: Player1
+[2025-04-01 21:24:12][DEBUG] idle_:D player: Player2
+[2025-04-01 21:24:12][DEBUG] archive status: online
+[2025-04-01 21:24:12][DEBUG] ------------------------------
+[2025-04-01 21:24:12][DEBUG] Board: 
+                     [DEBUG]     A B C D E F G H I J K L M   
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+                     [DEBUG] A . + + + + + + + + + + + + + . 
+                     [DEBUG] B . + + + + + + + + + + + + + . 
+                     [DEBUG] C . + + + + + + + + + + + + + . 
+                     [DEBUG] D . + + + + + + + + + + + + + . 
+                     [DEBUG] E . + + + + + + + + + + + + + . 
+                     [DEBUG] F . + + + + + + + + + + + + + . 
+                     [DEBUG] G . + + + + + + + + + + + + + . 
+                     [DEBUG] H . + + + + + + + + + + + + + . 
+                     [DEBUG] I . + + + + + + + + + + + + + . 
+                     [DEBUG] J . + + + + + + + + + + + + + . 
+                     [DEBUG] K . + + + + + + + + + + + + + . 
+                     [DEBUG] L . + + + + + + + + + + + + + . 
+                     [DEBUG] M . + + + + + + + + + + + + + . 
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+[2025-04-01 21:24:14][DEBUG] Human player puts cmd: PIECE
+[2025-04-01 21:24:14][DEBUG] Human's pos: [0, 0]
+[2025-04-01 21:24:14][DEBUG] Board: 
+                     [DEBUG]     A B C D E F G H I J K L M   
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+                     [DEBUG] A .[*]+ + + + + + + + + + + + . 
+                     [DEBUG] B . + + + + + + + + + + + + + . 
+                     [DEBUG] C . + + + + + + + + + + + + + . 
+                     [DEBUG] D . + + + + + + + + + + + + + . 
+                     [DEBUG] E . + + + + + + + + + + + + + . 
+                     [DEBUG] F . + + + + + + + + + + + + + . 
+                     [DEBUG] G . + + + + + + + + + + + + + . 
+                     [DEBUG] H . + + + + + + + + + + + + + . 
+                     [DEBUG] I . + + + + + + + + + + + + + . 
+                     [DEBUG] J . + + + + + + + + + + + + + . 
+                     [DEBUG] K . + + + + + + + + + + + + + . 
+                     [DEBUG] L . + + + + + + + + + + + + + . 
+                     [DEBUG] M . + + + + + + + + + + + + + . 
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+[2025-04-01 21:24:14][INFO]  Robot's pos: [2, 2]
+[2025-04-01 21:24:14][DEBUG] Board: 
+                     [DEBUG]     A B C D E F G H I J K L M   
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+                     [DEBUG] A . X + + + + + + + + + + + + . 
+                     [DEBUG] B . + + + + + + + + + + + + + . 
+                     [DEBUG] C . + +[@]+ + + + + + + + + + . 
+                     [DEBUG] D . + + + + + + + + + + + + + . 
+                     [DEBUG] E . + + + + + + + + + + + + + . 
+                     [DEBUG] F . + + + + + + + + + + + + + . 
+                     [DEBUG] G . + + + + + + + + + + + + + . 
+                     [DEBUG] H . + + + + + + + + + + + + + . 
+                     [DEBUG] I . + + + + + + + + + + + + + . 
+                     [DEBUG] J . + + + + + + + + + + + + + . 
+                     [DEBUG] K . + + + + + + + + + + + + + . 
+                     [DEBUG] L . + + + + + + + + + + + + + . 
+                     [DEBUG] M . + + + + + + + + + + + + + . 
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+[2025-04-01 21:24:16][DEBUG] Human player puts cmd: QUIT
+[2025-04-01 21:24:16][INFO]  Game ends with status: QUIT

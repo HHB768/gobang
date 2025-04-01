@@ -191,7 +191,7 @@ protected:
             fs_.open(archive_filename_, std::ios::app);
         }
         fs_ << "[XQ4GB-SEP]\n"
-            << "this game end with status:" 
+            << "This game end with status:" 
             << GameStatusDescription.at(static_cast<size_t>(status))
             << "\n\n";
     }

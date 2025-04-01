@@ -62,9 +62,9 @@ class InferFormatter {
             // ss << LogLevelDescription.at(static_cast<size_t>(level))
             //    << ' ' << msg.msg;
             std::string ret;
-            ret += '{';
-            ret += std::to_string(msg.time_stamp);
-            ret += "} ";
+            // ret += '{';
+            ret += std::to_string(msg.time_stamp - XQ4GB_TIMESTAMP);
+            ret += ' ';
             ret += msg.msg;
             return ret;
         }
@@ -332,11 +332,11 @@ public:
     
     void new_game(size_t board_height, size_t board_width) {
 #ifdef __LOG_INFERENCE_ELSEWHERE__
-        log(LogLevel::INFER, "[%d, %d]", board_height, board_width);
+        log(LogLevel::INFER, "{%d,%d}", board_height, board_width);
 #endif  // __LOG_INFERENCE_ELSEWHERE__
     }
     void end_game(GameStatus status) {
-        log(LogLevel::INFO, "game ends with status: %s", 
+        log(LogLevel::INFO, "Game ends with status: %s", 
             GameStatusDescription.at(static_cast<size_t>(status)).c_str());
         file_appender_.flush();
     }
@@ -398,7 +398,7 @@ private:
         infer_log_space(fmt_with_pref, INFERENCE_DEPTH - infer_depth);
         fmt_with_pref += " ::: "; fmt_with_pref += fmt; fmt_with_pref += " ::: ";
 #else  // __LOG_INFERENCE_ELSEWHERE__
-        std::string fmt_with_pref = "[%d]";
+        std::string fmt_with_pref = "%d ";
         fmt_with_pref += fmt;
         #endif  // __LOG_INFERENCE_ELSEWHERE__
         return fmt_with_pref;

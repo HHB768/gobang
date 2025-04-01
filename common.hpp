@@ -4,6 +4,9 @@
 #include <bits/stdc++.h>  // temp
 #include "constdef.hpp"
 
+#define likely(x)       __builtin_expect(!!(x), 1)
+#define unlikely(x)     __builtin_expect(!!(x), 0)
+
 namespace mfwu {
     enum class BoardSize : size_t {
         Small  = 13,

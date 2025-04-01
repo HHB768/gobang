@@ -50,7 +50,7 @@ public:
     } 
     void show() const {
         std::stringstream ss;
-        log_debug("board: ");
+        log_debug("Board: ");
         for (const std::string& line : framework_) {
             ss << line << "\n";
             log_debug(XQ4GB_TIMESTAMP, line.c_str());
@@ -338,14 +338,14 @@ public:
         size_t status_num = board.size() * board.size();
         std::string ret; ret.reserve(status_num + 4);
         if (zip_mode_ == false) {
-            ret += "::";
+            ret += ": ";
             for (const auto& line : board) {
                 for (const size_t& status : line) {
                     ret += '0' + status;
                 }
             }
         } else {  // zip_mode = true
-            ret += "**";
+            ret += "* ";
             size_t last_status = -1;
             size_t more_num = 0;
             for (const auto& line : board) {
@@ -377,6 +377,42 @@ public:
         // ret += '\n';
         return ret;
     }
+    
+    void unzip_tbl(const std::string_view& str, bool mode) {
+        // ensure you have initialized it first
+        int i = 0, j = 0;
+        if (mode == false) {
+            for (int k = 0; k < str.size(); k++) {
+                update_directly(i, j, str[k] - '0');
+                advance(i, j);
+                if (i >= height_) break;
+            }
+        } else {
+            int last_num = -1;
+            for (int k = 0; k < str.size(); k++) {
+                if (str[k] == '{') {
+                    int kc = k;
+                    while (k != '}') {
+                        k++;
+                    }
+                    kc = atoi(str.substr(kc + 1, k - kc - 1).data());
+                    for (int ii = 0; ii < kc; ii++) {
+                        update_directly(i, j, last_num);
+                        advance(i, j); if (i >= height_) break;
+                    }
+                } else if (is_digit(str[k])) {
+                    last_num = str[k] - '0';
+                    update_directly(i, j, last_num);
+                    advance(i, j); if (i >= height_) break;
+                }
+            }
+        }
+    }
+
+    const std::vector<std::string>& get_framework() const {
+        return this->framework_;
+    };
+
     void update(int i, int j, size_t status) {
         update_directly(i, j, status);
 
@@ -508,6 +544,14 @@ private:
             ch = white_piece_char;
         } else if (ch == black_sp_piece_char) {
             ch = black_piece_char;
+        }
+    }
+
+    void advance(int& i, int& j) {
+        if (j < width_ - 1) {
+            j++;
+        } else {
+            i++; j = 0;
         }
     }
 
