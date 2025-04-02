@@ -104,33 +104,25 @@ public:
                     } break;
                     case '*' : {
                         board_->unzip_tbl(std::string_view(str.data() + subs[3].first, subs[3].second - subs[3].first), true);
-                        ss << "Deduction board\n :::";
-                        for (auto&& line : board_->get_framework()) {
-                            ss << get_log_space(depth);
-                            ss << " ::: " << line << " ::: \n";
-                        }
+                        log_board(ss, depth);
                     } break;
                     case ':' : {
                         board_->unzip_tbl(std::string_view(str.data() + subs[3].first, subs[3].second - subs[3].first), false);
-                        ss << "Deduction board\n";
-                        for (auto&& line : board_->get_framework()) {
-                            ss << get_log_space(depth);
-                            ss << line << "\n";
-                        }
+                        log_board(ss, depth);
                     } break;
                     case '1' : {
                         ss << "[1] Infering " << (str[subs[3].first] == 'b' ? "black" : "white")
-                           << "player's optional pos: [" << get_substr(str, subs[4]) << ", "
+                           << " player's optional pos: [" << get_substr(str, subs[4]) << ", "
                            << get_substr(str, subs[5]) << "]";
                     } break;
                     case '2' : {
                         ss << "[2] Infering " << (str[subs[3].first] == 'b' ? "black" : "white")
-                           << "player's optional pos: [" << get_substr(str, subs[4]) << ", "
+                           << " player's optional pos: [" << get_substr(str, subs[4]) << ", "
                            << get_substr(str, subs[5]) << "]";
                     } break;
                     case '3' : {
                         ss << "[3] Infering " << (str[subs[3].first] == 'b' ? "black" : "white")
-                           << "player's optional pos: [" << get_substr(str, subs[4]) << ", "
+                           << " player's optional pos: [" << get_substr(str, subs[4]) << ", "
                            << get_substr(str, subs[5]) << "]";
                     } break;
                     default : {
@@ -172,6 +164,20 @@ private:
         }
         return ret;
     }
+
+    void log_board(std::stringstream& ss, size_t depth) {
+        ss << "Deduction board :::\n";
+        const auto& board = board_->get_framework();
+        for (int i = 0; i < board.size(); i++) {
+            const auto& line = board[i];
+            ss << get_log_space(depth);
+            ss << " ::: " << line;
+            if (likely(i != board.size() - 1)) {
+                ss << " ::: \n";
+            }
+        }
+    }
+    
 
     std::ifstream ifs_;
     std::ofstream ofs_;

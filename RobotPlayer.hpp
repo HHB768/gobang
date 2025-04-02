@@ -173,7 +173,7 @@ private:
                 if (deduction_board[row][col] != 0) { continue; }  // only search empty pos
                 score_board[row][col] += calc_pos(row, col, color)
                     + 0.6 * calc_pos(row, col, Piece::Color{Piece::get_op_real_status(color)});
-                if (pq.empty() || score_board[row][col] - std::get<0>(pq.top()) > 0 - eps) {
+                if (pq.size() < num_of_choices || score_board[row][col] - std::get<0>(pq.top()) > 0 - eps) {
                     while (pq.size() >= num_of_choices) {
                         pq.pop();
                     }
@@ -213,6 +213,7 @@ private:
                     continue;
                 }
                 log_infer_next_move(depth, color, next_row, next_col);
+                deduce_new_piece(deduction_board, board_log, next_row, next_col, Piece::get_real_status(color));
                 board_log.show_infer(depth, deduction_board);
                 float next_eval = calc_pos(row, col, color)
                     + 0.6 * calc_pos(row, col, Piece::Color{Piece::get_op_real_status(color)});
@@ -373,7 +374,7 @@ private:
     static void deduce_new_piece(std::vector<std::vector<size_t>>& deduction_board, 
                                  DisplayFrameworkLight& board_log,
                                  int row, int col, size_t real_status) {
-        deduction_board[row][col] = real_status;
+        deduction_board[row][col] = real_status + 1;
         board_log.update(row, col, real_status + 1);  
         // 感觉如果board_log作为deduction_board的观察者，或者两者在一个class里面，就不用搞这么麻烦了   
     }

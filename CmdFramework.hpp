@@ -7,6 +7,9 @@
 // gui(?) of cmd mode lol
 namespace mfwu {
 
+// we should have a base class Framework
+// TODO
+
 template <BoardSize Size=BoardSize::Small>
 class DisplayFramework {
     /*  
@@ -392,7 +395,7 @@ public:
             for (int k = 0; k < str.size(); k++) {
                 if (str[k] == '{') {
                     int kc = k;
-                    while (k != '}') {
+                    while (str[k] != '}') {  // once i wrote like this : k != '}' : k++ holy s🐻🐻t
                         k++;
                     }
                     kc = atoi(str.substr(kc + 1, k - kc - 1).data());
@@ -466,26 +469,32 @@ private:
     void print_empty_position(int r, int c) {
         // framework_[get_row_in_framework(r)][get_col_in_framework(c)] = empty_position_char;
         get_pos_ref_in_framework(r, c) = empty_position_char;
+        remove_highlight(r, c);
     }
     void print_white_piece(int r, int c) {
         // framework_[get_row_in_framework(r)][get_col_in_framework(c)] = white_piece_char;
         get_pos_ref_in_framework(r, c) = white_piece_char;
+        remove_highlight(r, c);
     }
     void print_white_sp_piece(int r, int c) {
         // framework_[get_row_in_framework(r)][get_col_in_framework(c)] = white_sp_piece_char;
         get_pos_ref_in_framework(r, c) = white_sp_piece_char;
+        add_highlight(r, c);
     }
     void print_black_piece(int r, int c) {
         // framework_[get_row_in_framework(r)][get_col_in_framework(c)] = black_piece_char;
         get_pos_ref_in_framework(r, c) = black_piece_char;
+        remove_highlight(r, c);
     }
     void print_black_sp_piece(int r, int c) {
         // framework_[get_row_in_framework(r)][get_col_in_framework(c)] = black_sp_piece_char;
         get_pos_ref_in_framework(r, c) = black_sp_piece_char;
+        add_highlight(r, c);
     }
     void print_unknown_status_piece(int r, int c) {
         // framework_[get_row_in_framework(r)][get_col_in_framework(c)] = unknown_status_piece_char;
         get_pos_ref_in_framework(r, c) = unknown_status_piece_char;
+        add_highlight(r, c);  // check
     }
 
     void remove_highlight() {
@@ -548,7 +557,7 @@ private:
     }
 
     void advance(int& i, int& j) {
-        if (j < width_ - 1) {
+        if (j < size_ - 1) {
             j++;
         } else {
             i++; j = 0;

@@ -58,6 +58,7 @@ public:
         } break;
         case CommandType::INVALID: {
             if (this->check_draw()) {
+                log_info("Draw");
                 return GameStatus::NORMAL;
             }
         } break;
