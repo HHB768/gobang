@@ -5,6 +5,51 @@
 
 namespace mfwu {
 
+class DeductionBoard_base {
+public:
+    DeductionBoard_base() = delete;
+    DeductionBoard_base(const std::vector<std::vector<size_t>>& board) 
+        : board_(board) {}
+    DeductionBoard_base(std::vector<std::vector<size_t>>&& board) 
+        : board_(std::move(board)) {}
+
+    std::vector<size_t>& operator[](int idx) {
+        return board_[idx];
+    }
+    virtual size_t size() const = 0;
+    virtual void set_piece(const Piece& p) = 0;
+    virtual void reset_pos(const Position& p) = 0;
+
+protected:
+    std::vector<std::vector<size_t>> board_;
+};  // endof class DeductionBoard_base
+
+template <BoardSize Size=BoardSize::Small>
+class DeductionBoard : public DeductionBoard_base {
+public:
+    using base_type = DeductionBoard_base;   
+
+    DeductionBoard() = delete;
+    DeductionBoard(const std::vector<std::vector<size_t>>& board) 
+        : base_type(board), board_log_(board) {}
+    DeductionBoard(std::vector<std::vector<size_t>>&& board)
+        : base_type(std::move(board)), board_log_(this->board) {}
+
+    size_t size() const override { return static_cast<size_t>(Size); }
+    void deduce_new_piece(const Piece& p, int depth) override {
+        size_t real_status = Piece::get_real_status(p.color);
+        this->board_[p.row][p.col] = real_status + 1;
+        board_log_.update(p.row, p.col, real_status + 1);
+        board_log_.show_infer(depth);
+    }
+    void deduce_reset_piece(const Position& p) override {
+        this->board_[p.row][p.col] = 0;
+        board_log_.update(p.row, p.col, 0);
+    }
+private:
+    InferDisplayer<Size> board_log_;
+};  // endof class DeductionBoard
+
 class RobotPlayer : public Player {
 public:
     RobotPlayer() : Player() {}
@@ -146,9 +191,25 @@ private:
         }
         if (is_clear_flag) return {(int)sz / 2, (int)sz / 2};
 
-        auto deduction_board = this->board_->snap();
-        DisplayFrameworkLight board_log(deduction_board);
-        auto [_, best_row, best_col] = get_best(INFERENCE_DEPTH, this->player_color_, deduction_board, board_log);
+        // std::shared_ptr<DeductionBoard_base> deduction_board;
+        // TODO: deduction board should update with last_piece
+        // just like framework does...  X 25.04.08
+        // then move this part to constructor and rm mutable qualifier
+        switch (this->board_->size()) {
+        case static_cast<size_t>(BoardSize::Small) : {
+            deduction_board_ = std::make_shared<DeductionBoard<BoardSize::Small>>(this->board_->snap());
+        } break;
+        case static_cast<size_t>(BoardSize::Middle) : {
+            deduction_board_ = std::make_shared<DeductionBoard<BoardSize::Middle>>(this->board_->snap());
+        } break;
+        case static_cast<size_t>(BoardSize::Large) : {
+            deduction_board_ = std::make_shared<DeductionBoard<BoardSize::Large>>(this->board_->snap());
+        } break;
+        default:
+            log_error("Deduction board is not correctly created");
+            log_error("bcz the size is: %lu", this->board_->size());
+        }
+        auto [_, best_row, best_col] = get_best(INFERENCE_DEPTH, this->player_color_);
         return {best_row, best_col};
     }
     struct cmp {
@@ -156,21 +217,19 @@ private:
             return std::get<0>(a) > std::get<0>(b);
         }
     };  // endof struct cmp
-    std::tuple<float, int, int> get_best(int depth, Piece::Color color, 
-                                         std::vector<std::vector<size_t>>& deduction_board,
-                                         DisplayFrameworkLight& board_log) const {
+    std::tuple<float, int, int> get_best(int depth, Piece::Color color) const {
         // if (depth == 0) return get_best(color);
         std::priority_queue<std::tuple<float, int, int>, std::vector<std::tuple<float, int, int>>, cmp> pq;
         int num_of_choices = 3;  // 3
-        size_t sz = deduction_board.size();
-        assert(deduction_board.size() > 0 && deduction_board.size() == deduction_board[0].size());
+        size_t sz = deduction_board_->size();
+        assert(deduction_board_->size() > 0 && deduction_board_->size() == (*deduction_board_)[0].size());
         std::vector<std::vector<float>> score_board(sz, std::vector<float>(sz, 0.0F));  
         // 搞一个score_board把结果存下来的意义在哪呢：debug很好用:D
         
         // 先筛选出最有价值的三个点，后面再详细看
         for (int row = 0; row < sz; row++) {
             for (int col = 0; col < sz; col++) {
-                if (deduction_board[row][col] != 0) { continue; }  // only search empty pos
+                if ((*deduction_board_)[row][col] != 0) { continue; }  // only search empty pos
                 score_board[row][col] += calc_pos(row, col, color)
                     + 0.6 * calc_pos(row, col, Piece::Color{Piece::get_op_real_status(color)});
                 if (pq.size() < num_of_choices || score_board[row][col] - std::get<0>(pq.top()) > 0 - eps) {
@@ -194,35 +253,28 @@ private:
                 log_infer_max_depth(depth);
             } else {
                 log_infer_this_move(depth, color, row, col);
-                deduce_new_piece(deduction_board, board_log, row, col, Piece::get_real_status(color));  // we should zip these two into a deducer or sth
-                board_log.show_infer(depth, deduction_board);
-                auto [op_score, op_row, op_col] = get_best(depth - 1, Piece::Color{Piece::get_op_real_status(color)},  // Piece::Color{Piece::get_op_real_status(color)}
-                                                           deduction_board, board_log);  // 不应该反向吗？就像这样↑
+                deduction_board_->set_piece(Piece{row, col, color});
+                auto [op_score, op_row, op_col] = get_best(depth - 1, Piece::Color{Piece::get_op_real_status(color)});  // 不应该反向吗？就像这样
                 if (op_row < 0 || op_col < 0) {
-                    deduce_reset_piece(deduction_board, board_log, row, col);
+                    deduction_board_->reset_pos(Position{row, col});
                     continue;
                 }
                 log_infer_op_move(depth, color, op_row, op_col);
-                deduce_new_piece(deduction_board, board_log, op_row, op_col, Piece::get_op_real_status(color));
-                board_log.show_infer(depth, deduction_board);
-                auto [_, next_row, next_col] = get_best(depth - 1, color,
-                                                        deduction_board, board_log);
+                deduction_board_->set_piece(Piece{op_row, op_col, Piece::Color{Piece::get_op_real_status(color)}});
+                auto [_, next_row, next_col] = get_best(depth - 1, color);
                 if (next_row < 0 || next_col < 0) {
-                    deduce_reset_piece(deduction_board, board_log, row, col);
-                    deduce_reset_piece(deduction_board, board_log, op_row, op_col);
+                    deduction_board_->reset_pos(Position{row, col});
+                    deduction_board_->reset_pos(Position{op_row, op_col});
                     continue;
                 }
                 log_infer_next_move(depth, color, next_row, next_col);
-                deduce_new_piece(deduction_board, board_log, next_row, next_col, Piece::get_real_status(color));
-                board_log.show_infer(depth, deduction_board);
+                deduction_board_->set_piece(Piece{next_row, next_col, color});
                 float next_eval = calc_pos(row, col, color)
                     + 0.6 * calc_pos(row, col, Piece::Color{Piece::get_op_real_status(color)});
-                // 这里不对，推演的点在deduction board上，calc_pos没用
-                // 可是我已经把这个点填上了，不就是0吗：不是，因为calc_pos记录的是board上的数据
                 now_score += 0.2 * next_eval;
-                deduce_reset_piece(deduction_board, board_log, row, col);
-                deduce_reset_piece(deduction_board, board_log, op_row, op_col);
-                deduce_reset_piece(deduction_board, board_log, next_row, next_col);
+                deduction_board_->reset_pos(Position{row, col});
+                deduction_board_->reset_pos(Position{op_row, op_col});
+                deduction_board_->reset_pos(Position{next_row, next_col});
             }
             
             if (std::fabs(now_score - max_score) <= eps) {
@@ -296,7 +348,7 @@ private:
     }
     void search_one_dir(int row, int col, int inc_r, int inc_c, 
                         int& seq, int& emp, int& jump, Piece::Color color) const {
-        size_t sz = this->board_->size();
+        // size_t sz = this->board_->size();
         for (int step = 1; step < 5; step++) {
             int cur_r = row + step * inc_r;
             int cur_c = col + step * inc_c;
@@ -371,20 +423,8 @@ private:
                   next_row, next_col);
 #endif // __LOG_INFERENCE_ELSEWHERE__
     }
-    static void deduce_new_piece(std::vector<std::vector<size_t>>& deduction_board, 
-                                 DisplayFrameworkLight& board_log,
-                                 int row, int col, size_t real_status) {
-        deduction_board[row][col] = real_status + 1;
-        board_log.update(row, col, real_status + 1);  
-        // 感觉如果board_log作为deduction_board的观察者，或者两者在一个class里面，就不用搞这么麻烦了   
-    }
-    static void deduce_reset_piece(std::vector<std::vector<size_t>>& deduction_board, 
-                                   DisplayFrameworkLight& board_log,
-                                   int row, int col) {
-        deduction_board[row][col] = 0;
-        board_log.update(row, col, 0);
-    }
-
+    
+    mutable std::shared_ptr<DeductionBoard_base> deduction_board_;
                     
 };  // endof class HumanLikeRobot
 

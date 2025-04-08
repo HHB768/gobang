@@ -13,6 +13,9 @@ namespace mfwu {
         Middle = 21,
         Large  = 25
     };  // endof enum class BoardSize
+    const std::unordered_map<size_t, std::string> BoardSizeDescription = {
+        {0, "Small"}, {1, "Middle"}, {2, "Large"}
+    };
 
     /* dual ints, -1 for invalid res */
     struct Position {

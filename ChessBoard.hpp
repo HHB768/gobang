@@ -2,7 +2,7 @@
 #define __CHESSBOARD_HPP__
 
 #include "common.hpp"
-#include "CmdFramework.hpp"
+#include "Displayer.hpp"
 #include "Logger.hpp"
 
 namespace mfwu {
@@ -11,6 +11,7 @@ namespace mfwu {
 
 class ChessBoard_base {
 public:
+    static constexpr BoardSize Size = BoardSize::Small;
     using Color = typename Piece::Color;
     static constexpr Color Invalid = Color::Invalid;
     static constexpr Color Black = Color::Black;
@@ -377,42 +378,98 @@ private:
     }
 };  // endof class ChessBoard
 
-// template <BoardSize Size=BoardSize::Small>
-// class GUIBoard : public ChessBoard<Size> {
-// public:
-//     Command get_command() override {
-//         return Command{CommandType::PIECE, {0, 0}};
-//     }
-
-//     void show() const override {
-
-//     }
-//     void refresh() override {
-//         show();
-//     }
-
-//     using Archive_type = std::string;
-
-// };  // endof class GUIBoard
-
 template <BoardSize Size=BoardSize::Small>
-class CMDBoard : public ChessBoard<Size> {
+class GuiBoard : public ChessBoard<Size> {
 public:
+    static constexpr size_t size_ = static_cast<size_t>(Size);
     using ArchiveSeq_type = typename ChessBoard<Size>::ArchiveSeq_type;
     using ArchiveTbl_type = typename ChessBoard<Size>::ArchiveTbl_type;
 
-    CMDBoard() 
+    GuiBoard() 
         : ChessBoard<Size>(), framework_() {}
-    CMDBoard(const std::vector<std::vector<size_t>>& input_board,
+    GuiBoard(const std::vector<std::vector<size_t>>& input_board,
              const Piece& last_piece=invalid_piece) 
         : ChessBoard<Size>(input_board, last_piece), 
           framework_(this->board_) {
     }
-    CMDBoard(const CMDBoard& board) = default;  // really work?
-    CMDBoard(CMDBoard&& board) = default;
+    GuiBoard(const GuiBoard& board) = default;  // really work?
+    GuiBoard(GuiBoard&& board) = default;
 
-    CMDBoard& operator=(const CMDBoard& board) = default;
-    CMDBoard& operator=(CMDBoard&& board) = default;
+    GuiBoard& operator=(const GuiBoard& board) = default;
+    GuiBoard& operator=(GuiBoard&& board) = default;
+
+    Command get_command() override {
+        
+        std::pair<int, int> input_pos = {-1, -1};
+        // wait until being triggered
+        Command ret = GuiBoard::validate_input(input_pos);
+        if (ret.type == CommandType::INVALID
+            || (ret.type == CommandType::PIECE 
+                && (ret.pos.row < 0 or ret.pos.col < 0))) {
+            std::cout << HELPER_INVALID_POSITION << "\n";
+            ret = this->get_command();
+        }
+        return ret;
+    }
+
+    void show() const override {
+
+    }
+    void refresh() override {
+        show();
+    }
+
+private:
+    static Command validate_input(const std::pair<int, int>& pos) {
+        if (pos.first == -1 || pos.second == -1) {
+            return Command{CommandType::INVALID, {}};
+        }
+        for (auto&& funcbox : this->funcboxes_) {
+            if (funcbox.encircle(pos)) {
+                return Command{funcbox.cmd_type, {}};
+            }
+        }
+
+        auto ret = Command{CommandType::PIECE, {get_row(pos.first), get_col(pos.second)}};
+        if (ret.pos.row == -1 or ret.pos.col == -1) return ret;
+        if (this->board_[ret.pos.row][ret.pos.col]->get_status()) {
+            ret.pos.row = ret.pos.col = -1;  // occupied pos
+        }
+        return ret;
+    }
+
+    static int get_row(int r) {
+        int ret = round(((double)r - GuiBoard<Size>::row_margin) / GuiBoard<Size>::grid_len);
+        if (!is_valid_row(ret)) { return -1; }
+        return ret;
+    }
+    static int get_col(int c) {
+        int ret = round(((double)c - GuiBoard<Size>::col_margin) / GuiBoard<Size>::grid_len);
+        if (!is_valid_col(ret)) { return -1; }
+        return ret;
+    }
+
+};  // endof class GuiBoard
+
+template <BoardSize Size=BoardSize::Small>
+class CmdBoard : public ChessBoard<Size> {
+public:
+    static constexpr size_t size_ = static_cast<size_t>(Size);
+    using ArchiveSeq_type = typename ChessBoard<Size>::ArchiveSeq_type;
+    using ArchiveTbl_type = typename ChessBoard<Size>::ArchiveTbl_type;
+
+    CmdBoard() 
+        : ChessBoard<Size>(), framework_() {}
+    CmdBoard(const std::vector<std::vector<size_t>>& input_board,
+             const Piece& last_piece=invalid_piece) 
+        : ChessBoard<Size>(input_board, last_piece), 
+          framework_(this->board_) {
+    }
+    CmdBoard(const CmdBoard& board) = default;  // really work?
+    CmdBoard(CmdBoard&& board) = default;
+
+    CmdBoard& operator=(const CmdBoard& board) = default;
+    CmdBoard& operator=(CmdBoard&& board) = default;
 
     void update(const Piece& piece) override {
         rm_last_sp();
@@ -424,7 +481,7 @@ public:
         std::cout << HELPER_RETURN2MENU << "\n";
         std::cout << HELPER_PLACE_PIECE << "\n";
         std::cin >> input_str;
-        Command ret = CMDBoard::validate_input(input_str);
+        Command ret = CmdBoard::validate_input(input_str);
         if (ret.type == CommandType::INVALID
             ||(ret.type == CommandType::PIECE 
                && (ret.pos.row < 0 or ret.pos.col < 0))) {
@@ -573,7 +630,7 @@ private:
         framework_.update_new_sp(this->last_piece_);
     }
 
-    Command validate_input(const std::string& rstr) {
+    static Command validate_input(const std::string& rstr) {
         if (rstr.size() > 10) return Command{CommandType::INVALID, {}};
         std::string str = rstr;
         toupper(str);
@@ -626,8 +683,8 @@ private:
         framework_.show_without_log();
     }
     
-    DisplayFramework<Size> framework_;
-};  // endof class CMDBoard
+    CmdDisplayer<Size> framework_;
+};  // endof class CmdBoard
 
 }  // endof namespace mfwu
 

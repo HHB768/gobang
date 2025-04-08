@@ -490,7 +490,7 @@ void log_end_game(GameStatus status) {
 // logerr shortcuts
 #define gc_error_exit(mode, size) do {  \
     log_error(ERROR_NEW_GC);  \
-    log_error(XQ4GB_TIMESTAMP, "mode: %ld, size: %ld", \
+    log_error(XQ4GB_TIMESTAMP, "mode: %lu, size: %lu", \
               static_cast<size_t>(mode), static_cast<size_t>(size));  \
     exit(-10086);  \
 } while (0);

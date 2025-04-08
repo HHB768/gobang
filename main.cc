@@ -25,10 +25,10 @@ int main() {
         std::unique_ptr<GameController_base_base> game = nullptr;
 
 #ifdef __CMD_MODE__
-#define __CHESSBOARD_TYPE__ CMDBoard
+#define __CHESSBOARD_TYPE__ CmdBoard
         using Human_type = HumanPlayer;
 #else 
-#define __CHESSBOARD_TYPE__ GUIBoard
+#define __CHESSBOARD_TYPE__ GuiBoard
         using Human_type = HumanPlayer;
 #endif
 
@@ -36,7 +36,6 @@ int main() {
         // using Robot_type = DummyRobot;
         using Robot_type = HumanLikeRobot;
         
-
         switch (mode) {
         case GameMode::PVE : {
             switch (size) {

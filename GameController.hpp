@@ -58,7 +58,7 @@ public:
         } break;
         case CommandType::INVALID: {
             if (this->check_draw()) {
-                log_info("Draw");
+                log_info("--- Draw ---");
                 return GameStatus::NORMAL;
             }
         } break;
@@ -207,22 +207,22 @@ class GameController : public GameController_base<Player1_type, Player2_type, Ch
 };
 
 // template <typename Player1_type, typename Player2_type, BoardSize Size>
-// class GameController<Player1_type, Player2_type, GUIBoard<Size>> 
-//     : public GameController_base<Player1_type, Player2_type, GUIBoard<Size>> {
+// class GameController<Player1_type, Player2_type, GuiBoard<Size>> 
+//     : public GameController_base<Player1_type, Player2_type, GuiBoard<Size>> {
 // public:
-//     GameController<Player1_type, Player2_type, GUIBoard<Size>>()
-//         : GameController_base<Player1_type, Player2_type, GUIBoard<Size>>() {}
-//     virtual ~GameController<Player1_type, Player2_type, GUIBoard<Size>>() {}
+//     GameController<Player1_type, Player2_type, GuiBoard<Size>>()
+//         : GameController_base<Player1_type, Player2_type, GuiBoard<Size>>() {}
+//     virtual ~GameController<Player1_type, Player2_type, GuiBoard<Size>>() {}
 // };
 
 
 template <typename Player1_type, typename Player2_type, BoardSize Size>
-class GameController<Player1_type, Player2_type, CMDBoard<Size>> 
-    : public GameController_base<Player1_type, Player2_type, CMDBoard<Size>> {
+class GameController<Player1_type, Player2_type, CmdBoard<Size>> 
+    : public GameController_base<Player1_type, Player2_type, CmdBoard<Size>> {
 public:
-    GameController<Player1_type, Player2_type, CMDBoard<Size>>() 
-        : GameController_base<Player1_type, Player2_type, CMDBoard<Size>>() {}
-    virtual ~GameController<Player1_type, Player2_type, CMDBoard<Size>>() {}
+    GameController<Player1_type, Player2_type, CmdBoard<Size>>() 
+        : GameController_base<Player1_type, Player2_type, CmdBoard<Size>>() {}
+    virtual ~GameController<Player1_type, Player2_type, CmdBoard<Size>>() {}
     
 private:
     
