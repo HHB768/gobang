@@ -19,6 +19,8 @@ public:
     virtual size_t size() const = 0;
     virtual void set_piece(const Piece& p) = 0;
     virtual void reset_pos(const Position& p) = 0;
+    virtual float calc_pos(int row, int col, Piece::Color color) const = 0;
+    // pure specifier is "= 0", not "=0", LOL
 
 protected:
     std::vector<std::vector<size_t>> board_;
@@ -46,7 +48,93 @@ public:
         this->board_[p.row][p.col] = 0;
         board_log_.update(p.row, p.col, 0);
     }
+
+    // NOTE: why not setting 'Piece' as the input arg?
+    // on one hand, there is actually no 'piece' here, we just assess this 'pos'
+    // on the other hand, it code is tranfered from a legacy lib in 2023,
+    // 得保留一些原有的味道，不然你都不知道我是从💩山挪过来的
+    // 25.04.08 XQ3
+    float calc_pos(int row, int col, Piece::Color color) const override {
+        std::vector<int> res;
+        res.reserve(4);
+        for (auto&& [inc_r, inc_c] : half_dirs) {
+            res.emplace_back(search_dir_rank(row, col, inc_r, inc_c, color));
+        }
+        std::sort(res.begin(), res.end());
+
+        if (res[0] == 0) return score_map[0];
+        else if (res[0] == 1) return score_map[1];
+        else if (res[0] == 2 && res[1] == 2) return score_map[1] * 0.1;
+        else if (res[0] == 2 && res[1] == 3) return score_map[2] * 1.5;
+        return 0.8 * score_map[res[0]] + 0.2 * score_map[res[1]];
+    }
+
 private:
+    int search_dir_rank(int row, int col, int inc_r, int inc_c, Piece::Color color) const {
+        assert(this->board_->get_status(row, col) == 0);
+        int seq = 1, emp = 0, jump1 = 0, jump2 = 0;
+        
+        search_one_dir(row, col, inc_r,  inc_c, seq, emp, jump1, color);
+        search_one_dir(row, col, -inc_r, -inc_c, seq, emp, jump2, color);  // bugfix
+        
+        int rank = 0;
+        if (seq >= 5) {
+            rank = 0;
+        } else if (emp == 0 || jump1 >= 4 || jump2 >= 4) {
+            rank = 7;
+        } else if (seq == 4 && emp == 2 || seq == 3 && emp == 2 && jump1 && jump2
+                   || seq == 2 && jump1 >= 2 && jump2 >= 2 || seq == 1 && jump1 == 3 && jump2 == 3) {
+            rank = 1;
+        } else if (seq == 4 && emp == 1 || seq == 3 && (emp + jump1 + jump2 >= 2)
+                   || seq == 2 && (emp == 2 && (jump1 + jump2) >= 2   // really?
+                                || emp == 1 && (jump1 + jump2) >= 3)
+                   || seq == 1 && (jump1 == 3 || jump2 == 3)) {
+            rank = 2;
+        } else if (seq == 2 && emp == 2 && (jump1 || jump2) 
+                   || seq == 1 && emp == 2 && (jump1 == 2 || jump2 == 2)) {  // 这个t级有待研究
+            rank = 3;
+        } else if (seq == 3 || seq == 2 && (emp + jump1 + jump2) >= 2 
+                            || seq == 1 && (emp + jump1 + jump2) >= 3) {
+            rank = 4;
+        } else if (seq == 2 || seq == 1 && (emp + jump1 + jump2 >= 2)) {
+            rank = 5;
+        } else if (seq == 1) {
+            rank = 6;
+        } else {
+            assert(1 == 0);
+            log_error(            "lol upi forget this situation");
+            log_error(XQ4GB_TIMESTAMP, "↑ you -> upi");
+        }
+        return rank;
+    }
+    void search_one_dir(int row, int col, int inc_r, int inc_c, 
+                        int& seq, int& emp, int& jump, Piece::Color color) const {
+        // size_t sz = this->board_->size();
+        for (int step = 1; step < 5; step++) {
+            int cur_r = row + step * inc_r;
+            int cur_c = col + step * inc_c;
+            if (!this->board_->is_valid_pos(cur_r, cur_c)) { break; }
+            if (this->board_->get_status(cur_r, cur_c) == 0) {
+                emp++;
+                for (int inc_step = 1; inc_step < 5; inc_step++) {
+                    cur_r = row + (step + inc_step) * inc_r;
+                    cur_c = col + (step + inc_step) * inc_c;
+                    if (!this->board_->is_valid_pos(cur_r, cur_c)) { break; }
+                    if (Piece::get_real_status(this->board_->get_status(cur_r, cur_c))
+                        == Piece::get_real_status(color)) {
+                        jump++;
+                    } else { break; }
+                }
+                break;
+            } else if (Piece::get_real_status(this->board_->get_status(cur_r, cur_c))
+                       == Piece::get_real_status(color)) {
+                seq++;
+            } else {
+                break;
+            }
+        }
+    }
+
     InferDisplayer<Size> board_log_;
 };  // endof class DeductionBoard
 
@@ -195,6 +283,8 @@ private:
         // TODO: deduction board should update with last_piece
         // just like framework does...  X 25.04.08
         // then move this part to constructor and rm mutable qualifier
+        // however, deduction_board_ should not detect the changes of board_
+        // so, i wont implement it here X 25.04.08
         switch (this->board_->size()) {
         case static_cast<size_t>(BoardSize::Small) : {
             deduction_board_ = std::make_shared<DeductionBoard<BoardSize::Small>>(this->board_->snap());
@@ -213,7 +303,8 @@ private:
         return {best_row, best_col};
     }
     struct cmp {
-        bool operator()(const std::tuple<float, int, int>& a, const std::tuple<float, int, int>& b) const {
+        bool operator()(const std::tuple<float, int, int>& a, 
+                        const std::tuple<float, int, int>& b) const {
             return std::get<0>(a) > std::get<0>(b);
         }
     };  // endof struct cmp
@@ -230,8 +321,8 @@ private:
         for (int row = 0; row < sz; row++) {
             for (int col = 0; col < sz; col++) {
                 if ((*deduction_board_)[row][col] != 0) { continue; }  // only search empty pos
-                score_board[row][col] += calc_pos(row, col, color)
-                    + 0.6 * calc_pos(row, col, Piece::Color{Piece::get_op_real_status(color)});
+                score_board[row][col] += deduction_board_->calc_pos(row, col, color)
+                    + 0.6 * deduction_board_->calc_pos(row, col, Piece::Color{Piece::get_op_real_status(color)});
                 if (pq.size() < num_of_choices || score_board[row][col] - std::get<0>(pq.top()) > 0 - eps) {
                     while (pq.size() >= num_of_choices) {
                         pq.pop();
@@ -269,8 +360,8 @@ private:
                 }
                 log_infer_next_move(depth, color, next_row, next_col);
                 deduction_board_->set_piece(Piece{next_row, next_col, color});
-                float next_eval = calc_pos(row, col, color)
-                    + 0.6 * calc_pos(row, col, Piece::Color{Piece::get_op_real_status(color)});
+                float next_eval = deduction_board_->calc_pos(row, col, color)
+                    + 0.6 * deduction_board_->calc_pos(row, col, Piece::Color{Piece::get_op_real_status(color)});
                 now_score += 0.2 * next_eval;
                 deduction_board_->reset_pos(Position{row, col});
                 deduction_board_->reset_pos(Position{op_row, op_col});
@@ -294,85 +385,7 @@ private:
         }
         return {max_score, best_row, best_col};
     }
-    float calc_pos(int row, int col, Piece::Color color) const {
-        std::vector<int> res;
-        res.reserve(4);
-        for (auto&& [inc_r, inc_c] : half_dirs) {
-            res.emplace_back(search_dir_rank(row, col, inc_r, inc_c, color));
-        }
-        std::sort(res.begin(), res.end());
 
-        if (res[0] == 0) return score_map[0];
-        else if (res[0] == 1) return score_map[1];
-        else if (res[0] == 2 && res[1] == 2) return score_map[1] * 0.1;
-        else if (res[0] == 2 && res[1] == 3) return score_map[2] * 1.5;
-        return 0.8 * score_map[res[0]] + 0.2 * score_map[res[1]];
-    }
-
-    int search_dir_rank(int row, int col, int inc_r, int inc_c, Piece::Color color) const {
-        assert(this->board_->get_status(row, col) == 0);
-        int seq = 1, emp = 0, jump1 = 0, jump2 = 0;
-        
-        search_one_dir(row, col, inc_r,  inc_c, seq, emp, jump1, color);
-        search_one_dir(row, col, -inc_r, -inc_c, seq, emp, jump2, color);  // bugfix
-        
-        int rank = 0;
-        if (seq >= 5) {
-            rank = 0;
-        } else if (emp == 0 || jump1 >= 4 || jump2 >= 4) {
-            rank = 7;
-        } else if (seq == 4 && emp == 2 || seq == 3 && emp == 2 && jump1 && jump2
-                   || seq == 2 && jump1 >= 2 && jump2 >= 2 || seq == 1 && jump1 == 3 && jump2 == 3) {
-            rank = 1;
-        } else if (seq == 4 && emp == 1 || seq == 3 && (emp + jump1 + jump2 >= 2)
-                   || seq == 2 && (emp == 2 && (jump1 + jump2) >= 2   // really?
-                                || emp == 1 && (jump1 + jump2) >= 3)
-                   || seq == 1 && (jump1 == 3 || jump2 == 3)) {
-            rank = 2;
-        } else if (seq == 2 && emp == 2 && (jump1 || jump2) 
-                   || seq == 1 && emp == 2 && (jump1 == 2 || jump2 == 2)) {  // 这个t级有待研究
-            rank = 3;
-        } else if (seq == 3 || seq == 2 && (emp + jump1 + jump2) >= 2 
-                            || seq == 1 && (emp + jump1 + jump2) >= 3) {
-            rank = 4;
-        } else if (seq == 2 || seq == 1 && (emp + jump1 + jump2 >= 2)) {
-            rank = 5;
-        } else if (seq == 1) {
-            rank = 6;
-        } else {
-            assert(1 == 0);
-            log_error("lol upi forget this situation");
-            log_error(XQ4GB_TIMESTAMP, "↑ you -> upi");
-        }
-        return rank;
-    }
-    void search_one_dir(int row, int col, int inc_r, int inc_c, 
-                        int& seq, int& emp, int& jump, Piece::Color color) const {
-        // size_t sz = this->board_->size();
-        for (int step = 1; step < 5; step++) {
-            int cur_r = row + step * inc_r;
-            int cur_c = col + step * inc_c;
-            if (!this->board_->is_valid_pos(cur_r, cur_c)) { break; }
-            if (this->board_->get_status(cur_r, cur_c) == 0) {
-                emp++;
-                for (int inc_step = 1; inc_step < 5; inc_step++) {
-                    cur_r = row + (step + inc_step) * inc_r;
-                    cur_c = col + (step + inc_step) * inc_c;
-                    if (!this->board_->is_valid_pos(cur_r, cur_c)) { break; }
-                    if (Piece::get_real_status(this->board_->get_status(cur_r, cur_c))
-                        == Piece::get_real_status(color)) {
-                        jump++;
-                    } else { break; }
-                }
-                break;
-            } else if (Piece::get_real_status(this->board_->get_status(cur_r, cur_c))
-                       == Piece::get_real_status(color)) {
-                seq++;
-            } else {
-                break;
-            }
-        }
-    }
     static void log_infer_pq_top_pos(size_t depth, int row, int col, float now_score) {
 #ifndef __LOG_INFERENCE_ELSEWHERE__
         log_infer(depth, "Prior pos: [%d, %d], score: %.2f", row, col, now_score);

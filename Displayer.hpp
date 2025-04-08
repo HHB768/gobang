@@ -441,14 +441,16 @@ private:
     mutable bool zip_mode_;  // 0 : "0000111", 1 : "0{3}1{2}"
 };  // endof class InferDisplayer
 
-struct FuncBox {
+struct Box {
 public:
-    FuncBox(int x0_, int x1_, int y0_, int y1_)
-        : x0(x0_), x1(x1_), y0(y0_), y1(y1_) {
+    Box(int x0_, int x1_, int y0_, int y1_, CommandType cmdtype)
+        : x0(x0_), x1(x1_), y0(y0_), y1(y1_), cmd_type(cmdtype) {
         assert(x0_ < x1_ && y0_ < y1_);
     }
-    CommandType cmd_type;
-
+    
+    CommandType get_cmd_type() const {
+        return cmd_type;
+    }
     bool encircle(const std::pair<int, int>& pos) {
         if (x0 <= pos.first && pos.first <= x1
             && y0 << pos.second && pos.second <= y1) {
@@ -459,7 +461,16 @@ public:
 
 private:
     int x0, x1, y0, y1;
+    const CommandType cmd_type;
 };  // endof struct FuncBox
+
+struct Page {
+public:
+    Page(const std::string& str) : name(str) {}
+
+    std::string name;
+    std::vector<Box> boxes;
+};  // endof struct Page
 
 template <BoardSize Size=BoardSize::Small>
 class GuiDiplayer : public Displayer<Size> {
@@ -467,8 +478,8 @@ public:
     using base_type = Displayer<Size>;
     DEFINE_SHAPES; DEFINE_SIZES;
 
-    CmdDisplayer() : base_type() {}
-    CmdDisplayer(const std::vector<std::vector<size_t>>& board_) : base_type(board_) {}
+    GuiDisplayer() : base_type() {}
+    GuiDisplayer(const std::vector<std::vector<size_t>>& board_) : base_type(board_) {}
     
     void show() const override {
         // window refresh
@@ -486,7 +497,15 @@ public:
     virtual void update() {
         // TODO
     }
-    
+
+private:
+    Page memu1("Menu - mode selection page");
+    Page menu2("Menu - size selection page");
+    Page game("Game playing page");
+    Page victory("Victory page");
+    Page xq4gb("XQ4GB - Q41");
+
+    int mode;
 };  // 
 
 }  // endof namespace mfwu

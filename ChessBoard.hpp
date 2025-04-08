@@ -398,6 +398,10 @@ public:
     GuiBoard& operator=(const GuiBoard& board) = default;
     GuiBoard& operator=(GuiBoard&& board) = default;
 
+    void update(const Piece& piece) override {
+        this->rm_last_sp();
+        this->update_new_piece(piece);
+    }
     Command get_command() override {
         
         std::pair<int, int> input_pos = {-1, -1};
@@ -420,6 +424,29 @@ public:
     }
 
 private:
+    void winner_display(const Piece::Color&) override {
+        // show winner pic
+    }
+
+    void _init_board() override {
+        ChessBoard<Size>::_init_board();
+        framework_.load_empty_board();
+    }
+
+    void rm_last_sp() {
+        if (this->last_piece_.get_status() == 0) { return ; }  // empty last_piece
+        framework_.remove_last_sp(this->last_piece_);
+        this->last_piece_.color = Piece::Color{this->last_piece_.get_status() - 1};
+        // LOL, you update this last_piece_ that is going to be reset here
+        // and forget to update the board_ XD XQX 25.03.24
+        this->board_[this->last_piece_.row][this->last_piece_.col]
+            = std::make_shared<Piece>(this->last_piece_);  // CHECK: MEMLEAK
+    }
+    void update_new_piece(const Piece& piece) {
+        ChessBoard<Size>::update(piece);
+        framework_.update_new_sp(this->last_piece_);
+    }
+
     static Command validate_input(const std::pair<int, int>& pos) {
         if (pos.first == -1 || pos.second == -1) {
             return Command{CommandType::INVALID, {}};
@@ -449,6 +476,7 @@ private:
         return ret;
     }
 
+    GuiDisplayer<Size> framework_;
 };  // endof class GuiBoard
 
 template <BoardSize Size=BoardSize::Small>
@@ -610,7 +638,6 @@ private:
         framework_.set_highlight(row, col);
         this->show_without_log();
     }
-
 
     void _init_board() override {
         ChessBoard<Size>::_init_board();

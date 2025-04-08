@@ -1,0 +1,28 @@
+[2025-04-08 20:19:46][INFO]  game controller inits...
+[2025-04-08 20:19:46][DEBUG] ------------------------------
+[2025-04-08 20:19:46][DEBUG] player1 color: Black
+[2025-04-08 20:19:46][DEBUG] player2 color: White
+[2025-04-08 20:19:46][DEBUG] player1 plays first: True
+[2025-04-08 20:19:46][DEBUG] current player: Player1
+[2025-04-08 20:19:46][DEBUG] idle_:D player: Player2
+[2025-04-08 20:19:46][DEBUG] archive status: online
+[2025-04-08 20:19:46][DEBUG] ------------------------------
+[2025-04-08 20:19:46][DEBUG] Board: 
+                     [DEBUG]     A B C D E F G H I J K L M   
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+                     [DEBUG] A . + + + + + + + + + + + + + . 
+                     [DEBUG] B . + + + + + + + + + + + + + . 
+                     [DEBUG] C . + + + + + + + + + + + + + . 
+                     [DEBUG] D . + + + + + + + + + + + + + . 
+                     [DEBUG] E . + + + + + + + + + + + + + . 
+                     [DEBUG] F . + + + + + + + + + + + + + . 
+                     [DEBUG] G . + + + + + + + + + + + + + . 
+                     [DEBUG] H . + + + + + + + + + + + + + . 
+                     [DEBUG] I . + + + + + + + + + + + + + . 
+                     [DEBUG] J . + + + + + + + + + + + + + . 
+                     [DEBUG] K . + + + + + + + + + + + + + . 
+                     [DEBUG] L . + + + + + + + + + + + + + . 
+                     [DEBUG] M . + + + + + + + + + + + + + . 
+                     [DEBUG]   . . . . . . . . . . . . . . . 
+[2025-04-08 20:19:51][DEBUG] Human player puts cmd: MENU
+[2025-04-08 20:19:51][INFO]  Game ends with status: MENU
