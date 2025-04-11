@@ -4,7 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include "common.hpp"
-#include "CmdFramework.hpp"
+#include "Displayer.hpp"
 // #include "Logger.hpp"
 
 namespace mfwu {
@@ -67,16 +67,54 @@ public:
                         ofs_ << "Not a valid board scale\n"; 
                         continue;
                     }
-                    board_height_ = atol(str.substr(f + 1, cidx - f - 1).data());
-                    board_width_  = atol(str.substr(cidx + 1, s - cidx - 1).data());
+                    size_t board_height_ = atol(str.substr(f + 1, cidx - f - 1).data());
+                    size_t board_width_  = atol(str.substr(cidx + 1, s - cidx - 1).data());
                     // ignore the rest entries (if existing)
                     ss << "BoardSize : [" << board_height_ << ", " << board_width_ << "]";
-                    board_ = std::make_unique<DisplayFrameworkLight>(
-                        std::vector<std::vector<size_t>>(
-                            board_height_, std::vector<size_t>(board_width_)
-                        )
-                    );
+                    if (unlikely(board_height_ != board_width_)) {
+                        ofs_ << "Not a valid boardSize\n"; 
+                        size_ = 0x3F3F3F3F;
+                        continue;
+                    }
+                    size_ = board_height_;
+                    switch (size_) {
+                    case static_cast<size_t>(BoardSize::Small) : {
+                        board_ = std::make_unique<InferDisplayer<BoardSize::Small>>(
+                            std::vector<std::vector<size_t>>(
+                                size_, std::vector<size_t>(size_)
+                            )
+                        );
+                    } break;
+                    case static_cast<size_t>(BoardSize::Middle) : {
+                        board_ = std::make_unique<InferDisplayer<BoardSize::Middle>>(
+                            std::vector<std::vector<size_t>>(
+                                size_, std::vector<size_t>(size_)
+                            )
+                        );
+                    } break;
+                    case static_cast<size_t>(BoardSize::Large) : {
+                        board_ = std::make_unique<InferDisplayer<BoardSize::Large>>(
+                            std::vector<std::vector<size_t>>(
+                                size_, std::vector<size_t>(size_)
+                            )
+                        );
+                    } break;
+                    default : {
+                        
+                    }
+                    }
+                    
                 } else {
+                    if (size_ == 0 or size_ == 0x3F3F3F3F) {
+                        // invalid size
+                        continue;
+                    } else if (size_ == static_cast<size_t>(BoardSize::Small)
+                            or size_ == static_cast<size_t>(BoardSize::Middle)
+                            or size_ == static_cast<size_t>(BoardSize::Large)) {}
+                    else {
+                        ofs_ << "Unexpected size_\n";
+                        continue;
+                    }
                     if (unlikely(subs.size() < 3)) {
                         ofs_ << "Not a valid infer step\n"; 
                         continue;
@@ -183,10 +221,9 @@ private:
     std::ofstream ofs_;
     std::string in_filename_, out_filename_;
 
-    size_t board_height_;
-    size_t board_width_;
+    size_t size_ = 0;
 
-    std::unique_ptr<DisplayFrameworkLight> board_ = nullptr;
+    std::unique_ptr<Displayer_base_base> board_ = nullptr;
 };  // endof class LogExplainer
 
 constexpr const char* dir = "./inference/";

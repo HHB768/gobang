@@ -7,6 +7,12 @@
 // gui(?) of cmd mode lol
 namespace mfwu {
 
+//  2 种改进思路
+/*
+    1. 全部与 BoardSize 无关的函数都 virtual 在 Displayer 这里
+    2. 强制 Displayer 系列以 board / size 初始化，不写在模板里
+    想搞 1，因为 ChessBoard 就是这个思路，进行到底！ XQ3
+*/
 class Displayer_base_base {
 public:
     static constexpr const char empty_position_char = '+';
@@ -20,6 +26,9 @@ public:
     // static constexpr const char highlight_up_down_char = '-';
     static constexpr const char highlight_left_char = '[';
     static constexpr const char highlight_right_char = ']';
+
+    virtual const std::vector<std::string>& get_framework() const = 0;
+    virtual void unzip_tbl(const std::string_view& str, bool mode) = 0;
 };  // endof class Displayer_base_base
 
 #define DEFINE_SHAPES \
@@ -65,6 +74,10 @@ public:
     static constexpr size_t height_ = 1 * (3 * mode + size_);
     static constexpr size_t width_  = (1 + mode) * (3 * mode + size_);
     DEFINE_SHAPES;
+
+    const std::vector<std::string>& get_framework() const override {
+        return this->framework_;
+    };
 
     static size_t get_row_in_framework(int r) {
         return 2 * mode + 1 * r;
@@ -192,6 +205,89 @@ public:
         // TODO
     }
 
+    std::string zip_tbl(const std::vector<std::vector<size_t>>& board) {
+        size_t status_num = board.size() * board.size();
+        std::string ret; ret.reserve(status_num + 4);
+        if (zip_mode_ == false) {
+            ret += ": ";
+            for (const auto& line : board) {
+                for (const size_t& status : line) {
+                    ret += '0' + status;
+                }
+            }
+        } else {  // zip_mode = true
+            ret += "* ";
+            size_t last_status = -1;
+            size_t more_num = 0;
+            for (const auto& line : board) {
+                for (const size_t& status : line) {
+                    if (status == last_status) {
+                        more_num++;
+                    } else {  // different status
+                        if (more_num) {
+                            ret += '{';
+                            ret += std::to_string(more_num);  // status < 10 is better
+                            ret += '}';
+                            more_num = 0;
+                        }
+                        last_status = status;
+                        ret += '0' + status;
+                    }
+                }
+            }
+            if (more_num) {
+                ret += '{';
+                ret += std::to_string(more_num);
+                ret += '}';
+                more_num = 0;
+            }
+            if (ret.size() > status_num / 2) {
+                zip_mode_ = false;
+            }
+        }
+        // ret += '\n';
+        return ret;
+    }
+    
+    void unzip_tbl(const std::string_view& str, bool mode) override {
+        // ensure you have initialized it first
+        int i = 0, j = 0;
+        if (mode == false) {
+            for (int k = 0; k < str.size(); k++) {
+                update_directly(i, j, str[k] - '0');
+                advance(i, j);
+                if (i >= height_) break;
+            }
+        } else {
+            int last_num = -1;
+            for (int k = 0; k < str.size(); k++) {
+                if (str[k] == '{') {
+                    int kc = k;
+                    while (str[k] != '}') {  // once i wrote like this : k != '}' : k++ holy s🐻🐻t
+                        k++;
+                    }
+                    kc = atoi(str.substr(kc + 1, k - kc - 1).data());
+                    for (int ii = 0; ii < kc; ii++) {
+                        update_directly(i, j, last_num);
+                        advance(i, j); if (i >= height_) break;
+                    }
+                } else if (is_digit(str[k])) {
+                    last_num = str[k] - '0';
+                    update_directly(i, j, last_num);
+                    advance(i, j); if (i >= height_) break;
+                }
+            }
+        }
+    }
+
+    void update(int i, int j, size_t status) {
+        update_directly(i, j, status);
+
+        remove_highlight();
+        if (status) add_highlight(i, j);
+        // there's efficient approach, but i'm lazy enough...
+    }
+
 protected:
     void update_directly(int i, int j, size_t status) {
         switch (status) {
@@ -223,7 +319,7 @@ protected:
     }
 
     void remove_highlight() {
-        for (std::string& line : framework_) {
+        for (std::string& line : this->framework_) {
             for (char& c : line) {
                 if (c == highlight_left_char 
                     or c == highlight_right_char) {
@@ -297,6 +393,17 @@ protected:
             }
         }
     }
+
+private:
+    void advance(int& i, int& j) {
+        if (j < size_ - 1) {
+            j++;
+        } else {
+            i++; j = 0;
+        }
+    }
+
+    mutable bool zip_mode_;  // 0 : "0000111", 1 : "0{3}1{2}"
 };  // endof class Displayer
 
 template <BoardSize Size=BoardSize::Small>
@@ -342,103 +449,7 @@ public:
         log_infer(depth, zipped_board.c_str());
     }
 #endif  // __LOG_INFERENCE_ELSEWHERE__
-    std::string zip_tbl(const std::vector<std::vector<size_t>>& board) {
-        size_t status_num = board.size() * board.size();
-        std::string ret; ret.reserve(status_num + 4);
-        if (zip_mode_ == false) {
-            ret += ": ";
-            for (const auto& line : board) {
-                for (const size_t& status : line) {
-                    ret += '0' + status;
-                }
-            }
-        } else {  // zip_mode = true
-            ret += "* ";
-            size_t last_status = -1;
-            size_t more_num = 0;
-            for (const auto& line : board) {
-                for (const size_t& status : line) {
-                    if (status == last_status) {
-                        more_num++;
-                    } else {  // different status
-                        if (more_num) {
-                            ret += '{';
-                            ret += std::to_string(more_num);  // status < 10 is better
-                            ret += '}';
-                            more_num = 0;
-                        }
-                        last_status = status;
-                        ret += '0' + status;
-                    }
-                }
-            }
-            if (more_num) {
-                ret += '{';
-                ret += std::to_string(more_num);
-                ret += '}';
-                more_num = 0;
-            }
-            if (ret.size() > status_num / 2) {
-                zip_mode_ = false;
-            }
-        }
-        // ret += '\n';
-        return ret;
-    }
-    
-    void unzip_tbl(const std::string_view& str, bool mode) {
-        // ensure you have initialized it first
-        int i = 0, j = 0;
-        if (mode == false) {
-            for (int k = 0; k < str.size(); k++) {
-                update_directly(i, j, str[k] - '0');
-                advance(i, j);
-                if (i >= height_) break;
-            }
-        } else {
-            int last_num = -1;
-            for (int k = 0; k < str.size(); k++) {
-                if (str[k] == '{') {
-                    int kc = k;
-                    while (str[k] != '}') {  // once i wrote like this : k != '}' : k++ holy s🐻🐻t
-                        k++;
-                    }
-                    kc = atoi(str.substr(kc + 1, k - kc - 1).data());
-                    for (int ii = 0; ii < kc; ii++) {
-                        update_directly(i, j, last_num);
-                        advance(i, j); if (i >= height_) break;
-                    }
-                } else if (is_digit(str[k])) {
-                    last_num = str[k] - '0';
-                    update_directly(i, j, last_num);
-                    advance(i, j); if (i >= height_) break;
-                }
-            }
-        }
-    }
 
-    const std::vector<std::string>& get_framework() const {
-        return this->framework_;
-    };
-
-    void update(int i, int j, size_t status) {
-        update_directly(i, j, status);
-
-        remove_highlight();
-        if (status) add_highlight(i, j);
-        // there's efficient approach, but i'm lazy enough...
-    }
-
-private:
-    void advance(int& i, int& j) {
-        if (j < size_ - 1) {
-            j++;
-        } else {
-            i++; j = 0;
-        }
-    }
-
-    mutable bool zip_mode_;  // 0 : "0000111", 1 : "0{3}1{2}"
 };  // endof class InferDisplayer
 
 struct PositionPix {
@@ -452,12 +463,18 @@ struct PositionPix {
 struct Box {
 public:
     using ptr = std::shared_ptr<Box>;
-    using pic_type = PICTURE;
+    using pic_type = int;
 
     Box(int x0_, int x1_, int y0_, int y1_, 
         CommandType cmd_type_, const pic_type& pic_)
         : x0(x0_), x1(x1_), y0(y0_), y1(y1_), 
-          cmd_type(cmd_type_), pic(pic_) {
+          cmd_type(cmd_type_), pics({pic_}) {
+        assert(x0_ < x1_ && y0_ < y1_);
+    }
+    Box(int x0_, int x1_, int y0_, int y1_, 
+        CommandType cmd_type_, const std::vector<pic_type>& pics_)
+        : x0(x0_), x1(x1_), y0(y0_), y1(y1_), 
+          cmd_type(cmd_type_), pics(pics_) {
         assert(x0_ < x1_ && y0_ < y1_);
     }
     
@@ -479,11 +496,14 @@ public:
     void show() {
         // show pic
     }
+    const std::vector<pic_type>& get_pics() const {
+        return pics;
+    }
 
 private:
     int x0, x1, y0, y1;
     const CommandType cmd_type;
-    pic_type pic;
+    std::vector<pic_type> pics;
 };  // endof struct Box
 
 class FuncBox : public Box {
@@ -526,6 +546,8 @@ private:
 
 class Page {
 public:
+    using ptr = std::shared_ptr<Page>;
+    using pic_type = Box::pic_type;
     Page(const std::string& str, const std::string& str1="") 
         : name_(str), description_(str1) {}
 
@@ -534,7 +556,10 @@ public:
     std::string append(typename Box::ptr b) {
         boxes_.push_back(b);
     }
-    Command get_command() {
+    virtual void show() const {
+        // TODO
+    }
+    virtual Command get_command() {
         const PositionPix& pos = wait_input();
         for (const typename Box::ptr& box : boxes_) {
             if (box->encircle(pos)) {
@@ -543,6 +568,10 @@ public:
         }
         return Command{CommandType::INVALID, {}};
     } 
+    typename Box::ptr get_box(int idx) const {
+        assert(0 <= idx && idx < boxes_.size());
+        return boxes_[idx];
+    }
 
 private:
     const PositionPix& wait_input() {
@@ -552,12 +581,15 @@ private:
     std::string name_;
     std::string description_;
     std::vector<typename Box::ptr> boxes_;
+    // recommended: std::unordered_map<std::string, typename Box::ptr> boxes_;
 };  // endof class Page
 
+// only used in menu in main.cc
 class MenuPage : public Page {
 public:
+    using pic_type = typename Page::pic_type;
+
     static constexpr int helper_pos[4] = {0, 0, 0, 0};
-    using pic_type = PICTURE;
     static constexpr pic_type helper_mode = {};
     static constexpr pic_type helper_size = {};
 
@@ -565,15 +597,15 @@ public:
     static constexpr int option_x1[3] = {0, 0, 0};
     static constexpr int option_y0[3] = {0, 0, 0};
     static constexpr int option_y1[3] = {0, 0, 0};
-    static constexpr pic_type option_mode = {{}, {}, {}};
-    static constexpr pic_type option_size = {{}, {}, {}};
+    static constexpr pic_type option_mode[3] = {{}, {}, {}};
+    static constexpr pic_type option_size[3] = {{}, {}, {}};
 
     MenuPage(const std::string& str, const std::string& str1="") 
         : Page(str, str1) {
         if (str == std::string("Menu1")) {
             typename Box::ptr helper = std::make_shared<FuncBox>(
-                helper_pos[0], helper_pos[0],
-                helper_pos[0], helper_pos[0], 
+                helper_pos[0], helper_pos[1],
+                helper_pos[2], helper_pos[3], 
                 CommandType::INVALID, helper_mode
             );
             this->append(helper);
@@ -583,6 +615,7 @@ public:
                     option_y0[i], option_y1[i], 
                     CommandType{i}, option_mode[i]
                 );
+                this->append(option);
             }
         } else if (str == std::string("Menu2")) {
             typename Box::ptr helper = std::make_shared<FuncBox>(
@@ -597,13 +630,91 @@ public:
                     option_y0[i], option_y1[i], 
                     CommandType{i}, option_size[i]
                 );
+                this->append(option);
             }
         } else {
-            logerror("...");
+            log_error("Not a valid menu page");
         }
-        
     }
 };  // endof class MenuPage
+
+
+template <BoardSize Size=BoardSize::Small>
+class GamePage : public Page {
+public:
+    using pic_type = typename Page::pic_type;
+
+    static constexpr int board_pos[4] = {0, 0, 0, 0};
+    static constexpr pic_type board_pic = {};
+
+    static constexpr int funcbox_x0[4] = {0, 0, 0, 0};
+    static constexpr int funcbox_x1[4] = {0, 0, 0, 0};
+    static constexpr int funcbox_y0[4] = {0, 0, 0, 0};
+    static constexpr int funcbox_y1[4] = {0, 0, 0, 0};
+    static constexpr pic_type option_mode[4] = {{}, {}, {}, {}};
+
+    Game(const std::string& str, const std::string& str1="")
+        : Page(str, str1) {
+        typename Box::ptr board_box = std::make_shared<BoardBox>(
+            boardbox_pos[0], boardbox_pos[1],
+            boardbox_pos[2], boardbox_pos[3], 
+            CommandType::PIECE, funcbox_pic[0]
+        );
+        this->append(board_box);
+        typename Box::ptr restart_box = std::make_shared<FuncBox>(
+            funcbox_x0[0], funcbox_x1[0],
+            funcbox_y0[0], funcbox_y1[0], 
+            CommandType::RESTART, funcbox_pic[0]
+        );
+        this->append(restart_box);
+        typename Box::ptr menu_box = std::make_shared<FuncBox>(
+            funcbox_x0[1], funcbox_x1[1],
+            funcbox_y0[1], funcbox_y1[1], 
+            CommandType::MENU, funcbox_pic[1]
+        );
+        this->append(menu_box);
+        typename Box::ptr quit_box = std::make_shared<FuncBox>(
+            funcbox_x0[2], funcbox_x1[2],
+            funcbox_y0[2], funcbox_y1[2], 
+            CommandType::QUIT, funcbox_pic[2]
+        );
+        this->append(quit_box);
+        typename Box::ptr xq4gb_box = std::make_shared<FuncBox>(
+            funcbox_x0[3], funcbox_x1[3],
+            funcbox_y0[3], funcbox_y1[3], 
+            CommandType::XQ4GB, funcbox_pic[3]
+        );
+        this->append(xq4gb_box);
+    }
+};  // endof class GamePage
+
+
+// 致敬传奇人机战神 vick       XQ4-3  25.04.11
+class VickPage : public Page {
+public:
+    using pic_type = typename Page::pic_type;   
+    
+    static constexpr int vick_pos[4] = {0, 0, 0, 0};
+    static constexpr pic_type vick_pic[5] = {};
+
+    VickPage(const std::string& str, const std::string& str1="")
+        : Page(str, str1) {
+        typename Box::ptr vick_box = std::make_shared<FuncBox>(
+            vick_pos[0], vick_pos[1],
+            vick_pos[2], vick_pos[3], 
+            CommandType::INVALID, vick_pic  // CHECK
+        );
+        // always put vick_box in the first idx
+        this->append(vick_box);
+    }
+
+    void show() const override {
+        for (auto&& pic : this->get_box(0)->get_pics()) {
+            // show pic
+        }
+    }
+};  // endof class VickPage
+
 
 template <BoardSize Size=BoardSize::Small>
 class GuiDiplayer : public Displayer<Size> {
@@ -611,14 +722,18 @@ public:
     using base_type = Displayer<Size>;
     // DEFINE_SHAPES; DEFINE_SIZES;
 
-    GuiDisplayer() : base_type() {}
-    GuiDisplayer(const std::vector<std::vector<size_t>>& board_) : base_type(board_) {}
+    GuiDisplayer() 
+        : base_type(), game_page_("Game", "Game playing page"), 
+          victory_page_("Victory", "Victory page") {}
+    GuiDisplayer(const std::vector<std::vector<size_t>>& board_) 
+        : base_type(board_), game_page_("Game", "Game playing page"), 
+          victory_page_("Victory", "Victory page") {}
     
     Command get_command() const {
         page_->get_command();
     }
     void show() const override {
-        // window refresh
+        // window
     }
     // 除了displayer里面cmdboardframework更新的那一部分（用于log）
     // 还要加上自己在gui中展示的部分
@@ -634,14 +749,30 @@ public:
         // TODO
     }
 
-private:
-    Page memu1(  "Menu1",   "Menu - mode selection page");
-    Page menu2(  "Menu2",   "Menu - size selection page");
-    Page game(   "Game",    "Game playing page");
-    Page victory("Victory", "Victory page");
-    Page xq4gb(  "XQ4GB",   "XQ4GB - Q41");
+    void switch_page(const std::string& page_name="") {
+        if (page_name == std::string("Game")) {
+            page_ = &game_page_;
+        } else if (page_name == std::string("Victory")) {
+            page_ = &victory_page_;
+        } else if (page_name == std::string("")) {
+            if (page_->get_name() == std::string("Game")) {
+                page_ = &victory_page_;
+            } else if (page_->get_name() == std::string("Victory")) {
+                page_ = &game_page_;
+            } else {
+                log_error("Invalid page status");
+            }
+        } else {
+            log_warn("Page name not found, page not switched");
+        }
+        page_->show();
+    }
 
-     mode;
+private:
+    GamePage<Size> game_page_;
+    VickPage victory_page_;
+    typename Page::ptr page_;
+
 };  // 
 
 }  // endof namespace mfwu

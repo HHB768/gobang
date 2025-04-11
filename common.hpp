@@ -1,7 +1,7 @@
 #ifndef __UTILS_HPP__
 #define __UTILS_HPP__
 
-#include <bits/stdc++.h>  // temp
+#include <bits/stdc++.h>  // TODO: temp
 #include "constdef.hpp"
 
 #define likely(x)       __builtin_expect(!!(x), 1)
