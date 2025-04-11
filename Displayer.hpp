@@ -441,46 +441,182 @@ private:
     mutable bool zip_mode_;  // 0 : "0000111", 1 : "0{3}1{2}"
 };  // endof class InferDisplayer
 
+struct PositionPix {
+    int hpix, vpix;
+    PositionPix() : hpix(0), vpix(0) {}
+    PositionPix(int h, int v) : hpix(h), vpix(v) {}
+    PositionPix(const PositionPix& pos) = default;
+    ~PositionPix() {}
+};  // endof struct PositionPix
+
 struct Box {
 public:
-    Box(int x0_, int x1_, int y0_, int y1_, CommandType cmdtype)
-        : x0(x0_), x1(x1_), y0(y0_), y1(y1_), cmd_type(cmdtype) {
+    using ptr = std::shared_ptr<Box>;
+    using pic_type = PICTURE;
+
+    Box(int x0_, int x1_, int y0_, int y1_, 
+        CommandType cmd_type_, const pic_type& pic_)
+        : x0(x0_), x1(x1_), y0(y0_), y1(y1_), 
+          cmd_type(cmd_type_), pic(pic_) {
         assert(x0_ < x1_ && y0_ < y1_);
     }
     
+    virtual Command get_cmd(const PositionPix& pos) const = 0;
+
     CommandType get_cmd_type() const {
         return cmd_type;
     }
-    bool encircle(const std::pair<int, int>& pos) {
-        if (x0 <= pos.first && pos.first <= x1
-            && y0 << pos.second && pos.second <= y1) {
+
+    bool encircle(const PositionPix& pos) const {
+        // in pix
+        if (x0 <= pos.hpix && pos.hpix <= x1
+            && y0 << pos.vpix && pos.vpix <= y1) {
             return true;
         }
         return false;
     }
 
+    void show() {
+        // show pic
+    }
+
 private:
     int x0, x1, y0, y1;
     const CommandType cmd_type;
-};  // endof struct FuncBox
+    pic_type pic;
+};  // endof struct Box
 
-struct Page {
+class FuncBox : public Box {
+private: 
+    Command get_cmd(const PositionPix& pos) const override {
+        if (this->encircle(pos)) {
+            return Command{get_cmd_type(), {}};
+        }
+        return Command{CommandType::INVALID, {}};
+    }
+};  // endof class FuncBox
+
+template <BoardSize Size=BoardSize::Small>
+class BoardBox : public Box {
+private:
+    static constexpr int vertical_margin = 0;
+    static constexpr int horizontal_margin = 0;
+    static constexpr int grid_len = 10;
+
+    Command get_cmd(const PositionPix& pos) const override {
+        if (this->encircle(pos)) {
+            auto ret = Command{CommandType::PIECE, {get_row(pos.vpix), get_col(pos.hpix)}};
+            if (ret.pos.row == -1 or ret.pos.col == -1) return ret;
+            return ret;
+        }
+        return Command{CommandType::INVALID, {}};
+    }
+
+    static int get_row(int vertical_pix) {
+        int ret = round(((double)vertical_pix - vertical_margin) / grid_len);
+        if (!ChessBoard<Size>::is_valid_row(ret)) { return -1; }
+        return ret;
+    }
+    static int get_col(int horizontal_pix) {
+        int ret = round(((double)horizontal_pix - horizontal_margin) / grid_len);
+        if (!ChessBoard<Size>::is_valid_col(ret)) { return -1; }
+        return ret;
+    }
+};  // endof class BoardBox
+
+class Page {
 public:
-    Page(const std::string& str) : name(str) {}
+    Page(const std::string& str, const std::string& str1="") 
+        : name_(str), description_(str1) {}
 
-    std::string name;
-    std::vector<Box> boxes;
-};  // endof struct Page
+    std::string get_name() const { return name_; }
+    std::string get_description() const { return description_; }
+    std::string append(typename Box::ptr b) {
+        boxes_.push_back(b);
+    }
+    Command get_command() {
+        const PositionPix& pos = wait_input();
+        for (const typename Box::ptr& box : boxes_) {
+            if (box->encircle(pos)) {
+                return box->get_cmd(pos);
+            }
+        }
+        return Command{CommandType::INVALID, {}};
+    } 
+
+private:
+    const PositionPix& wait_input() {
+        return {};
+    }
+
+    std::string name_;
+    std::string description_;
+    std::vector<typename Box::ptr> boxes_;
+};  // endof class Page
+
+class MenuPage : public Page {
+public:
+    static constexpr int helper_pos[4] = {0, 0, 0, 0};
+    using pic_type = PICTURE;
+    static constexpr pic_type helper_mode = {};
+    static constexpr pic_type helper_size = {};
+
+    static constexpr int option_x0[3] = {0, 0, 0};
+    static constexpr int option_x1[3] = {0, 0, 0};
+    static constexpr int option_y0[3] = {0, 0, 0};
+    static constexpr int option_y1[3] = {0, 0, 0};
+    static constexpr pic_type option_mode = {{}, {}, {}};
+    static constexpr pic_type option_size = {{}, {}, {}};
+
+    MenuPage(const std::string& str, const std::string& str1="") 
+        : Page(str, str1) {
+        if (str == std::string("Menu1")) {
+            typename Box::ptr helper = std::make_shared<FuncBox>(
+                helper_pos[0], helper_pos[0],
+                helper_pos[0], helper_pos[0], 
+                CommandType::INVALID, helper_mode
+            );
+            this->append(helper);
+            for (int i = 0; i < 3; i++) {
+                typename Box::ptr option = std::make_shared<FuncBox>(
+                    option_x0[i], option_x1[i], 
+                    option_y0[i], option_y1[i], 
+                    CommandType{i}, option_mode[i]
+                );
+            }
+        } else if (str == std::string("Menu2")) {
+            typename Box::ptr helper = std::make_shared<FuncBox>(
+                helper_pos[0], helper_pos[0],
+                helper_pos[0], helper_pos[0], 
+                CommandType::INVALID, helper_size
+            );
+            this->append(helper);
+            for (int i = 0; i < 3; i++) {
+                typename Box::ptr option = std::make_shared<FuncBox>(
+                    option_x0[i], option_x1[i], 
+                    option_y0[i], option_y1[i], 
+                    CommandType{i}, option_size[i]
+                );
+            }
+        } else {
+            logerror("...");
+        }
+        
+    }
+};  // endof class MenuPage
 
 template <BoardSize Size=BoardSize::Small>
 class GuiDiplayer : public Displayer<Size> {
 public:
     using base_type = Displayer<Size>;
-    DEFINE_SHAPES; DEFINE_SIZES;
+    // DEFINE_SHAPES; DEFINE_SIZES;
 
     GuiDisplayer() : base_type() {}
     GuiDisplayer(const std::vector<std::vector<size_t>>& board_) : base_type(board_) {}
     
+    Command get_command() const {
+        page_->get_command();
+    }
     void show() const override {
         // window refresh
     }
@@ -499,13 +635,13 @@ public:
     }
 
 private:
-    Page memu1("Menu - mode selection page");
-    Page menu2("Menu - size selection page");
-    Page game("Game playing page");
-    Page victory("Victory page");
-    Page xq4gb("XQ4GB - Q41");
+    Page memu1(  "Menu1",   "Menu - mode selection page");
+    Page menu2(  "Menu2",   "Menu - size selection page");
+    Page game(   "Game",    "Game playing page");
+    Page victory("Victory", "Victory page");
+    Page xq4gb(  "XQ4GB",   "XQ4GB - Q41");
 
-    int mode;
+     mode;
 };  // 
 
 }  // endof namespace mfwu

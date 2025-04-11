@@ -403,10 +403,19 @@ public:
         this->update_new_piece(piece);
     }
     Command get_command() override {
-        
-        std::pair<int, int> input_pos = {-1, -1};
         // wait until being triggered
-        Command ret = GuiBoard::validate_input(input_pos);
+        // get from displayer
+        //  这里我们有两种思路：
+        /*
+            1、以 chessboard 为核心，displayer 只提供 commandType，
+               将 validate_input 放在 chessboard
+            2、把 chessboard 视为一种 box，让 displayer 返回 command
+            在此我想试试 思路2  25.04.11
+        */
+        Command ret = framework_->get_command();
+        if (this->board_[ret.pos.row][ret.pos.col]->get_status()) {
+            ret.pos.row = ret.pos.col = -1;  // occupied pos
+        }
         if (ret.type == CommandType::INVALID
             || (ret.type == CommandType::PIECE 
                 && (ret.pos.row < 0 or ret.pos.col < 0))) {
@@ -447,34 +456,7 @@ private:
         framework_.update_new_sp(this->last_piece_);
     }
 
-    static Command validate_input(const std::pair<int, int>& pos) {
-        if (pos.first == -1 || pos.second == -1) {
-            return Command{CommandType::INVALID, {}};
-        }
-        for (auto&& funcbox : this->funcboxes_) {
-            if (funcbox.encircle(pos)) {
-                return Command{funcbox.cmd_type, {}};
-            }
-        }
-
-        auto ret = Command{CommandType::PIECE, {get_row(pos.first), get_col(pos.second)}};
-        if (ret.pos.row == -1 or ret.pos.col == -1) return ret;
-        if (this->board_[ret.pos.row][ret.pos.col]->get_status()) {
-            ret.pos.row = ret.pos.col = -1;  // occupied pos
-        }
-        return ret;
-    }
-
-    static int get_row(int r) {
-        int ret = round(((double)r - GuiBoard<Size>::row_margin) / GuiBoard<Size>::grid_len);
-        if (!is_valid_row(ret)) { return -1; }
-        return ret;
-    }
-    static int get_col(int c) {
-        int ret = round(((double)c - GuiBoard<Size>::col_margin) / GuiBoard<Size>::grid_len);
-        if (!is_valid_col(ret)) { return -1; }
-        return ret;
-    }
+    
 
     GuiDisplayer<Size> framework_;
 };  // endof class GuiBoard

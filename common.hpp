@@ -10,7 +10,7 @@
 namespace mfwu {
     enum class BoardSize : size_t {
         Small  = 13,
-        Middle = 21,
+        Middle = 19,
         Large  = 25
     };  // endof enum class BoardSize
     const std::unordered_map<size_t, std::string> BoardSizeDescription = {
@@ -153,10 +153,10 @@ namespace mfwu {
     };  // endof enum class GameMode
 
     enum class CommandType : size_t {
-        PIECE = 0,
-        RESTART = 1,
-        MENU = 2,
-        QUIT = 3,
+        PIECE = 0,    // Menu page:
+        RESTART = 1,  // box option1
+        MENU = 2,     // box option2
+        QUIT = 3,     // box option3
         INVALID = 4,
         XQ4GB = 5
     };  // endof enum class CommandType
@@ -171,10 +171,10 @@ namespace mfwu {
 
     // constexpr char*
     enum class GameStatus : size_t {
-        NORMAL = 0,
-        RESTART = 1,
-        MENU = 2,
-        QUIT = 3,
+        NORMAL = 0,   
+        RESTART = 1,   
+        MENU = 2,     
+        QUIT = 3,     
         INVALID = 4,
         XQ4GB = 5
     };  // endof enum class GameStatus
