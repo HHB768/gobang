@@ -5,20 +5,28 @@
 
 namespace mfwu {
 
+// frankly speaking, i should use ChessBoard here as the deduction board
+// but with considerations below, i use std::vector<std::vector<size_t>> (vvs)
+/*
+    1. show that the nature of ChessBoard is a 'vvs', and how to use it
+    2. simplify the data access, accelarating the computing
+    3. tell the differences between uniformed ChessBoard and user-defined robot strategies
+*/
+// X-Q41 25.04.14
 class DeductionBoard_base {
 public:
     DeductionBoard_base() = delete;
     DeductionBoard_base(const std::vector<std::vector<size_t>>& board) 
-        : board_(board) {}
+        : board_(board) { assert(board.size() > 0 && board.size() == board[0].size()); }
     DeductionBoard_base(std::vector<std::vector<size_t>>&& board) 
-        : board_(std::move(board)) {}
+        : board_(std::move(board)) { assert(board.size() > 0 && board.size() == board[0].size()); }
 
     std::vector<size_t>& operator[](int idx) {
         return board_[idx];
     }
     virtual size_t size() const = 0;
-    virtual void set_piece(const Piece& p) = 0;
-    virtual void reset_pos(const Position& p) = 0;
+    virtual void deduce_new_piece(const Piece& p, int depth) = 0;  // TODO: depth as arg[0]
+    virtual void deduce_reset_pos(const Position& p) = 0;
     virtual float calc_pos(int row, int col, Piece::Color color) const = 0;
     // pure specifier is "= 0", not "=0", LOL
 
@@ -35,16 +43,16 @@ public:
     DeductionBoard(const std::vector<std::vector<size_t>>& board) 
         : base_type(board), board_log_(board) {}
     DeductionBoard(std::vector<std::vector<size_t>>&& board)
-        : base_type(std::move(board)), board_log_(this->board) {}
+        : base_type(std::move(board)), board_log_(this->board_) {}
 
     size_t size() const override { return static_cast<size_t>(Size); }
     void deduce_new_piece(const Piece& p, int depth) override {
         size_t real_status = Piece::get_real_status(p.color);
         this->board_[p.row][p.col] = real_status + 1;
         board_log_.update(p.row, p.col, real_status + 1);
-        board_log_.show_infer(depth);
+        board_log_.log_inference(depth, board_);  // TODO: i thick board_log can use its own framework
     }
-    void deduce_reset_piece(const Position& p) override {
+    void deduce_reset_pos(const Position& p) override {
         this->board_[p.row][p.col] = 0;
         board_log_.update(p.row, p.col, 0);
     }
@@ -70,8 +78,12 @@ public:
     }
 
 private:
+    bool is_valid_pos(int row, int col) const {
+        return row >= 0 && row < this->size()
+               && col >= 0 && col < this->size();
+    }
     int search_dir_rank(int row, int col, int inc_r, int inc_c, Piece::Color color) const {
-        assert(this->board_->get_status(row, col) == 0);
+        assert(this->board_[row][col] == 0);
         int seq = 1, emp = 0, jump1 = 0, jump2 = 0;
         
         search_one_dir(row, col, inc_r,  inc_c, seq, emp, jump1, color);
@@ -113,20 +125,20 @@ private:
         for (int step = 1; step < 5; step++) {
             int cur_r = row + step * inc_r;
             int cur_c = col + step * inc_c;
-            if (!this->board_->is_valid_pos(cur_r, cur_c)) { break; }
-            if (this->board_->get_status(cur_r, cur_c) == 0) {
+            if (!is_valid_pos(cur_r, cur_c)) { break; }
+            if (this->board_[cur_r][cur_c] == 0) {
                 emp++;
                 for (int inc_step = 1; inc_step < 5; inc_step++) {
                     cur_r = row + (step + inc_step) * inc_r;
                     cur_c = col + (step + inc_step) * inc_c;
-                    if (!this->board_->is_valid_pos(cur_r, cur_c)) { break; }
-                    if (Piece::get_real_status(this->board_->get_status(cur_r, cur_c))
+                    if (!is_valid_pos(cur_r, cur_c)) { break; }
+                    if (Piece::get_real_status(this->board_[cur_r][cur_c])
                         == Piece::get_real_status(color)) {
                         jump++;
                     } else { break; }
                 }
                 break;
-            } else if (Piece::get_real_status(this->board_->get_status(cur_r, cur_c))
+            } else if (Piece::get_real_status(this->board_[cur_r][cur_c])
                        == Piece::get_real_status(color)) {
                 seq++;
             } else {
@@ -344,28 +356,28 @@ private:
                 log_infer_max_depth(depth);
             } else {
                 log_infer_this_move(depth, color, row, col);
-                deduction_board_->set_piece(Piece{row, col, color});
+                deduction_board_->deduce_new_piece(Piece{row, col, color}, depth);
                 auto [op_score, op_row, op_col] = get_best(depth - 1, Piece::Color{Piece::get_op_real_status(color)});  // 不应该反向吗？就像这样
                 if (op_row < 0 || op_col < 0) {
-                    deduction_board_->reset_pos(Position{row, col});
+                    deduction_board_->deduce_reset_pos(Position{row, col});
                     continue;
                 }
                 log_infer_op_move(depth, color, op_row, op_col);
-                deduction_board_->set_piece(Piece{op_row, op_col, Piece::Color{Piece::get_op_real_status(color)}});
+                deduction_board_->deduce_new_piece(Piece{op_row, op_col, Piece::Color{Piece::get_op_real_status(color)}}, depth);
                 auto [_, next_row, next_col] = get_best(depth - 1, color);
                 if (next_row < 0 || next_col < 0) {
-                    deduction_board_->reset_pos(Position{row, col});
-                    deduction_board_->reset_pos(Position{op_row, op_col});
+                    deduction_board_->deduce_reset_pos(Position{row, col});
+                    deduction_board_->deduce_reset_pos(Position{op_row, op_col});
                     continue;
                 }
                 log_infer_next_move(depth, color, next_row, next_col);
-                deduction_board_->set_piece(Piece{next_row, next_col, color});
+                deduction_board_->deduce_new_piece(Piece{next_row, next_col, color}, depth);
                 float next_eval = deduction_board_->calc_pos(row, col, color)
                     + 0.6 * deduction_board_->calc_pos(row, col, Piece::Color{Piece::get_op_real_status(color)});
                 now_score += 0.2 * next_eval;
-                deduction_board_->reset_pos(Position{row, col});
-                deduction_board_->reset_pos(Position{op_row, op_col});
-                deduction_board_->reset_pos(Position{next_row, next_col});
+                deduction_board_->deduce_reset_pos(Position{row, col});
+                deduction_board_->deduce_reset_pos(Position{op_row, op_col});
+                deduction_board_->deduce_reset_pos(Position{next_row, next_col});
             }
             
             if (std::fabs(now_score - max_score) <= eps) {

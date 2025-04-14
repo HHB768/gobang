@@ -378,88 +378,88 @@ private:
     }
 };  // endof class ChessBoard
 
-template <BoardSize Size=BoardSize::Small>
-class GuiBoard : public ChessBoard<Size> {
-public:
-    static constexpr size_t size_ = static_cast<size_t>(Size);
-    using ArchiveSeq_type = typename ChessBoard<Size>::ArchiveSeq_type;
-    using ArchiveTbl_type = typename ChessBoard<Size>::ArchiveTbl_type;
+// template <BoardSize Size=BoardSize::Small>
+// class GuiBoard : public ChessBoard<Size> {
+// public:
+//     static constexpr size_t size_ = static_cast<size_t>(Size);
+//     using ArchiveSeq_type = typename ChessBoard<Size>::ArchiveSeq_type;
+//     using ArchiveTbl_type = typename ChessBoard<Size>::ArchiveTbl_type;
 
-    GuiBoard() 
-        : ChessBoard<Size>(), framework_() {}
-    GuiBoard(const std::vector<std::vector<size_t>>& input_board,
-             const Piece& last_piece=invalid_piece) 
-        : ChessBoard<Size>(input_board, last_piece), 
-          framework_(this->board_) {
-    }
-    GuiBoard(const GuiBoard& board) = default;  // really work?
-    GuiBoard(GuiBoard&& board) = default;
+//     GuiBoard() 
+//         : ChessBoard<Size>(), framework_() {}
+//     GuiBoard(const std::vector<std::vector<size_t>>& input_board,
+//              const Piece& last_piece=invalid_piece) 
+//         : ChessBoard<Size>(input_board, last_piece), 
+//           framework_(this->board_) {
+//     }
+//     GuiBoard(const GuiBoard& board) = default;  // really work?
+//     GuiBoard(GuiBoard&& board) = default;
 
-    GuiBoard& operator=(const GuiBoard& board) = default;
-    GuiBoard& operator=(GuiBoard&& board) = default;
+//     GuiBoard& operator=(const GuiBoard& board) = default;
+//     GuiBoard& operator=(GuiBoard&& board) = default;
 
-    void update(const Piece& piece) override {
-        this->rm_last_sp();
-        this->update_new_piece(piece);
-    }
-    Command get_command() override {
-        // wait until being triggered
-        // get from displayer
-        //  这里我们有两种思路：
-        /*
-            1、以 chessboard 为核心，displayer 只提供 commandType，
-               将 validate_input 放在 chessboard
-            2、把 chessboard 视为一种 box，让 displayer 返回 command
-            在此我想试试 思路2  25.04.11
-        */
-        Command ret = framework_->get_command();
-        if (this->board_[ret.pos.row][ret.pos.col]->get_status()) {
-            ret.pos.row = ret.pos.col = -1;  // occupied pos
-        }
-        if (ret.type == CommandType::INVALID
-            || (ret.type == CommandType::PIECE 
-                && (ret.pos.row < 0 or ret.pos.col < 0))) {
-            std::cout << HELPER_INVALID_POSITION << "\n";
-            ret = this->get_command();
-        }
-        return ret;
-    }
+//     void update(const Piece& piece) override {
+//         this->rm_last_sp();
+//         this->update_new_piece(piece);
+//     }
+//     Command get_command() override {
+//         // wait until being triggered
+//         // get from displayer
+//         //  这里我们有两种思路：
+//         /*
+//             1、以 chessboard 为核心，displayer 只提供 commandType，
+//                将 validate_input 放在 chessboard
+//             2、把 chessboard 视为一种 box，让 displayer 返回 command
+//             在此我想试试 思路2  25.04.11
+//         */
+//         Command ret = framework_->get_command();
+//         if (this->board_[ret.pos.row][ret.pos.col]->get_status()) {
+//             ret.pos.row = ret.pos.col = -1;  // occupied pos
+//         }
+//         if (ret.type == CommandType::INVALID
+//             || (ret.type == CommandType::PIECE 
+//                 && (ret.pos.row < 0 or ret.pos.col < 0))) {
+//             std::cout << HELPER_INVALID_POSITION << "\n";
+//             ret = this->get_command();
+//         }
+//         return ret;
+//     }
 
-    void show() const override {
+//     void show() const override {
 
-    }
-    void refresh() override {
-        show();
-    }
+//     }
+//     void refresh() override {
+//         show();
+//     }
 
-private:
-    void winner_display(const Piece::Color&) override {
-        // show winner pic
-    }
+// private:
+//     void winner_display(const Piece::Color&) override {
+//         // show winner pic
+//     }
 
-    void _init_board() override {
-        ChessBoard<Size>::_init_board();
-        framework_.load_empty_board();
-    }
+//     void _init_board() override {
+//         ChessBoard<Size>::_init_board();
+//         framework_.load_empty_board();
+//     }
 
-    void rm_last_sp() {
-        if (this->last_piece_.get_status() == 0) { return ; }  // empty last_piece
-        framework_.remove_last_sp(this->last_piece_);
-        this->last_piece_.color = Piece::Color{this->last_piece_.get_status() - 1};
-        // LOL, you update this last_piece_ that is going to be reset here
-        // and forget to update the board_ XD XQX 25.03.24
-        this->board_[this->last_piece_.row][this->last_piece_.col]
-            = std::make_shared<Piece>(this->last_piece_);  // CHECK: MEMLEAK
-    }
-    void update_new_piece(const Piece& piece) {
-        ChessBoard<Size>::update(piece);
-        framework_.update_new_sp(this->last_piece_);
-    }
+//     void rm_last_sp() {
+//         if (this->last_piece_.get_status() == 0) { return ; }  // empty last_piece
+//         framework_.remove_last_sp(this->last_piece_);
+//         this->last_piece_.color = Piece::Color{this->last_piece_.get_status() - 1};
+//         // LOL, you update this last_piece_ that is going to be reset here
+//         // and forget to update the board_ XD XQX 25.03.24
+//         this->board_[this->last_piece_.row][this->last_piece_.col]
+//             = std::make_shared<Piece>(this->last_piece_);  // CHECK: MEMLEAK
+//     }
+//     void update_new_piece(const Piece& piece) {
+//         ChessBoard<Size>::update(piece);
+//         framework_.update_new_sp(this->last_piece_);
+//     }
 
     
 
-    GuiDisplayer<Size> framework_;
-};  // endof class GuiBoard
+//     GuiDisplayer<Size> framework_;
+// };  // endof class GuiBoard
 
 template <BoardSize Size=BoardSize::Small>
 class CmdBoard : public ChessBoard<Size> {
@@ -516,11 +516,11 @@ private:
     static std::string winner_printer(const std::string& winner_name, const Piece::Color& color) {
         char piece_char, sp_piece_char;
         if (Piece::is_same_color(color, Piece::Color::Black)) {
-            piece_char = DisplayFramework<Size>::black_piece_char;
-            sp_piece_char = DisplayFramework<Size>::black_sp_piece_char;
+            piece_char = Displayer<Size>::black_piece_char;
+            sp_piece_char = Displayer<Size>::black_sp_piece_char;
         } else {
-            piece_char = DisplayFramework<Size>::white_piece_char;
-            sp_piece_char = DisplayFramework<Size>::white_sp_piece_char;
+            piece_char = Displayer<Size>::white_piece_char;
+            sp_piece_char = Displayer<Size>::white_sp_piece_char;
         }
         std::string str(3, sp_piece_char);
         str += " --- ";
@@ -639,7 +639,7 @@ private:
         framework_.update_new_sp(this->last_piece_);
     }
 
-    static Command validate_input(const std::string& rstr) {
+    Command validate_input(const std::string& rstr) {
         if (rstr.size() > 10) return Command{CommandType::INVALID, {}};
         std::string str = rstr;
         toupper(str);
