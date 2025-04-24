@@ -329,7 +329,7 @@ public:
     void log_error(time_t time_stamp, const std::string& fmt, Args&&... args) {
         log(LogLevel::ERROR, time_stamp, fmt, std::forward<Args>(args)...);
     }
-    
+    // TODO: though harmless, we should keep it behind end_game() in gc 
     void new_game(size_t board_height, size_t board_width) {
 #ifdef __LOG_INFERENCE_ELSEWHERE__
         log(LogLevel::INFER, "{%d,%d}", board_height, board_width);

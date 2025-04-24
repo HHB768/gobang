@@ -53,7 +53,7 @@ constexpr const char* HELPER_INVALID_POSITION  = "invalid piece position, plz tr
 
 // error messages
 constexpr const char* ERROR_NEW_GC = "An error occurs when we new GameController()";
-constexpr const char* ERROR_UNKNOWN_COMMAND_TYPE = "Unknown CommandType by HumanPlayer";
+constexpr const char* ERROR_UNKNOWN_COMMAND_TYPE = "Unknown CommandType";
 constexpr const char* ERROR_UNKNOWN_PIECE_STATUS = "Unknown piece status";
 constexpr const char* ERROR_UNKNOWN_GAME_STATUS  = "Unknown game status";
 

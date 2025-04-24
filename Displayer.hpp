@@ -13,6 +13,7 @@ namespace mfwu {
     2. 强制 Displayer 系列以 board / size 初始化，不写在模板里
     想搞 1，因为 ChessBoard 就是这个思路，进行到底！ XQ3
 */
+// TODO: 在player里面提供displayer指针，各种player和archive自己new 0418
 class Displayer_base_base {
 public:
     static constexpr const char empty_position_char = '+';
@@ -61,6 +62,12 @@ class Displayer_base : public Displayer_base_base {
         [i, j] -> [2 + 1 * i, 4 + 2 * j]
     */
 public:
+    static constexpr size_t size_   = static_cast<size_t>(Size);
+    static constexpr size_t height_ = 1 * (3 * Mode + size_);
+    static constexpr size_t width_  = (1 + Mode) * (3 * Mode + size_);
+    using base_type = Displayer_base_base;
+    DEFINE_SHAPES;
+
     Displayer_base() : framework_(height_, std::string(width_, inner_border_char)) {
         _init_framework();
         load_empty_board();
@@ -71,11 +78,6 @@ public:
         _init_framework();
         reconstruct(board_);
     } 
-    static constexpr size_t size_   = static_cast<size_t>(Size);
-    static constexpr size_t height_ = 1 * (3 * Mode + size_);
-    static constexpr size_t width_  = (1 + Mode) * (3 * Mode + size_);
-    using base_type = Displayer_base_base;
-    DEFINE_SHAPES;
 
     const std::vector<std::string>& get_framework() const override {
         return framework_;
@@ -120,7 +122,7 @@ public:
         get_pos_ref_in_framework(r, c) = unknown_status_piece_char;
     }
 
-    void load_empty_board() {
+    virtual void load_empty_board() {
         for (int i = 0; i < size_; i++) {
             for (int j = 0; j < size_; j++) {
                 print_empty_position(i, j);
@@ -321,8 +323,13 @@ public:
         }
     }
 
+    void load_empty_board() override {
+        base_type::load_empty_board();
+        this->remove_highlight();
+    }
+
 protected:
-    void remove_highlight() {
+    virtual void remove_highlight() {
         for (std::string& line : this->framework_) {
             for (char& c : line) {
                 if (c == highlight_left_char 
@@ -332,7 +339,7 @@ protected:
             }
         }
     }
-    void remove_highlight(int r, int c) {
+    virtual void remove_highlight(int r, int c) {
         auto [row, col] = base_type::get_pos_in_framework(r, c);
         char* ch = &this->framework_[row][col - 1];
         if (*ch == highlight_left_char) {
@@ -343,7 +350,7 @@ protected:
             *ch = inner_border_char;
         }
     }
-    void add_highlight(const Piece& last_piece) {
+    virtual void add_highlight(const Piece& last_piece) {
         auto [row, col] = base_type::get_pos_in_framework(last_piece.row, 
                                                last_piece.col);
         // framework_[row - 1][col] = highlight_up_down_char;
@@ -351,7 +358,7 @@ protected:
         this->framework_[row][col - 1] = highlight_left_char;
         this->framework_[row][col + 1] = highlight_right_char;
     }
-    void add_highlight(int r, int c) {
+    virtual void add_highlight(int r, int c) {
         // assert(...)
         auto [row, col] = base_type::get_pos_in_framework(r, c);
         // framework_[row - 1][col] = highlight_up_down_char;
@@ -359,7 +366,7 @@ protected:
         this->framework_[row][col - 1] = highlight_left_char;
         this->framework_[row][col + 1] = highlight_right_char;
     }
-    void remove_sp() {
+    virtual void remove_sp() {
         for (auto line : this->framework_) {
             for (auto c : line) {
                 if (c == white_sp_piece_char) {
@@ -370,7 +377,7 @@ protected:
             }
         }
     }
-    void remove_sp(int r, int c) {
+    virtual void remove_sp(int r, int c) {
         auto [row, col] = base_type::get_pos_in_framework(r, c);
         char& ch = this->framework_[row][col];
         if (ch == white_sp_piece_char) {
@@ -379,7 +386,7 @@ protected:
             ch = black_piece_char;
         }
     }
-    void add_sp(const Piece& last_piece) {
+    virtual void add_sp(const Piece& last_piece) {
         auto [row, col] = base_type::get_pos_in_framework(last_piece.row, 
                                                last_piece.col);
         if (last_piece.color == Piece::Color::BlackSp) {
@@ -407,7 +414,7 @@ private:
         }
     }
 
-    mutable bool zip_mode_;  // 0 : "0000111", 1 : "0{3}1{2}"
+    mutable bool zip_mode_ = true;  // 0 : "0000111", 1 : "0{3}1{2}"
 };  // endof class Displayer
 
 template <BoardSize Size=BoardSize::Small>
@@ -782,4 +789,4 @@ public:
 
 }  // endof namespace mfwu
 
-#endif  // __CMD_FRAMEWORK_HPP__
+#endif  // __DISPLAYER_HPP__

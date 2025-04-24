@@ -19,7 +19,7 @@ public:
     DeductionBoard_base(const std::vector<std::vector<size_t>>& board) 
         : board_(board) { assert(board.size() > 0 && board.size() == board[0].size()); }
     DeductionBoard_base(std::vector<std::vector<size_t>>&& board) 
-        : board_(std::move(board)) { assert(board.size() > 0 && board.size() == board[0].size()); }
+        : board_(std::move(board)) { assert(board_.size() > 0 && board_.size() == board_[0].size()); }
 
     std::vector<size_t>& operator[](int idx) {
         return board_[idx];
@@ -83,7 +83,7 @@ private:
                && col >= 0 && col < this->size();
     }
     int search_dir_rank(int row, int col, int inc_r, int inc_c, Piece::Color color) const {
-        assert(this->board_[row][col] == 0);
+        // assert(this->board_[row][col] == 0);
         int seq = 1, emp = 0, jump1 = 0, jump2 = 0;
         
         search_one_dir(row, col, inc_r,  inc_c, seq, emp, jump1, color);
@@ -321,9 +321,11 @@ private:
         }
     };  // endof struct cmp
     std::tuple<float, int, int> get_best(int depth, Piece::Color color) const {
+        // TODO: 减少计算量：1. 不要全棋盘搜索，而是局限在一定范围
+        //                  2. 存下推导结果，不要重复计算已经出现过的情况
         // if (depth == 0) return get_best(color);
         std::priority_queue<std::tuple<float, int, int>, std::vector<std::tuple<float, int, int>>, cmp> pq;
-        int num_of_choices = 3;  // 3
+        int num_of_choices = 3 + depth;  // origin : 3
         size_t sz = deduction_board_->size();
         assert(deduction_board_->size() > 0 && deduction_board_->size() == (*deduction_board_)[0].size());
         std::vector<std::vector<float>> score_board(sz, std::vector<float>(sz, 0.0F));  
@@ -343,7 +345,8 @@ private:
                 }
             }
         }
-        if (pq.empty()) { return {0, -1, -1}; }
+        size_t pq_size = pq.size();
+        if (pq.empty()) { return {0, -1, -1}; }  // invalid piece
         auto [max_score, best_row, best_col] = pq.top();
         // float max_score = INT_MIN / 2;
         // int best_row = -1, best_col = -1;
@@ -351,7 +354,7 @@ private:
         while (!pq.empty()) {
             auto [now_score, row, col] = pq.top();
             pq.pop();
-            log_infer_pq_top_pos(depth, row, col, now_score);
+            log_infer_pq_top_pos(depth, row, col, now_score, pq_size - pq.size());
             if (depth <= 0) {
                 log_infer_max_depth(depth);
             } else {
@@ -398,9 +401,9 @@ private:
         return {max_score, best_row, best_col};
     }
 
-    static void log_infer_pq_top_pos(size_t depth, int row, int col, float now_score) {
+    static void log_infer_pq_top_pos(size_t depth, int row, int col, float now_score, size_t seq) {
 #ifndef __LOG_INFERENCE_ELSEWHERE__
-        log_infer(depth, "Prior pos: [%d, %d], score: %.2f", row, col, now_score);
+        log_infer(depth, "Prior #%lu pos: [%d, %d], score: %.2f", seq, row, col, now_score);
 #else  // __LOG_INFERENCE_ELSEWHERE__
         log_infer(depth, "- %d %d %.2f", row, col, now_score);
 #endif // __LOG_INFERENCE_ELSEWHERE__

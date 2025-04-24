@@ -11,7 +11,7 @@ namespace mfwu {
 
 class ChessBoard_base {
 public:
-    static constexpr BoardSize Size = BoardSize::Small;
+    // static constexpr BoardSize Size = BoardSize::Small;
     using Color = typename Piece::Color;
     static constexpr Color Invalid = Color::Invalid;
     static constexpr Color Black = Color::Black;
@@ -473,8 +473,7 @@ public:
     CmdBoard(const std::vector<std::vector<size_t>>& input_board,
              const Piece& last_piece=invalid_piece) 
         : ChessBoard<Size>(input_board, last_piece), 
-          framework_(this->board_) {
-    }
+          framework_(this->board_) {}  // TODO: BUG 25.04.22
     CmdBoard(const CmdBoard& board) = default;  // really work?
     CmdBoard(CmdBoard&& board) = default;
 
@@ -493,8 +492,8 @@ public:
         std::cin >> input_str;
         Command ret = CmdBoard::validate_input(input_str);
         if (ret.type == CommandType::INVALID
-            ||(ret.type == CommandType::PIECE 
-               && (ret.pos.row < 0 or ret.pos.col < 0))) {
+            || (ret.type == CommandType::PIECE 
+                && (ret.pos.row < 0 or ret.pos.col < 0))) {
             std::cout << HELPER_INVALID_POSITION << "\n";
             ret = this->get_command();
         }
@@ -656,7 +655,7 @@ private:
             /*|| str == std::string(RESTART_CMD3)*/) {
             return Command{CommandType::RESTART, {}};
         } else if (str == std::string(XQ4GB_CMD)) {
-            return Command{CommandType::XQ4GB};
+            return Command{CommandType::XQ4GB, {}};
         }
 
         if (str.size() != 2) return Command{CommandType::INVALID, {}};

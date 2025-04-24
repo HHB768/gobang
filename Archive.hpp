@@ -21,7 +21,7 @@ namespace mfwu {
 template <
           size_t Size=static_cast<size_t>(BoardSize::Small),
           typename Seq_t=std::string, 
-          typename Tbl_t=std::vector<std::vector<int>>
+          typename Tbl_t=std::vector<std::vector<size_t>>
          >
 class Archive_base {
 public:
@@ -147,7 +147,7 @@ protected:
             seq.reserve(tbl.size() * (tbl[0].size() + 1) * 2);  // check
             for (size_t i = 0; i < tbl.size(); i++) {
                 for (size_t j = 0; j < tbl[0].size(); j++) {
-                    seq += tbl[i][j];
+                    seq += '0' + tbl[i][j];
                     seq += ' ';
                 }
                 seq += '\n';
@@ -281,11 +281,12 @@ public:
 
     void init_game() override {
         this->frames_.clear();
-        this->frames_.emplace_back(Tbl_type(Size, typename Tbl_type::value_type(Size, 0)));
+        // this->frames_.emplace_back(Tbl_type(Size, typename Tbl_type::value_type(Size, 0)));
+        // check: we dont need this
     }
     void init_game(const Tbl_type& board) override {
         this->frames_.clear();
-        this->frames_.emplace_back(board);
+        // this->frames_.emplace_back(board);
     }
 };  // endof class Archive
 
@@ -334,21 +335,21 @@ public:
         assert(this->frames_.size() == this->moves_.size());
     }
     // recommended
-    void record(const Piece last_piece) {
+    void record(const Piece& last_piece) {
         moves_.emplace_back(last_piece);
     }
 
-    void flush(GameStatus status) {
-        for (Frame& frame : this->frames_) {
-            flush_frame(frame);
-        }
-        this->frames_.clear();
-        this->flush_log(status);
-        this->fs_.flush();  // flush once after a game
+    // void flush(GameStatus status) {
+    //     for (Frame& frame : this->frames_) {
+    //         flush_frame(frame);
+    //     }
+    //     this->frames_.clear();
+    //     this->flush_log(status);
+    //     this->fs_.flush();  // flush once after a game
 
-        // reinit for next game
-        this->init_game();
-    }
+    //     // reinit for next game
+    //     this->init_game();
+    // }
     std::string get_last_frame_in_seq() const {
         update_frame();
         return this->frames_.back().get_seq();

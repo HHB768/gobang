@@ -110,8 +110,12 @@ public:
         return this->board_->is_full();
     }
     virtual void restart_game_init() {
+        log_end_game(GameStatus::RESTART);
+        archive_.flush(GameStatus::RESTART);
+        
         log_new_game(board_->size(), board_->size());
         board_->reset();
+        // board_->show();
         // doesnt swap
         if (player1_first_) {
             current_player_ = &player1_;
@@ -120,13 +124,14 @@ public:
             current_player_ = &player2_;
             idle_player_ = &player1_;
         }
-        log_end_game(GameStatus::RESTART);
-        archive_.flush(GameStatus::RESTART);
-        // board_->show();
     }
     virtual void reset_game_init() {
+        log_end_game(GameStatus::NORMAL);
+        archive_.flush(GameStatus::NORMAL);
+
         log_new_game(board_->size(), board_->size());
         board_->reset();
+        // board_->show();
         std::swap(player1_.get_color(), player2_.get_color());
         player1_first_ = !player1_first_;
         if (player1_first_) {
@@ -136,9 +141,6 @@ public:
             current_player_ = &player2_;
             idle_player_ = &player1_;
         }
-        log_end_game(GameStatus::NORMAL);
-        archive_.flush(GameStatus::NORMAL);
-        // board_->show();
     }
     virtual void abrupt_flush(GameStatus status) {
         log_end_game(status);
@@ -200,6 +202,9 @@ private:
 
 };  // endof class GameController_base
 
+// 250418 xq42: actually we dont need this...
+// and maybe we should remove 'virtual' qualifiers
+// in gc_base class def
 template <typename Player1_type, typename Player2_type, typename ChessBoard_type>
 class GameController : public GameController_base<Player1_type, Player2_type, ChessBoard_type> {
     GameController() : GameController_base<Player1_type, Player2_type, ChessBoard_type>() {}

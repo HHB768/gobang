@@ -1,4 +1,4 @@
-// #define __GUI_MODE__
+// #define __GUI_MODE__  // compilation marco
 #define __CMD_MODE__
 #ifdef __GUI_MODE__
 #undef __CMD_MODE__
@@ -26,12 +26,10 @@ int main() {
 
 #ifdef __CMD_MODE__
 #define __CHESSBOARD_TYPE__ CmdBoard
-        using Human_type = HumanPlayer;
-#else 
+#else  // __GUI_BOARD__
 #define __CHESSBOARD_TYPE__ GuiBoard
-        using Human_type = HumanPlayer;
 #endif
-
+        using Human_type = HumanPlayer;
         // using Robot_type = DebugRobot;
         // using Robot_type = DummyRobot;
         using Robot_type = HumanLikeRobot;
