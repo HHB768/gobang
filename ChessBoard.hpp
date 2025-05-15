@@ -692,6 +692,7 @@ private:
     }
     
     CmdDisplayer<Size> framework_;
+    // TODO: we can set Displayer ptr here and alloc a CmdDisplayer in constructor 2025.5.6
 };  // endof class CmdBoard
 
 }  // endof namespace mfwu

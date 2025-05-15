@@ -162,7 +162,7 @@ matrix_empty = {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
                 {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
                 {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
 
-class XQ4Printer {
+class Xq4Printer {
 public:
     using M_type = std::vector<std::list<int>>;
     

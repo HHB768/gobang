@@ -109,7 +109,7 @@ public:
     virtual bool check_draw() const {
         return this->board_->is_full();
     }
-    virtual void restart_game_init() {
+    virtual void restart_game_init() override {
         log_end_game(GameStatus::RESTART);
         archive_.flush(GameStatus::RESTART);
         
@@ -125,10 +125,11 @@ public:
             idle_player_ = &player1_;
         }
     }
-    virtual void reset_game_init() {
-        log_end_game(GameStatus::NORMAL);
-        archive_.flush(GameStatus::NORMAL);
-
+    virtual void reset_game_init(GameStatus status) {
+        abrupt_flush(status);
+        reset_game_init();
+    }
+    virtual void reset_game_init() override {
         log_new_game(board_->size(), board_->size());
         board_->reset();
         // board_->show();
@@ -142,7 +143,7 @@ public:
             idle_player_ = &player1_;
         }
     }
-    virtual void abrupt_flush(GameStatus status) {
+    virtual void abrupt_flush(GameStatus status) override {
         log_end_game(status);
         archive_.flush(status);
     }

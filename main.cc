@@ -105,6 +105,7 @@ int main() {
                 } break;
                 case GameStatus::NORMAL : {
                     std::cout << HELPER_PRESS_ANY_KEY << "\n";
+                    game->abrupt_flush(status);
                     sleep(1);  // TODO: del this after transfering to win platf
                     fgetc(stdin);
                     game->reset_game_init();

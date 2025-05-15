@@ -1,9 +1,9 @@
 #include <iostream>
-#include "XQ4Printer.hpp"
+#include "Xq4Printer.hpp"
 #include <unistd.h>
 #include <sstream>
 
-void clear_and_print_once(const mfwu::XQ4Printer::M_type& res) {
+void clear_and_print_once(const mfwu::Xq4Printer::M_type& res) {
     std::cout << "\033[2J\033[1;1H";
     std::stringstream ss;
     for (const auto& line : res) {
@@ -20,10 +20,10 @@ void clear_and_print_once(const mfwu::XQ4Printer::M_type& res) {
 }
 
 int main() {
-    auto res = mfwu::XQ4Printer::get_xq4_matrix();
+    auto res = mfwu::Xq4Printer::get_xq4_matrix();
     for (int i = 0; i < 551; i++) {
         clear_and_print_once(res);
-        mfwu::XQ4Printer::roll(res, 1);
+        mfwu::Xq4Printer::roll(res, 1);
         usleep(50000);
     }
     return 0;
