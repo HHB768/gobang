@@ -1,4 +1,4 @@
-// #define __GUI_MODE__  // compilation marco
+#define __GUI_MODE__  // compilation marco
 #define __CMD_MODE__
 #ifdef __GUI_MODE__
 #undef __CMD_MODE__

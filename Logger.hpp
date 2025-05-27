@@ -353,7 +353,14 @@ private:
 #endif  // __LOG_INFERENCE_ELSEWHERE__
     {}
 #else  // __GUI_MODE__
-    Logger() : std_appender_(LogLevel::ERROR), file_appender_(LogLevel::DEBUG) {}
+    Logger() : std_appender_(LogLevel::ERROR), 
+#ifdef __LOG_INFERENCE_ELSEWHERE__
+    file_appender_(LogLevel::DEBUG),
+    inference_appender_(LogLevel::INFER)
+#else  // !__LOG_INFERENCE_ELSEWHERE__
+    file_appender_(LogLevel::INFER) 
+#endif  // __LOG_INFERENCE_ELSEWHERE__
+     {}
 #endif  // __CMD_MODE__
 
     static void infer_log_space(std::string& str, int num) {
