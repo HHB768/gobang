@@ -309,6 +309,7 @@ public:
     
 protected:
     virtual void show_board() const = 0;
+
     virtual void _init_board() {
         for (size_t i = 0; i < len(); i++) {
             for (size_t j = 0; j < len(); j++) {
@@ -412,7 +413,7 @@ public:
             2、把 chessboard 视为一种 box，让 displayer 返回 command
             在此我想试试 思路2  25.04.11
         */
-        Command ret = framework_->get_command();
+        Command ret = framework_.get_command();
         if (this->board_[ret.pos.row][ret.pos.col]->get_status()) {
             ret.pos.row = ret.pos.col = -1;  // occupied pos
         }
@@ -426,7 +427,12 @@ public:
     }
 
     void show() const override {
-
+        cmd_clear();
+        show_board();
+    }
+    void show_without_log() const {
+        cmd_clear();
+        show_board_without_log();
     }
     void refresh() override {
         show();
@@ -435,7 +441,7 @@ public:
 private:
     void winner_display(const Piece::Color& color) override {
         framework_.switch_page(Piece::is_same_color(color, Piece::Color::Black) ?
-                               "BVickPage" : "WVickPage");
+                               PageType::BlackVickPage : PageType::WhiteVickPage);
     }
 
     void _init_board() override {
@@ -455,6 +461,13 @@ private:
     void update_new_piece(const Piece& piece) {
         ChessBoard<Size>::update(piece);
         framework_.update_new_sp(this->last_piece_);
+    }
+
+    void show_board() const override {
+        framework_.show();
+    }
+    void show_board_without_log() const {
+        framework_.show_without_log();
     }
 
     GuiDisplayer<Size> framework_;
@@ -678,7 +691,7 @@ private:
         if (res >= static_cast<size_t>(Size)) { return -1; }
         return res;
     }
-    void show_board() const {
+    void show_board() const override {
         // TODO: better design:
         // init a vec<vec<char> frwk first and list a set of 
         // methods to locate the position of [i, j] on the board_  25.03.03

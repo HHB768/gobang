@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "Logger.hpp"
+#include "gui_common.hpp"
 
 // gui(?) of cmd mode lol
 namespace mfwu {
@@ -464,69 +465,17 @@ public:
 
 };  // endof class InferDisplayer
 
-struct PositionPix {
-    int hpix, vpix;
-    PositionPix() : hpix(0), vpix(0) {}
-    PositionPix(int h, int v) : hpix(h), vpix(v) {}
-    PositionPix(const PositionPix& pos) = default;
-    ~PositionPix() {}
-};  // endof struct PositionPix
-
-enum class PageType : size_t {
-    GamePlayPage = 0,
-    BlackVickPage = 1,
-    WhiteVickPage = 2,
-    Menu1 = 3,
-    Menu2 = 4
-};  // endof enum class PageType
-
-struct Box {
-public:
-    using ptr = std::shared_ptr<Box>;
-    using pic_type = int;  // TODO
-
-    Box(int x0_, int x1_, int y0_, int y1_, 
-        CommandType cmd_type_, const pic_type& pic_)
-        : x0(x0_), x1(x1_), y0(y0_), y1(y1_), 
-          cmd_type(cmd_type_), pics(1, pic_) {
-        assert(x0_ < x1_ && y0_ < y1_);
-    }
-    Box(int x0_, int x1_, int y0_, int y1_, 
-        CommandType cmd_type_, const std::vector<pic_type>& pics_)
-        : x0(x0_), x1(x1_), y0(y0_), y1(y1_), 
-          cmd_type(cmd_type_), pics(pics_) {
-        assert(x0_ < x1_ && y0_ < y1_);
-    }
-    
-    virtual Command get_cmd(const PositionPix& pos) const = 0;
-
-    CommandType get_cmd_type() const {
-        return cmd_type;
-    }
-
-    bool encircle(const PositionPix& pos) const {
-        // in pix
-        if (x0 <= pos.hpix && pos.hpix <= x1
-            && y0 << pos.vpix && pos.vpix <= y1) {
-            return true;
-        }
-        return false;
-    }
-
-    void show() const {
-        // show pic
-    }
-    const std::vector<pic_type>& get_pics() const {
-        return pics;
-    }
-
-private:
-    int x0, x1, y0, y1;
-    const CommandType cmd_type;
-    std::vector<pic_type> pics;
-};  // endof struct Box
 
 class FuncBox : public Box {
+public:
+    using pic_type = Box::pic_type;
+
+    FuncBox(int x0_, int x1_, int y0_, int y1_, 
+        CommandType cmd_type_, const pic_type& pic_)
+        : Box(x0_, x1_, y0_, y1_, cmd_type_, pic_) {}
+    FuncBox(int x0_, int x1_, int y0_, int y1_, 
+        CommandType cmd_type_, const std::vector<pic_type>& pics_)
+        : Box(x0_, x1_, y0_, y1_, cmd_type_, pics_) {}
 private: 
     Command get_cmd(const PositionPix& pos) const override {
         if (this->encircle(pos)) {
@@ -538,6 +487,15 @@ private:
 
 template <BoardSize Size=BoardSize::Small>
 class BoardBox : public Box {
+public:
+    using pic_type = Box::pic_type;
+    
+    BoardBox(int x0_, int x1_, int y0_, int y1_, 
+        CommandType cmd_type_, const pic_type& pic_)
+        : Box(x0_, x1_, y0_, y1_, cmd_type_, pic_) {}
+    BoardBox(int x0_, int x1_, int y0_, int y1_, 
+        CommandType cmd_type_, const std::vector<pic_type>& pics_)
+        : Box(x0_, x1_, y0_, y1_, cmd_type_, pics_) {}
 private:
     static constexpr int vertical_margin = 0;
     static constexpr int horizontal_margin = 0;
@@ -564,48 +522,6 @@ private:
         return ret;
     }
 };  // endof class BoardBox
-
-class Page {
-public:
-    using ptr = std::shared_ptr<Page>;
-    using pic_type = Box::pic_type;
-    Page(PageType type, const std::string& str1="") 
-        : type_(type), description_(str1) {}
-
-    PageType get_type() const { return type_; }
-    std::string get_description() const { return description_; }
-    void append(typename Box::ptr b) {
-        boxes_.push_back(b);
-    }
-    virtual void show() const {
-        for (const typename Box::ptr& box : boxes_) {
-            box->show();
-        }
-    }
-    virtual Command get_command() {
-        const PositionPix pos = wait_input();
-        for (const typename Box::ptr& box : boxes_) {
-            if (box->encircle(pos)) {
-                return box->get_cmd(pos);
-            }
-        }
-        return Command{CommandType::INVALID, {}};
-    } 
-    typename Box::ptr get_box(int idx) const {
-        assert(0 <= idx && idx < boxes_.size());
-        return boxes_[idx];
-    }
-
-private:
-    PositionPix wait_input() {
-        return {};
-    }
-
-    PageType type_;
-    std::string description_;
-    std::vector<typename Box::ptr> boxes_;
-    // recommended: std::unordered_map<std::string, typename Box::ptr> boxes_;
-};  // endof class Page
 
 // only used in menu in main.cc
 class MenuPage : public Page {
@@ -667,45 +583,45 @@ class GamePage : public Page {
 public:
     using pic_type = typename Page::pic_type;
 
-    static constexpr int board_pos[4] = {0, 0, 0, 0};
-    static constexpr pic_type board_pic = {};
+    static constexpr int boardbox_pos[4] = {0, 0, 0, 0};
+    static constexpr pic_type boardbox_pic = {};
 
     static constexpr int funcbox_x0[4] = {0, 0, 0, 0};
     static constexpr int funcbox_x1[4] = {0, 0, 0, 0};
     static constexpr int funcbox_y0[4] = {0, 0, 0, 0};
     static constexpr int funcbox_y1[4] = {0, 0, 0, 0};
-    static constexpr pic_type option_mode[4] = {{}, {}, {}, {}};
+    static constexpr pic_type funcbox_pics[4] = {{}, {}, {}, {}};
 
     GamePage(PageType type, const std::string& str1="")
         : Page(type, str1) {
-        typename Box::ptr board_box = std::make_shared<BoardBox>(
+        typename Box::ptr board_box = std::make_shared<BoardBox<Size>>(
             boardbox_pos[0], boardbox_pos[1],
             boardbox_pos[2], boardbox_pos[3], 
-            CommandType::PIECE, funcbox_pic[0]
+            CommandType::PIECE, boardbox_pic
         );
         this->append(board_box);
         typename Box::ptr restart_box = std::make_shared<FuncBox>(
             funcbox_x0[0], funcbox_x1[0],
             funcbox_y0[0], funcbox_y1[0], 
-            CommandType::RESTART, funcbox_pic[0]
+            CommandType::RESTART, funcbox_pics[0]
         );
         this->append(restart_box);
         typename Box::ptr menu_box = std::make_shared<FuncBox>(
             funcbox_x0[1], funcbox_x1[1],
             funcbox_y0[1], funcbox_y1[1], 
-            CommandType::MENU, funcbox_pic[1]
+            CommandType::MENU, funcbox_pics[1]
         );
         this->append(menu_box);
         typename Box::ptr quit_box = std::make_shared<FuncBox>(
             funcbox_x0[2], funcbox_x1[2],
             funcbox_y0[2], funcbox_y1[2], 
-            CommandType::QUIT, funcbox_pic[2]
+            CommandType::QUIT, funcbox_pics[2]
         );
         this->append(quit_box);
         typename Box::ptr xq4gb_box = std::make_shared<FuncBox>(
             funcbox_x0[3], funcbox_x1[3],
             funcbox_y0[3], funcbox_y1[3], 
-            CommandType::XQ4GB, funcbox_pic[3]
+            CommandType::XQ4GB, funcbox_pics[3]
         );
         this->append(xq4gb_box);
     }
@@ -715,21 +631,21 @@ public:
     }
 };  // endof class GamePage
 
-
 // 致敬传奇人机战神 vick       XQ4-3  25.04.11
 class VickPage : public Page {
 public:
     using pic_type = typename Page::pic_type;   
-    
+    static constexpr int num_of_vick_pic = 5;
     static constexpr int vick_pos[4] = {0, 0, 0, 0};
-    static constexpr pic_type vick_pic[5] = {};
+    static constexpr pic_type vick_pics[num_of_vick_pic] = {};
 
     VickPage(PageType type, const std::string& str1="")
         : Page(type, str1) {
+        std::vector<pic_type> pics(vick_pics, vick_pics + num_of_vick_pic);
         typename Box::ptr vick_box = std::make_shared<FuncBox>(
             vick_pos[0], vick_pos[1],
             vick_pos[2], vick_pos[3], 
-            CommandType::INVALID, vick_pic  // CHECK
+            CommandType::INVALID, pics // CHECK
         );
         // always put vick_box in the first idx
         this->append(vick_box);
@@ -744,7 +660,7 @@ public:
 
 
 template <BoardSize Size=BoardSize::Small>
-class GuiDiplayer : public Displayer<Size> {
+class GuiDisplayer : public Displayer<Size> {
 public:
     using base_type = Displayer<Size>;
     // DEFINE_SHAPES; DEFINE_SIZES;
@@ -763,7 +679,7 @@ public:
           menu2page_(PageType::Menu2, "Size selection helper page") {}
     
     Command get_command() const {
-        page_->get_command();
+        return page_->get_command();
     }
     void show() const override {
         page_->show();
@@ -794,10 +710,10 @@ public:
             page_ = &white_victory_page_;
         } break;
         case PageType::Menu1 : {
-            page_ = &menu1_;
+            page_ = &menu1page_;
         } break;
         case PageType::Menu2 : {
-            page_ = &menu2_;
+            page_ = &menu2page_;
         } break;
         default : {
             log_warn("Page type : %lu not found, page not switched",
@@ -814,7 +730,7 @@ private:
     VickPage white_victory_page_;
     MenuPage menu1page_;
     MenuPage menu2page_;
-    typename Page::ptr page_;
+    Page* page_;  // do not manage memory with this ptr
 
 };  // 
 

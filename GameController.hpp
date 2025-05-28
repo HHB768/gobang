@@ -208,18 +208,19 @@ private:
 // in gc_base class def
 template <typename Player1_type, typename Player2_type, typename ChessBoard_type>
 class GameController : public GameController_base<Player1_type, Player2_type, ChessBoard_type> {
+// private, not used
     GameController() : GameController_base<Player1_type, Player2_type, ChessBoard_type>() {}
     virtual ~GameController() {}
 };
 
-// template <typename Player1_type, typename Player2_type, BoardSize Size>
-// class GameController<Player1_type, Player2_type, GuiBoard<Size>> 
-//     : public GameController_base<Player1_type, Player2_type, GuiBoard<Size>> {
-// public:
-//     GameController<Player1_type, Player2_type, GuiBoard<Size>>()
-//         : GameController_base<Player1_type, Player2_type, GuiBoard<Size>>() {}
-//     virtual ~GameController<Player1_type, Player2_type, GuiBoard<Size>>() {}
-// };
+template <typename Player1_type, typename Player2_type, BoardSize Size>
+class GameController<Player1_type, Player2_type, GuiBoard<Size>> 
+    : public GameController_base<Player1_type, Player2_type, GuiBoard<Size>> {
+public:
+    GameController<Player1_type, Player2_type, GuiBoard<Size>>()
+        : GameController_base<Player1_type, Player2_type, GuiBoard<Size>>() {}
+    virtual ~GameController<Player1_type, Player2_type, GuiBoard<Size>>() {}
+};
 
 
 template <typename Player1_type, typename Player2_type, BoardSize Size>
