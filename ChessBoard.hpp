@@ -413,13 +413,23 @@ public:
             2、把 chessboard 视为一种 box，让 displayer 返回 command
             在此我想试试 思路2  25.04.11
         */
+       /*
+            另外，理论上说只要把 cmd/gui_displayer 的接口都放在 displayer_base，
+            是不需要区分 cmd/gui_board 和 gc 的，但考虑到思路2和 cmddisplayer 
+            可能不是一样的，未来也可能有更多的不一样的需求，所以暂时先分出两个
+            chessboard，先试试思路2，感觉很有趣   X-H 25.05.29
+       */
         Command ret = framework_.get_command();
         if (this->board_[ret.pos.row][ret.pos.col]->get_status()) {
             ret.pos.row = ret.pos.col = -1;  // occupied pos
         }
         if (ret.type == CommandType::INVALID
             || (ret.type == CommandType::PIECE 
-                && (ret.pos.row < 0 or ret.pos.col < 0))) {
+                && ((ret.pos.row < 0 or ret.pos.col < 0)
+                    || (!this->is_valid_pos(ret.pos.row, ret.pos.col))
+                   )
+               )
+           ) {
             std::cout << HELPER_INVALID_POSITION << "\n";
             ret = this->get_command();
         }

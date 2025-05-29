@@ -529,15 +529,11 @@ public:
     using pic_type = typename Page::pic_type;
 
     static constexpr int helper_pos[4] = {0, 0, 0, 0};
-    static constexpr pic_type helper_mode = {};
-    static constexpr pic_type helper_size = {};
 
     static constexpr int option_x0[3] = {0, 0, 0};
     static constexpr int option_x1[3] = {0, 0, 0};
     static constexpr int option_y0[3] = {0, 0, 0};
     static constexpr int option_y1[3] = {0, 0, 0};
-    static constexpr pic_type option_mode[3] = {{}, {}, {}};
-    static constexpr pic_type option_size[3] = {{}, {}, {}};
 
     MenuPage(PageType type, const std::string& str1="") 
         : Page(type, str1) {
@@ -545,14 +541,14 @@ public:
             typename Box::ptr helper = std::make_shared<FuncBox>(
                 helper_pos[0], helper_pos[1],
                 helper_pos[2], helper_pos[3], 
-                CommandType::INVALID, helper_mode
+                CommandType::INVALID, helper_mode_pic
             );
             this->append(helper);
             for (size_t i = 0; i < 3; i++) {
                 typename Box::ptr option = std::make_shared<FuncBox>(
                     option_x0[i], option_x1[i], 
                     option_y0[i], option_y1[i], 
-                    CommandType{i}, option_mode[i]
+                    CommandType{i}, option_mode_pics[i]
                 );
                 this->append(option);
             }
@@ -560,14 +556,14 @@ public:
             typename Box::ptr helper = std::make_shared<FuncBox>(
                 helper_pos[0], helper_pos[0],
                 helper_pos[0], helper_pos[0], 
-                CommandType::INVALID, helper_size
+                CommandType::INVALID, helper_size_pic
             );
             this->append(helper);
             for (size_t i = 0; i < 3; i++) {
                 typename Box::ptr option = std::make_shared<FuncBox>(
                     option_x0[i], option_x1[i], 
                     option_y0[i], option_y1[i], 
-                    CommandType{i}, option_size[i]
+                    CommandType{i}, option_size_pics[i]
                 );
                 this->append(option);
             }
@@ -583,8 +579,11 @@ class GamePage : public Page {
 public:
     using pic_type = typename Page::pic_type;
 
-    static constexpr int boardbox_pos[4] = {0, 0, 0, 0};
-    static constexpr pic_type boardbox_pic = {};
+    static constexpr int bpos[2] = {0, 0};
+    static constexpr int boardbox_pos[4] = {
+        bpos[0], bpos[0] + BoardSize2BoardPicSize(Size).height,
+        bpos[1], bpos[1] + BoardSize2BoardPicSize(Size).width
+    };
 
     static constexpr int funcbox_x0[4] = {0, 0, 0, 0};
     static constexpr int funcbox_x1[4] = {0, 0, 0, 0};
@@ -597,7 +596,7 @@ public:
         typename Box::ptr board_box = std::make_shared<BoardBox<Size>>(
             boardbox_pos[0], boardbox_pos[1],
             boardbox_pos[2], boardbox_pos[3], 
-            CommandType::PIECE, boardbox_pic
+            CommandType::PIECE, chessboard_pic
         );
         this->append(board_box);
         typename Box::ptr restart_box = std::make_shared<FuncBox>(
@@ -635,9 +634,8 @@ public:
 class VickPage : public Page {
 public:
     using pic_type = typename Page::pic_type;   
-    static constexpr int num_of_vick_pic = 5;
+
     static constexpr int vick_pos[4] = {0, 0, 0, 0};
-    static constexpr pic_type vick_pics[num_of_vick_pic] = {};
 
     VickPage(PageType type, const std::string& str1="")
         : Page(type, str1) {
